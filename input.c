@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: input.c,v $
+ * Revision 1.13  1994/07/03 13:07:47  johnsonm
+ * Set and restore signals and terminal settings correctly.
+ *
  * Revision 1.12  1994/07/03  12:29:27  johnsonm
  * Don't restore terminal, which restores signals, which makes vlock -a
  *   completely ineffective, until the correct password has been entered.
@@ -60,6 +63,7 @@
 
 
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <signal.h>
 #include <pwd.h>
@@ -68,120 +72,102 @@
      versions, where some signals get ignored, and simple keystrokes
      can terminate vlock.  This cannot be solved here; you have to
      fix your shadow library or use a working one. */
+
+  /* Current shadow maintainer's note: it should no longer be a problem
+     with libc5 because we don't need to link with libshadow.a at all
+     (shadow passwords are now supported in the standard libc).
+
+     I also hacked the code a bit:
+      - use /dev/tty instead of /dev/console (permissions on the latter
+        shouldn't allow all users to open it)
+      - get encrypted password once at startup, drop privileges as soon
+        as possible (we have to be setuid root for shadow passwords)
+      - error message instead of core dump if getpwuid() returns NULL
+      - added check if encrypted password is valid (>=13 characters)
+      - terminal modes should be properly restored (don't leave echo off)
+        if getpass() fails.
+
+     -- Marek Michalkiewicz <marekm@i17linuxb.ists.pwr.wroc.pl> */
+
 #include <shadow.h>
 #endif
 #include "vlock.h"
 
 
-/* size of input buffer. */
-#define INBUFSIZE 50
+static char rcsid[] = "$Id: input.c,v 1.14 1996/05/17 02:49:46 johnsonm Exp $";
 
 
-static char rcsid[] = "$Id: input.c,v 1.13 1994/07/03 13:07:47 johnsonm Exp $";
-
-
-/* correct_password() taken with some modifications from the GNU su.c */
-/* returns true if the password entered is either the user's password */
-/* or the root password, so that root can unlock anything...          */
-
-static int correct_password (struct passwd *pw) {
-
-  char *runencrypted, *unencrypted, *encrypted, *correct, user[INBUFSIZE];
-  int ret;
-  static struct passwd rpw;
-
-#ifdef SHADOW_PWD
-  struct spwd *sp = getspnam(pw->pw_name);
-
-  endspent ();
-  if (sp)
-    correct = sp->sp_pwdp;
-  else
+static char username[40]; /* current user's name */
+static char prompt[100];  /* password prompt ("user's password: ") */
+static char userpw[200];  /* current user's encrypted password */
+#ifndef NO_ROOT_PASS
+static char rootpw[200];  /* root's encrypted password */
 #endif
-  correct = pw->pw_passwd;
+static int
+correct_password(void)
+{
+  char *pass;
 
-  /* if account has no password, it can't be locked.  I'm not */
-  /* going to fake it.  The user can write a shell script to  */
-  /* fake it if he wants to...                                */
-  if (correct == 0 || correct[0] == '\0')
+  pass = getpass(prompt);
+  if (!pass) {
+    perror("getpass: cannot open /dev/tty");
+    restore_terminal();
+    exit(1);
+  }
+  /* fix signals that probably have been disordered by getpass() */
+  set_signal_mask(0);
+
+  if (strcmp(crypt(pass, userpw), userpw) == 0) {
+    memset(pass, 0, strlen(pass));
     return 1;
-
-  set_terminal(1);
-  sprintf(user, "%s's password:", pw->pw_name);
-  set_terminal(0);
-  unencrypted = getpass(user);
-  set_terminal(0);
-  set_signal_mask(0); /* fix signals that probably have been disordered
-			 by getpass() */
-  runencrypted = (char *) strdup(unencrypted);
-  if (unencrypted == NULL) {
-    perror ("getpass: cannot open /dev/tty");
-    /* Need to exit, or computer might be locked up... */
-    exit (1);
   }
-  encrypted = crypt(unencrypted, correct);
-  ret = (strcmp(encrypted, correct) == 0);
-  if (!ret) {
-#ifdef SHADOW_PWD
-    struct spwd *rsp = getspnam("root");
-#endif
-    rpw = *(getpwuid(0)); /* get the root password */
-
-#ifdef SHADOW_PWD
-    endspent ();
-    if (rsp)
-      correct = rsp->sp_pwdp;
-    else
-#endif
-    correct = rpw.pw_passwd;
-    encrypted = crypt(runencrypted, correct);
-    ret = (strcmp(encrypted, correct) == 0);
+#ifndef NO_ROOT_PASS
+  if (strcmp(crypt(pass, rootpw), rootpw) == 0) {
+    memset(pass, 0, strlen(pass));
+    /* To do: for the paranoid, maybe log the use of root password? */
+    return 1;
   }
-  memset (unencrypted, 0, strlen(unencrypted));
-  memset (runencrypted, 0, strlen(runencrypted));
-  free(runencrypted);
-  return ret;
+#endif
+  memset(pass, 0, strlen(pass));
+  return 0;
 }
 
 
 
-/* get_password() should not return until a correct password has been */
-/* entered. */
 
-void get_password(void) {
-
-  static struct passwd pwd;
+void
+get_password(void)
+{
   int times = 0;
 
+  set_terminal(0);
   do {
-    pwd = *(getpwuid(getuid()));
-    set_terminal(1);
     if (o_lock_all) {
+      /* To do: allow logging the user out safely without shutting down
+         the whole machine...  */
       printf("The entire console display is now completely locked.\n"
-	     "You will not be able to switch to another virtual console.\n");
+       "You will not be able to switch to another virtual console.\n");
 
     } else {
       printf("This TTY is now locked.\n");
       if (is_vt)
-	printf("Use Alt-function keys to switch to other virtual consoles.\n");
+        printf("Use Alt-function keys to switch to other virtual consoles.\n");
     }
     printf("Please enter the password to unlock.\n");
     fflush(stdout);
 
     /* correct_password() sets the terminal status as necessary */
-    if (correct_password(&pwd)) {
+    if (correct_password()) {
       restore_signals();
       restore_terminal();
       return;
     }
-
     /* Need to slow down people who are trying to break in by brute force */
     /* Note that it is technically possible to break this, but I can't    */
     /* make it happen, even knowing the code and knowing how to try.      */
     /* If you manage to kill vlock from the terminal while in this code,  */
     /* please tell me how you did it.                                     */
     sleep(++times);
-    set_terminal(1);
     printf(" *** That password is incorrect; please try again. *** \n");
     if (times >= 15) {
       printf("Slow down and try again in a while.\n");
@@ -191,5 +177,73 @@ void get_password(void) {
     printf("\n");
 
   } while (1);
+}
 
+  /* Get the user's and root passwords once at startup and store them
+     for use later.  This has several advantages:
+      - to support shadow passwords, we have to be installed setuid
+        root, but we can completely drop privileges very early
+      - we avoid problems with unlocking when using NIS, after the
+        NIS server goes down
+      - before locking, we can check if any real password has a chance
+        to match the encrypted password (should be >=13 chars)
+      - this is the same way xlockmore does it.
+     Warning: this code runs as root - be careful if you modify it.  */
+
+static struct passwd *
+my_getpwuid(uid_t uid)
+{
+  struct passwd *pw;
+#ifdef SHADOW_PWD
+  struct spwd *sp;
+#endif
+
+  pw = getpwuid(uid);
+  if (!pw) {
+    fprintf(stderr, "vlock: getpwuid(%d) failed!\n", (int) uid);
+    exit(1);
+  }
+#ifdef SHADOW_PWD
+  sp = getspnam(pw->pw_name);
+  if (sp)
+    pw->pw_passwd = sp->sp_pwdp;
+  endspent();
+#endif
+  return pw;
+}
+
+void
+init_passwords(void)
+{
+  struct passwd *pw;
+
+  /* Get the password entry for this user (never returns NULL).  */
+  pw = my_getpwuid(getuid());
+
+  /* Save the results where they will not get overwritten.  */
+  strncpy(userpw, pw->pw_passwd, sizeof(userpw) - 1);
+  userpw[sizeof(userpw) - 1] = '\0';
+
+  strncpy(username, pw->pw_name, sizeof(username) - 1);
+  username[sizeof(username) - 1] = '\0';
+
+  if (strlen(userpw) < 13) {
+    /* To do: ask for password to use instead of login password.  */
+    fprintf(stderr,
+      " *** No valid password for user %s - will not lock.  ***\n", username);
+    exit(1);
+  }
+
+#ifndef NO_ROOT_PASS
+  /* Now get and save the encrypted root password.  */
+  pw = my_getpwuid(0);
+
+  strncpy(rootpw, pw->pw_passwd, sizeof(rootpw) - 1);
+  rootpw[sizeof(rootpw) - 1] = '\0';
+#endif /* NO_ROOT_PASS */
+
+  /* We don't need root privileges any longer.  */
+  setuid(getuid());
+
+  sprintf(prompt, "%s's password: ", username);
 }
