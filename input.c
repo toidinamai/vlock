@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: input.c,v $
+ * Revision 1.4  1994/03/19  17:53:20  johnsonm
+ * Password reading now works, thanks to the correct_password() routine
+ * from GNU su.  No point in re-inventing the wheel...
+ *
  * Revision 1.3  1994/03/19  14:24:33  johnsonm
  * Removed silly two-process model.  It's certainly not needed.
  * Also fixed occasional core dump.
@@ -40,18 +44,22 @@
 #define INBUFSIZE 50
 
 
-static char rcsid[] = "$Id: input.c,v 1.4 1994/03/19 17:53:20 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.5 1994/03/20 13:13:48 johnsonm Exp $";
 
 
 /* correct_password() taken with some modifications from the GNU su.c */
+/* returns true if the password entered is either the user's password */
+/* or the root password, so that root can unlock anything...          */
 
 static int correct_password (struct passwd *pw) {
 
-  char *unencrypted, *encrypted, *correct, user[INBUFSIZE];
+  char *runencrypted, *unencrypted, *encrypted, *correct, user[INBUFSIZE];
+  int ret;
+  static struct passwd rpw;
 
 #ifdef SHADOW_PWD
-  /* Shadow passwd stuff for SVR3 and maybe other systems.  */
-  struct spwd *sp = getspnam (pw->pw_name);
+  /* Shadow passwd support; untested.  */
+  struct spwd *sp = getspnam(pw->pw_name);
 
   endspent ();
   if (sp)
@@ -64,15 +72,35 @@ static int correct_password (struct passwd *pw) {
     return 1;
 
   sprintf(user, "%s's password:", pw->pw_name);
-  unencrypted = getpass (user);
+  unencrypted = getpass(user);
+  runencrypted = (char *) strdup(unencrypted);
   if (unencrypted == NULL) {
     perror ("getpass: cannot open /dev/tty");
     /* Need to exit, or computer might be locked up... */
     exit (1);
   }
-  encrypted = crypt (unencrypted, correct);
-  memset (unencrypted, 0, strlen (unencrypted));
-  return (strcmp (encrypted, correct) == 0);
+  encrypted = crypt(unencrypted, correct);
+  ret = (strcmp(encrypted, correct) == 0);
+  if (!ret) {
+#ifdef SHADOW_PWD
+    struct spwd *rsp = getspuid(0);
+#endif
+    rpw = *(getpwuid(0)); /* get the root password */
+
+#ifdef SHADOW_PWD
+    endspent ();
+    if (rsp)
+      correct = rsp->sp_pwdp;
+    else
+#endif
+    correct = rpw.pw_passwd;
+    encrypted = crypt(runencrypted, correct);
+    ret = (strcmp(encrypted, correct) == 0);
+  }
+  memset (unencrypted, 0, strlen(unencrypted));
+  memset (runencrypted, 0, strlen(runencrypted));
+  free(runencrypted);
+  return ret;
 }
 
 
@@ -82,11 +110,11 @@ static int correct_password (struct passwd *pw) {
 
 void get_password(void) {
 
-  struct passwd *pwd;
+  static struct passwd pwd;
   int times = 0;
 
   do {
-    pwd = getpwuid(getuid());
+    pwd = *(getpwuid(getuid()));
     if (o_lock_all) {
       printf("The entire console display is now completely locked.\n"
 	     "You will not be able to switch to another virtual console.\n");
@@ -98,7 +126,7 @@ void get_password(void) {
     printf("Please enter the password to unlock.\n");
     fflush(stdout);
 
-    if (correct_password(pwd))
+    if (correct_password(&pwd))
       return;
 
     /* Need to slow down people who are trying to break in by brute force */
