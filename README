@@ -37,7 +37,13 @@ to switch to any console without typing your password.
   vlock -a, it is your own problem, not mine.  I warned you.
 
 The root password will *always* be able to unlock any vlock
-session.
+session.  If anyone else can log in as you, they can send a
+SIGKILL to vlock, which *will* kill it.  If you wish to
+avoid this, you may make a vlock account, and make vlock
+setuid vlock, or you may make vlock setuid root.  However,
+I do not guarantee that making vlock setuid is safe.  DO
+THIS ONLY AT YOUR OWN RISK.  I TAKE NO RESPONSIBILITY FOR
+THE CONSEQUENCES IF YOU MAKE vlock SETUID ROOT.
 
 The vlock binary can be installed wherever you like, with
 whatever name you like.  However, it will always call itself
@@ -48,21 +54,23 @@ use the source...
 
 *** Features: ***
 Currently, vlock doesn't have very many features.  It locks the
-console.  I started putting in hooks for fancy screen-saving
-neat-looking displays using vgalib, but haven't implemented
-anything yet, and probably never will.  If anyone is interested
-in doing this, please contact me.  A good screen saver, as is
-being discussed in c.o.l.d as I write this, would be far better.
-It would just have to be able to cooperate with vlock, or
-vice versa.
+console, and now will even try to lock other sessions as well.
+I hope that non-VC sessions will be locked securely, but I
+don't know for sure.
+
+I have removed the hooks for possible pattern displays.  Instead,
+if Linux ever gets a screen saver, I will consider making vlock
+cooperate with the screen saver.
+
 
 *** Shadow passwords: ***
 I don't use shadow passwords, so I can't test this with shadow
 passwords.  If you have shadow passwords, please compile this
 (at least input.c) with -SHADOW_PWD, and make vlock setuid
 root or setgid shadow (however your shadow password setup
-is done) and try it.  Please send me any patches needed to
-make it work.
+is done) and try it.  I have been given some patches for shadow
+support, and I hope that they work for everyone.  Please tell
+me if they don't.
 
   NOTICE:  Except for shadow passwords, this program does not
   need to run with any setuid or setgid priviledges, and I do
@@ -82,6 +90,12 @@ Root was not allowed to lock his tty because I took my
 password reading program from GNU su, for which it is
 appropriate for root not to be asked to enter a password...
 This was fixed March 21, 1994.
+
+Message said to use Control-function key, not Alt-function key.
+This was fixed March 23, 1994.
+
+SIGQUIT could break out of vlock in some cases.
+This was fixed March 23, 1994.
 
 
 Please send me any comments you have about vlock.  My
