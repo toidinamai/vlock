@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: input.c,v $
+ * Revision 1.10  1994/07/03  12:14:49  johnsonm
+ * Restores signal mask after getting password
+ *
  * Revision 1.9  1994/07/03  12:11:24  johnsonm
  * Updated shadow comment to explain.
  *
@@ -54,6 +57,10 @@
 #include <signal.h>
 #include <pwd.h>
 #ifdef SHADOW_PWD
+  /* Shadow passwd support; THIS IS NOT SAFE with some shadow password
+     versions, where some signals get ignored, and simple keystrokes
+     can terminate vlock.  This cannot be solved here; you have to
+     fix your shadow library or use a working one. */
 #include <shadow.h>
 #endif
 #include "vlock.h"
@@ -63,7 +70,7 @@
 #define INBUFSIZE 50
 
 
-static char rcsid[] = "$Id: input.c,v 1.10 1994/07/03 12:14:49 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.11 1994/07/03 12:19:29 johnsonm Exp $";
 
 
 /* correct_password() taken with some modifications from the GNU su.c */
@@ -77,10 +84,6 @@ static int correct_password (struct passwd *pw) {
   static struct passwd rpw;
 
 #ifdef SHADOW_PWD
-  /* Shadow passwd support; THIS IS NOT SAFE with some shadow password
-     versions, where some signals get ignored, and simple keystrokes
-     can terminate vlock.  This cannot be solved here; you have to
-     fix your shadow library or use a working one. */
   struct spwd *sp = getspnam(pw->pw_name);
 
   endspent ();
