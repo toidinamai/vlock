@@ -12,9 +12,12 @@
 
 /* RCS log:
  * $Log: input.c,v $
+ * Revision 1.2  1994/03/16  20:12:06  johnsonm
+ * Now almost working.  Need to get signals straightened out for
+ * second process.
+ *
  * Revision 1.1  1994/03/15  18:27:33  johnsonm
  * Initial revision
- *
  *
  */
 
@@ -26,48 +29,68 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.2 1994/03/16 20:12:06 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.3 1994/03/19 14:24:33 johnsonm Exp $";
 
 
-/* get_password() should fork a new process to get the password. */
-/* get_password() should return right away, but the new process  */
-/* should not exit until it gets a proper password.              */
+void synch(void) {
+ return;
+}
 
-/* size of input buffer.  Shouldn't probably be very big.  Try 1... */
-#define INBUFSIZE 1
+
+/* get_password() should not return until a correct password has been */
+/* entered. */
+
+/* size of input buffer. */
+#define INBUFSIZE 40
 
 void get_password(void) {
 
+  int c, i;
   pid_t pid;
   static char inbuf[INBUFSIZE];
+  char *inptr;
+  static struct passwd pwd;
 
-  if ((pid = fork()) < 0) {
-    perror("fork failed");
-    exit(1);
-  } else {
-    if (pid > 0) {
-      /* Parent */
-      return; /* to wait for signals, including SIGCHLD from this process... */
-    } else {
-      /* Child */
-      /* we need to ignore SIGCHLD now... */
-      ignore_sigchld();
-      printf("Please enter the password to unlock.\n");
-      printf("%s's password:", getpwuid(getuid())->pw_name);
-      fflush(stdout);
+  do {
+    printf("Please enter the password to unlock.\n");
+    printf("%s's password:", getpwuid(getuid())->pw_name);
+    fflush(stdout);
 
-      /* set the terminal characteristics to not echo, etc... */
-      set_terminal();
+    /* set the terminal characteristics to not echo, etc... */
+    set_terminal();
 
-      /* Should get password here... */
-      read(STDIN_FILENO, &inbuf, INBUFSIZE);
-
-      /* reset the terminal characteristics to echo again before exiting */
-      restore_terminal();
+    /* get password from user -- fgets() doesn't seem to work,
+       probably because we have screwed with terminal settings */
+    while (c = read(STDIN_FILENO, &inbuf[i], 1)) {
+      synch(); /* possible compiler bug... */
+      if (c > 0) {
+	if (i+c >= INBUFSIZE) {
+	  i = 0;
+	  continue;
+	}
+	if ((inbuf[i+c-1] == '\n') || (inbuf[i+c-1] == '\r')) {
+	  inbuf[i+c-1] == '\000';
+	  break; /* done reading password */
+	}
+	else
+	  i += c; /* read more */
+      } else
+	if (c == 0) {
+	  i = 0;
+	}
     }
-  }
-  fprintf(stderr, "exiting second process\n");
-  fflush(stderr);
-  exit(0);
 
+    /* get rid of return or newline */
+    if(inptr = strchr(inbuf, '\r') || (inptr = strchr(inbuf, '\n')))
+      *inptr = '\000';
+
+    /* should get password from /etc/password and encrypt user-provided
+       one and see if they match */
+
+  } while (0); /* this should strcmp the encrypted strings */
+
+  /* reset the terminal characteristics to echo again before exiting */
+  restore_terminal();
+  printf("\n");
+  
 }
