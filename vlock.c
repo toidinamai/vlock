@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: vlock.c,v $
+ * Revision 1.7  1994/03/19  17:54:42  johnsonm
+ * Moved printing the lock message to get_password.  Added a return
+ * code again.
+ *
  * Revision 1.6  1994/03/19  14:36:08  johnsonm
  * Made a better explanation for when the --all or -a flag is chosen.
  *
@@ -51,7 +55,7 @@
 #include "version.h"
 
 
-static char rcsid[] = "$Id: vlock.c,v 1.7 1994/03/19 17:54:42 johnsonm Exp $";
+static char rcsid[] = "$Id: vlock.c,v 1.8 1994/03/20 11:21:20 johnsonm Exp $";
 
 /* Option globals */
   /* This determines whether the default behavior is to lock only the */
@@ -110,8 +114,11 @@ int main(int argc, char **argv) {
   }
 
   /* Now we have parsed the options, and can get on with life */
-  /* get the file descriptor (should check this...) */
-  vfd = open("/dev/console", O_RDWR);
+  if (vfd = open("/dev/console", O_RDWR) < 0) {
+    perror("vlock: could not open /dev/console");
+    exit (1);
+  }
+
   /* First we will set process control of VC switching; if this fails, */
   /* then we know that we aren't on a VC, and will print a message and */
   /* exit.   If it doesn't fail, it gets the current VT status... */
