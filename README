@@ -36,6 +36,14 @@ to switch to any console without typing your password.
   data because you have to reset your computer because of
   vlock -a, it is your own problem, not mine.  I warned you.
 
+The root password will *always* be able to unlock any vlock
+session.
+
+The vlock binary can be installed wherever you like, with
+whatever name you like.  However, it will always call itself
+vlock, even if you rename it.  If you want to change that,
+use the source...
+
 "vlock -h" or "vlock --help" will get you a help message.
 
 Features:
