@@ -30,6 +30,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/types.h>
 #include <pwd.h>
 #ifdef SHADOW_PWD
   /* Shadow passwd support; THIS IS NOT SAFE with some very old versions
@@ -123,7 +124,7 @@ static struct pam_conv PAM_conversation = {
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.16 1997/10/10 17:08:14 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.17 1997/10/10 17:10:27 johnsonm Exp $";
 
 
 static char username[40]; /* current user's name */
