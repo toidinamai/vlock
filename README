@@ -62,6 +62,10 @@ console, and now will even try to lock other sessions as well.
 I hope that non-VC sessions will be locked securely, but I
 don't know for sure.
 
+*** PAM: ***
+vlock supports PAM authentication with the USE_PAM compile-time
+flag.
+
 *** Shadow passwords: ***
 Compile with -DSHADOW_PWD, and make vlock setuid root or setgid shadow
 (however your shadow password setup is done).  However, there are
@@ -127,9 +131,7 @@ SIGQUIT could break out of vlock in some cases.
 This was fixed March 23, 1994.
 
 
-Please send me any comments you have about vlock.  My
-name is Michael K. Johnson, and my email address is
-johnsonm@redhat.com
+Please email me any comments you have about vlock: johnsonm@redhat.com
 
 I wrote this code as a demonstration of the VT ioctls for Linux
 Journal.  Subscription information is available on the web at
