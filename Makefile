@@ -1,6 +1,9 @@
+# vlock makefile
+
 CC = gcc
-CFLAGS = -O2
-LDFLAGS = -s
+# remove the -DUSE_PAM, -ldl, and -lpam if you aren't using PAM
+CFLAGS = -O2 -DUSE_PAM
+LDFLAGS = -ldl -lpam
 
 OBJS = vlock.o signals.o help.o terminal.o input.o
 
@@ -16,4 +19,5 @@ terminal.o: vlock.h
 input.o: vlock.h
 
 clean:
-	rm -f $(OBJS) vlock core.vlock
+	rm -f $(OBJS) vlock core core.vlock
+
