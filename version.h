@@ -11,9 +11,12 @@
  */
 
 /* RCS log:
- * $Log$
+ * $Log: version.h,v $
+ * Revision 1.1  1994/03/13  16:28:16  johnsonm
+ * Initial revision
+ *
  */
 
-static char rcsid_versionh[] = "$Id: version.h,v 1.1 1994/03/13 16:28:16 johnsonm Exp $";
+static char rcsid_versionh[] = "$Id: version.h,v 1.2 1994/03/13 17:31:16 johnsonm Exp $";
 
-#define VERSION "0.1"
+#define VERSION "vlock version 0.1\n"
