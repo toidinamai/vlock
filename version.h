@@ -10,6 +10,6 @@
  *
  */
 
-static char rcsid_versionh[] = "$Id: version.h,v 1.8 1997/10/10 17:08:15 johnsonm Exp $";
+static char rcsid_versionh[] = "$Id: version.h,v 1.9 1998/03/12 13:22:11 johnsonm Exp $";
 
-#define VERSION "vlock version 1.1\n"
+#define VERSION "vlock version 1.2\n"

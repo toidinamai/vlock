@@ -1,10 +1,10 @@
 Summary: locks one or more virtual consoles
 Name: vlock
-Version: 1.1
+Version: 1.2
 Release: 1
 Copyright: GPL
 Group: Utilities/Console
-Source: ftp://tsx-11.mit.edu:/pub/linux/sources/usr.bin/vlock-1.1.tar.gz
+Source: ftp://tsx-11.mit.edu:/pub/linux/sources/usr.bin/vlock-1.2.tar.gz
 Requires: pam >= 0.59
 BuildRoot: /tmp/vlock
 
@@ -16,6 +16,11 @@ these locks when either the password of the user who started vlock
 or the root password is typed.
 
 %changelog
+
+* Thu Mar 12 1998 Michael K. Johnson <johnsonm@redhat.com>
+
+- Does not create a DoS attack if pty is closed (not applicable
+  to use on a VC)
 
 * Fri Oct 10 1997 Michael K. Johnson <johnsonm@redhat.com>
 
