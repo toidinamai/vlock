@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: input.c,v $
+ * Revision 1.12  1994/07/03  12:29:27  johnsonm
+ * Don't restore terminal, which restores signals, which makes vlock -a
+ *   completely ineffective, until the correct password has been entered.
+ *
  * Revision 1.11  1994/07/03  12:19:29  johnsonm
  * Moved shadow comment to first SHADOW define.
  *
@@ -73,7 +77,7 @@
 #define INBUFSIZE 50
 
 
-static char rcsid[] = "$Id: input.c,v 1.12 1994/07/03 12:29:27 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.13 1994/07/03 13:07:47 johnsonm Exp $";
 
 
 /* correct_password() taken with some modifications from the GNU su.c */
@@ -102,8 +106,11 @@ static int correct_password (struct passwd *pw) {
   if (correct == 0 || correct[0] == '\0')
     return 1;
 
+  set_terminal(1);
   sprintf(user, "%s's password:", pw->pw_name);
+  set_terminal(0);
   unencrypted = getpass(user);
+  set_terminal(0);
   set_signal_mask(0); /* fix signals that probably have been disordered
 			 by getpass() */
   runencrypted = (char *) strdup(unencrypted);
@@ -148,6 +155,7 @@ void get_password(void) {
 
   do {
     pwd = *(getpwuid(getuid()));
+    set_terminal(1);
     if (o_lock_all) {
       printf("The entire console display is now completely locked.\n"
 	     "You will not be able to switch to another virtual console.\n");
@@ -160,7 +168,9 @@ void get_password(void) {
     printf("Please enter the password to unlock.\n");
     fflush(stdout);
 
+    /* correct_password() sets the terminal status as necessary */
     if (correct_password(&pwd)) {
+      restore_signals();
       restore_terminal();
       return;
     }
@@ -170,8 +180,8 @@ void get_password(void) {
     /* make it happen, even knowing the code and knowing how to try.      */
     /* If you manage to kill vlock from the terminal while in this code,  */
     /* please tell me how you did it.                                     */
-    set_terminal();
     sleep(++times);
+    set_terminal(1);
     printf(" *** That password is incorrect; please try again. *** \n");
     if (times >= 15) {
       printf("Slow down and try again in a while.\n");
