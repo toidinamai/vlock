@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: input.c,v $
+ * Revision 1.14  1996/05/17 02:49:46  johnsonm
+ * Added Marek's changes, which add proper shadow support, and fix
+ * a few other niggling bugs.
+ *
  * Revision 1.13  1994/07/03 13:07:47  johnsonm
  * Set and restore signals and terminal settings correctly.
  *
@@ -61,6 +65,21 @@
  *
  */
 
+  /* Marek hacked the code a bit:
+      - use /dev/tty instead of /dev/console (permissions on the latter
+        shouldn't allow all users to open it)
+      - get encrypted password once at startup, drop privileges as soon
+        as possible (we have to be setuid root for shadow passwords)
+        * This may not be a good idea, because it makes vlock a way for
+          the user to get at root's encrypted password (if user can
+          ptrace process after setuid(getuid()); -- check this)
+        * (probably) can't give up id with PAM anyway, at least with
+          shadow
+      - error message instead of core dump if getpwuid() returns NULL
+      - added check if encrypted password is valid (>=13 characters)
+      - terminal modes should be properly restored (don't leave echo off)
+        if getpass() fails.
+  */
 
 #include <stdio.h>
 #include <string.h>
@@ -68,45 +87,113 @@
 #include <signal.h>
 #include <pwd.h>
 #ifdef SHADOW_PWD
-  /* Shadow passwd support; THIS IS NOT SAFE with some shadow password
-     versions, where some signals get ignored, and simple keystrokes
-     can terminate vlock.  This cannot be solved here; you have to
-     fix your shadow library or use a working one. */
+  /* Shadow passwd support; THIS IS NOT SAFE with some very old versions
+     of the shadow password suite, where some signals get ignored, and
+     simple keystrokes can terminate vlock.  This cannot be solved here;
+     you have to fix your shadow library or use a working one. */
 
   /* Current shadow maintainer's note: it should no longer be a problem
      with libc5 because we don't need to link with libshadow.a at all
-     (shadow passwords are now supported in the standard libc).
+     (shadow passwords are now supported in the standard libc). */
 
-     I also hacked the code a bit:
-      - use /dev/tty instead of /dev/console (permissions on the latter
-        shouldn't allow all users to open it)
-      - get encrypted password once at startup, drop privileges as soon
-        as possible (we have to be setuid root for shadow passwords)
-      - error message instead of core dump if getpwuid() returns NULL
-      - added check if encrypted password is valid (>=13 characters)
-      - terminal modes should be properly restored (don't leave echo off)
-        if getpass() fails.
-
-     -- Marek Michalkiewicz <marekm@i17linuxb.ists.pwr.wroc.pl> */
 
 #include <shadow.h>
 #endif
+
+
+#ifdef USE_PAM
+  /* PAM -- Pluggable Authentication Modules support
+     With any luck, PAM will be *the* method through which authentication
+     is done under Linux.  Very flexible; allows any authentication method
+     to work according to a configuration file.
+  */
+  /* PAM subsumes shadow, and doesn't mesh with shadow-specific code */
+#ifdef SHADOW_PWD
+#error "Shadow and PAM don't mix!"
+#endif
+
+#include <security/pam_appl.h>
+/* Static variables used to communicate between the conversation function
+ * and the server_login function
+ */
+static char *PAM_username;
+static char *PAM_password;
+
+/* PAM conversation function
+ * Here we assume (for now, at least) that echo on means login name, and
+ * echo off means password.
+ */
+static int PAM_conv (int num_msg,
+                     const struct pam_message **msg,
+		     struct pam_response **resp,
+		     void *appdata_ptr) {
+  int count = 0, replies = 0;
+  struct pam_response *reply = NULL;
+  int size = sizeof(struct pam_response);
+
+  #define GET_MEM if (reply) realloc(reply, size); else reply = malloc(size); \
+  if (!reply) return PAM_CONV_ERR; \
+  size += sizeof(struct pam_response)
+  #define COPY_STRING(s) (s) ? strdup(s) : NULL
+
+  for (count = 0; count < num_msg; count++) {
+    switch (msg[count]->msg_style) {
+      case PAM_PROMPT_ECHO_ON:
+        GET_MEM;
+        reply[replies].resp_retcode = PAM_SUCCESS;
+	reply[replies++].resp = COPY_STRING(PAM_username);
+          /* PAM frees resp */
+        break;
+      case PAM_PROMPT_ECHO_OFF:
+        GET_MEM;
+        reply[replies].resp_retcode = PAM_SUCCESS;
+	reply[replies++].resp = COPY_STRING(PAM_password);
+          /* PAM frees resp */
+        break;
+      case PAM_TEXT_INFO:
+        /* ignore it... */
+        break;
+      case PAM_ERROR_MSG:
+      default:
+        /* Must be an error of some sort... */
+        free (reply);
+        return PAM_CONV_ERR;
+    }
+  }
+  if (reply) *resp = reply;
+  return PAM_SUCCESS;
+}
+static struct pam_conv PAM_conversation = {
+    &PAM_conv,
+    NULL
+};
+
+#endif /* USE_PAM */
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.14 1996/05/17 02:49:46 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.15 1996/06/21 23:27:17 johnsonm Exp $";
 
 
 static char username[40]; /* current user's name */
 static char prompt[100];  /* password prompt ("user's password: ") */
+#ifndef USE_PAM
 static char userpw[200];  /* current user's encrypted password */
 #ifndef NO_ROOT_PASS
 static char rootpw[200];  /* root's encrypted password */
 #endif
+#endif /* !USE_PAM */
+
+
+
 static int
 correct_password(void)
 {
   char *pass;
+#ifdef USE_PAM
+  pam_handle_t *pamh;
+  int pam_error;
+#endif
 
   pass = getpass(prompt);
   if (!pass) {
@@ -117,6 +204,36 @@ correct_password(void)
   /* fix signals that probably have been disordered by getpass() */
   set_signal_mask(0);
 
+#ifdef USE_PAM
+  /* Now use PAM to do authentication.
+   */
+  #define PAM_BAIL if (pam_error != PAM_SUCCESS) { \
+     pam_end(pamh, 0); \
+     memset(pass, 0, strlen(pass)); \
+     return 0; \
+     }
+  PAM_password = pass;
+  PAM_username = username;
+  pam_error = pam_start("vlock", username, &PAM_conversation, &pamh);
+  PAM_BAIL;
+  pam_error = pam_authenticate(pamh, 0);
+#ifdef NO_ROOT_PASS
+  PAM_BAIL;
+#else
+  if (pam_error != PAM_SUCCESS) {
+    /* Try as root; bail if no success there either */
+    pam_error = pam_set_item(pamh, PAM_USER, "root");
+    PAM_BAIL;
+    pam_error = pam_authenticate(pamh, 0);
+    PAM_BAIL;
+  }
+#endif /* !NO_ROOT_PASS */
+  pam_end(pamh, PAM_SUCCESS);
+  /* If this point is reached, the user has been authenticated. */
+  memset(pass, 0, strlen(pass));
+  return 1;
+
+#else /* !PAM */
   if (strcmp(crypt(pass, userpw), userpw) == 0) {
     memset(pass, 0, strlen(pass));
     return 1;
@@ -128,6 +245,8 @@ correct_password(void)
     return 1;
   }
 #endif
+#endif /* !USE_PAM */
+
   memset(pass, 0, strlen(pass));
   return 0;
 }
@@ -188,7 +307,12 @@ get_password(void)
       - before locking, we can check if any real password has a chance
         to match the encrypted password (should be >=13 chars)
       - this is the same way xlockmore does it.
-     Warning: this code runs as root - be careful if you modify it.  */
+     Warning: this code runs as root - be careful if you modify it.
+
+     With PAM, applications never see encrypted passwords, so we can't
+     get the encrypted password ahead of time.  We just have to hope
+     things work later on, just like we do with PAMified xlockmore.
+   */
 
 static struct passwd *
 my_getpwuid(uid_t uid)
@@ -221,11 +345,12 @@ init_passwords(void)
   pw = my_getpwuid(getuid());
 
   /* Save the results where they will not get overwritten.  */
-  strncpy(userpw, pw->pw_passwd, sizeof(userpw) - 1);
-  userpw[sizeof(userpw) - 1] = '\0';
-
   strncpy(username, pw->pw_name, sizeof(username) - 1);
   username[sizeof(username) - 1] = '\0';
+
+#ifndef USE_PAM
+  strncpy(userpw, pw->pw_passwd, sizeof(userpw) - 1);
+  userpw[sizeof(userpw) - 1] = '\0';
 
   if (strlen(userpw) < 13) {
     /* To do: ask for password to use instead of login password.  */
@@ -240,10 +365,12 @@ init_passwords(void)
 
   strncpy(rootpw, pw->pw_passwd, sizeof(rootpw) - 1);
   rootpw[sizeof(rootpw) - 1] = '\0';
-#endif /* NO_ROOT_PASS */
+#endif /* !NO_ROOT_PASS */
 
   /* We don't need root privileges any longer.  */
   setuid(getuid());
+#endif /* !USE_PAM */
 
   sprintf(prompt, "%s's password: ", username);
 }
+
