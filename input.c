@@ -71,7 +71,7 @@ static struct pam_conv PAM_conversation = {
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.22 1997/10/10 21:30:14 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.23 1998/03/12 13:11:04 johnsonm Exp $";
 
 
 static char prompt[100];  /* password prompt ("user's password: ") */
@@ -133,6 +133,13 @@ correct_password(void)
 #else /* !PAM */
   char *pass;
 
+  pass = getpass(prompt);
+  if (!pass) {
+    perror("getpass: cannot open /dev/tty");
+    restore_terminal();
+    exit(1);
+  }
+
   if (strcmp(crypt(pass, userpw), userpw) == 0) {
     memset(pass, 0, strlen(pass));
     return 1;
@@ -180,6 +187,17 @@ get_password(void)
       restore_terminal();
       return;
     }
+
+    /* correct_password() may have failed to return success because the   */
+    /* terminal is closed.  In this case, it would not be appropriate to  */
+    /* try again...                                                       */
+    if (isatty(STDIN_FILENO) == 0) {
+	perror("isatty");
+	restore_terminal();
+	exit(1);
+    }
+
+
     /* Need to slow down people who are trying to break in by brute force */
     /* Note that it is technically possible to break this, but I can't    */
     /* make it happen, even knowing the code and knowing how to try.      */
