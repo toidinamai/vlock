@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: version.h,v $
+ * Revision 1.6  1996/05/17 02:37:40  johnsonm
+ * Marek's massive changes include proper support for shadow passwords.
+ *
  * Revision 1.5  1994/07/03 13:23:42  johnsonm
  * Version 0.8 fixes several security bugs, including -a not working on
  *   second and subsequent tries at the password, and SIGINT possibly
@@ -31,6 +34,6 @@
  *
  */
 
-static char rcsid_versionh[] = "$Id: version.h,v 1.6 1996/05/17 02:37:40 johnsonm Exp $";
+static char rcsid_versionh[] = "$Id: version.h,v 1.7 1996/06/21 23:27:09 johnsonm Exp $";
 
-#define VERSION "vlock version 0.9\n"
+#define VERSION "vlock version 1.0\n"
