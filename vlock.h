@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: vlock.h,v $
+ * Revision 1.6  1994/03/23  17:02:59  johnsonm
+ * This time *really* removed the pattern-list support...
+ *
  * Revision 1.5  1994/03/23  17:01:54  johnsonm
  * Removed appendages for pattern display.
  * Added support for non-VT ttys.
@@ -31,7 +34,7 @@
  *
  */
 
-static char rcsid_vlockh[] = "$Id: vlock.h,v 1.6 1994/03/23 17:02:59 johnsonm Exp $";
+static char rcsid_vlockh[] = "$Id: vlock.h,v 1.7 1994/07/03 12:09:48 johnsonm Exp $";
 
 
 #define O_PATTERN 1
@@ -41,6 +44,7 @@ static char rcsid_vlockh[] = "$Id: vlock.h,v 1.6 1994/03/23 17:02:59 johnsonm Ex
 
 void release_vt(int signo);
 void acquire_vt(int signo);
+void set_signal_mask(int save);
 void mask_signals(void);
 void restore_signals(void);
 void set_terminal(void);
