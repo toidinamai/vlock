@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: vlock.h,v $
+ * Revision 1.5  1994/03/23  17:01:54  johnsonm
+ * Removed appendages for pattern display.
+ * Added support for non-VT ttys.
+ *
  * Revision 1.4  1994/03/19  14:29:58  johnsonm
  * No longer need to deal with two-process model.
  *
@@ -27,7 +31,7 @@
  *
  */
 
-static char rcsid_vlockh[] = "$Id: vlock.h,v 1.5 1994/03/23 17:01:54 johnsonm Exp $";
+static char rcsid_vlockh[] = "$Id: vlock.h,v 1.6 1994/03/23 17:02:59 johnsonm Exp $";
 
 
 #define O_PATTERN 1
@@ -50,9 +54,6 @@ void get_password(void);
   /* This determines whether the default behavior is to lock only the */
   /* current VT or all of them.  0 means current, 1 means all. */
   extern int o_lock_all;
-  /* Pattern lists are not yet really supported, but we'll put in the */
-  /* infrastructure for when they are. */
-  extern Pattern *o_pattern_list;
 
 /* Other globals: */
   /* Copy of the VT mode when the program was started */
