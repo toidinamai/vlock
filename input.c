@@ -12,6 +12,12 @@
 
 /* RCS log:
  * $Log: input.c,v $
+ * Revision 1.6  1994/03/21  17:30:55  johnsonm
+ * Allow root to lock console.  Was only disallowed because I took
+ * the correct_password function from gnu su, where of course root
+ * automatically succeeds at entering the password without haveing
+ * to enter it.  Oops.
+ *
  * Revision 1.5  1994/03/20  13:13:48  johnsonm
  * Added code so that root password unlocks the session too.
  *
@@ -47,7 +53,7 @@
 #define INBUFSIZE 50
 
 
-static char rcsid[] = "$Id: input.c,v 1.6 1994/03/21 17:30:55 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.7 1994/03/21 17:33:33 johnsonm Exp $";
 
 
 /* correct_password() taken with some modifications from the GNU su.c */
@@ -126,8 +132,8 @@ void get_password(void) {
 	     "You will not be able to switch to another virtual console.\n");
 
     } else {
-      printf("This TTY is now locked.  Use Control-function keys to switch\n"
-	     "to other virtual consoles.\n");
+      printf("This TTY is now locked.\n"
+	     "Use Control-function keys to switch to other virtual consoles.\n");
     }
     printf("Please enter the password to unlock.\n");
     fflush(stdout);
