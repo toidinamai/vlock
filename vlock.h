@@ -1,7 +1,7 @@
 /* vlock.h -- main header file for vlock, the VT locking program for linux
  *
  * This program is copyright (C) 1994 Michael K. Johnson, and is free
- * software, which is freely distributable under the terms of the
+ * software which is freely distributable under the terms of the
  * GNU public license, included as the file COPYING in this
  * distribution.  It is NOT public domain software, and any
  * redistribution not permitted by the GNU Public License is
@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: vlock.h,v $
+ * Revision 1.7  1994/07/03  12:09:48  johnsonm
+ * Added set_signal_mask()
+ *
  * Revision 1.6  1994/03/23  17:02:59  johnsonm
  * This time *really* removed the pattern-list support...
  *
@@ -34,7 +37,7 @@
  *
  */
 
-static char rcsid_vlockh[] = "$Id: vlock.h,v 1.7 1994/07/03 12:09:48 johnsonm Exp $";
+static char rcsid_vlockh[] = "$Id: vlock.h,v 1.8 1994/07/03 12:15:03 johnsonm Exp $";
 
 
 #define O_PATTERN 1
