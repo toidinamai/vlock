@@ -11,7 +11,10 @@
  */
 
 /* RCS log:
- * $Log$
+ * $Log: terminal.c,v $
+ * Revision 1.1  1994/03/15  18:27:33  johnsonm
+ * Initial revision
+ *
  *
  */
 
@@ -23,7 +26,7 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: terminal.c,v 1.1 1994/03/15 18:27:33 johnsonm Exp $";
+static char rcsid[] = "$Id: terminal.c,v 1.2 1994/03/17 18:22:08 johnsonm Exp $";
 
 
 void set_terminal(void) {
@@ -46,7 +49,6 @@ void restore_terminal(void) {
     ioctl(vfd, VT_SETMODE, &ovtm);
     tcsetattr(STDIN_FILENO, TCSANOW, &oterm);
     restore_signals();
-    printf("\n");
 
 }
 
