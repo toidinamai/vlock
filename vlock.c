@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: vlock.c,v $
+ * Revision 1.2  1994/03/13  17:28:56  johnsonm
+ * Now using SIGUSR{1,2} correctly to announce VC switches.  Fixed a few
+ * other minor bugs.
+ *
  * Revision 1.1  1994/03/13  16:28:16  johnsonm
  * Initial revision
  *
@@ -32,7 +36,7 @@
 #include "version.h"
 
 
-static char rcsid[] = "$Id: vlock.c,v 1.2 1994/03/13 17:28:56 johnsonm Exp $";
+static char rcsid[] = "$Id: vlock.c,v 1.3 1994/03/15 18:27:33 johnsonm Exp $";
 
 /* Option globals */
   /* This determines whether the default behavior is to lock only the */
@@ -44,6 +48,8 @@ static char rcsid[] = "$Id: vlock.c,v 1.2 1994/03/13 17:28:56 johnsonm Exp $";
 
 /* Other globals */
   struct vt_mode ovtm;
+  struct termios oterm;
+  int vfd;
 
 int main(int argc, char **argv) {
 
@@ -51,15 +57,13 @@ int main(int argc, char **argv) {
     {"current", 0, &o_lock_all, 0},
     {"all", 0, &o_lock_all, 1},
     {"pattern", required_argument, 0, O_PATTERN},
-    {"version", required_argument, 0, O_VERSION},
-    {"help", required_argument, 0, O_HELP},
+    {"version", no_argument, 0, O_VERSION},
+    {"help", no_argument, 0, O_HELP},
     {0, 0, 0, 0},
   };
   int option_index; /* Unused */
   int c;
   struct vt_mode vtm;
-  struct termios oterm, term;
-  int fd;
 
   /* First we parse all the command line arguments */
   while ((c = getopt_long(argc, argv, "acvhp:",
@@ -92,41 +96,43 @@ int main(int argc, char **argv) {
 
   /* Now we have parsed the options, and can get on with life */
   /* get the file descriptor (should check this...) */
-  fd = open("/dev/console", O_RDWR);
+  vfd = open("/dev/console", O_RDWR);
   /* First we will set process control of VC switching; if this fails, */
   /* then we know that we aren't on a VC, and will print a message and */
-  /* exit. */
-  c = ioctl(fd, VT_GETMODE, &vtm);
+  /* exit.   If it doesn't fail, it gets the current VT status... */
+  c = ioctl(vfd, VT_GETMODE, &vtm);
   if (c < 0) {
     fprintf(stderr, "This tty is not a VC (virtual console), and cannot be locked.\n\n");
     print_help(1);
   }
+
+  /* Now set the signals so we can't be summarily executed or stopped, */
+  /* and handle SIGUSR{1,2} and SIGCHLD */
+  mask_signals();
+
   ovtm = vtm; /* Keep a copy around to restore at appropriate times */
   vtm.mode = VT_PROCESS;
   vtm.relsig = SIGUSR1; /* handled by release_vt() */
   vtm.acqsig = SIGUSR2; /* handled by acquire_vt() */
-  /* Now set the signals so we can't be summarily executed or stopped, */
-  /* and handle SIGUSR{1,2} */
-  mask_signals();
-  c = ioctl(fd, VT_SETMODE, &vtm);
+  ioctl(vfd, VT_SETMODE, &vtm);
 
   printf("Your TTY is now locked.  Please enter the password to unlock.\n");
   printf("%s's password:", getpwuid(getuid())->pw_name);
 
-  tcgetattr(STDIN_FILENO, &oterm);
-  term=oterm;
-  term.c_iflag &= !BRKINT;
-  term.c_iflag |= IGNBRK;
-  term.c_lflag &= !(ECHO | ECHOCTL | ISIG);
-  tcsetattr(STDIN_FILENO, TCSANOW, &term);
+  set_terminal();
 
-  getchar();
+  /* I'd like to use getchar() here for testing now, but I can't; */
+  /* signals aren't being handled until that system call returns. */
+  get_password();
 
-  printf("\n");
-
-  /* restore the VT settings before exiting */
-  c = ioctl(fd, VT_SETMODE, &ovtm);
-  tcsetattr(STDIN_FILENO, TCSANOW, &oterm);
+  /* Now, get_password will fork the child process and return, and    */
+  /* signal_die() will get the SIGCHLD.  In the meantime, we need to  */
+  /* make a way for all signals to get through as soon as they come.  */
+  /* signal_die() will be responsible for exiting if a SIGCHLD is     */
+  /* received from the password-getting child exiting.  That child is */
+  /* responsible not to die until it gets a proper password.          */
+  while(1)
+    pause();
 
 }
 
