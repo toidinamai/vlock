@@ -64,7 +64,10 @@ don't know for sure.
 
 *** PAM: ***
 vlock supports PAM authentication with the USE_PAM compile-time
-flag.
+flag.  It will try to authenticate the user's password in a
+separate pass from root's password, instead of quietly trying
+the password as both the user and root.  This is to let PAM do
+all the authentication including asking for the password itself.
 
 *** Shadow passwords: ***
 Compile with -DSHADOW_PWD, and make vlock setuid root or setgid shadow
