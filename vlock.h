@@ -10,9 +10,6 @@
  *
  */
 
-static char rcsid_vlockh[] = "$Id: vlock.h,v 1.11 1997/10/10 17:08:16 johnsonm Exp $";
-
-
 #define O_PATTERN 1
 #define O_VERSION 2
 #define O_HELP    3

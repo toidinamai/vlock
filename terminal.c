@@ -19,9 +19,6 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: terminal.c,v 1.8 1997/10/10 17:08:15 johnsonm Exp $";
-
-
 void set_terminal(int print) {
 
   static struct termios term;
