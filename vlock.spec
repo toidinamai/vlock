@@ -34,7 +34,6 @@ or the root password is typed.
 
 %prep 
 %setup
-%patch -p1
 
 %build
 make
