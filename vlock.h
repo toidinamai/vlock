@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: vlock.h,v $
+ * Revision 1.8  1994/07/03  12:15:03  johnsonm
+ * *** empty log message ***
+ *
  * Revision 1.7  1994/07/03  12:09:48  johnsonm
  * Added set_signal_mask()
  *
@@ -37,7 +40,7 @@
  *
  */
 
-static char rcsid_vlockh[] = "$Id: vlock.h,v 1.8 1994/07/03 12:15:03 johnsonm Exp $";
+static char rcsid_vlockh[] = "$Id: vlock.h,v 1.9 1994/07/03 13:10:28 johnsonm Exp $";
 
 
 #define O_PATTERN 1
@@ -50,7 +53,7 @@ void acquire_vt(int signo);
 void set_signal_mask(int save);
 void mask_signals(void);
 void restore_signals(void);
-void set_terminal(void);
+void set_terminal(int print);
 void restore_terminal(void);
 void get_password(void);
 
