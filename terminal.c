@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: terminal.c,v $
+ * Revision 1.4  1994/07/03  12:25:26  johnsonm
+ * Only get old terminal characteristics the first time.
+ *
  * Revision 1.3  1994/03/23  17:01:01  johnsonm
  * Added support for non-vt ttys.
  *
@@ -32,7 +35,7 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: terminal.c,v 1.4 1994/07/03 12:25:26 johnsonm Exp $";
+static char rcsid[] = "$Id: terminal.c,v 1.5 1994/07/03 12:31:26 johnsonm Exp $";
 
 
 void set_terminal(void) {
@@ -60,7 +63,6 @@ void restore_terminal(void) {
     ioctl(vfd, VT_SETMODE, &ovtm);
   }
   tcsetattr(STDIN_FILENO, TCSANOW, &oterm);
-  restore_signals();
 
 }
 
