@@ -12,6 +12,11 @@
 
 /* RCS log:
  * $Log: signals.c,v $
+ * Revision 1.8  1994/07/03 13:09:18  johnsonm
+ * Added support for setting the signal mask with or without saving the
+ *   old mask.
+ * Added handling SIGTSTP back in; apparantly it is important in some cases.
+ *
  * Revision 1.7  1994/07/03  12:01:53  johnsonm
  * Added SIGINT handling so ctrl-break won't kill it.
  *
@@ -46,11 +51,12 @@
 #include <unistd.h>
 #include <signal.h>
 #include <waitflags.h>
-#include <linux/vt.h>
+#include <sys/ioctl.h>
+#include <sys/vt.h>
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: signals.c,v 1.8 1994/07/03 13:09:18 johnsonm Exp $";
+static char rcsid[] = "$Id: signals.c,v 1.9 1996/05/17 02:50:28 johnsonm Exp $";
 
 
 
