@@ -1,7 +1,7 @@
 /* signals.c -- signal handline routine for vlock
  *
  * This program is copyright (C) 1994 Michael K. Johnson, and is free
- * software, which is freely distributable under the terms of the
+ * software which is freely distributable under the terms of the
  * GNU public license, included as the file COPYING in this
  * distribution.  It is NOT public domain software, and any
  * redistribution not permitted by the GNU Public License is
@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: signals.c,v $
+ * Revision 1.6  1994/03/23  17:01:25  johnsonm
+ * Fixed SIGQUIT bug.
+ * Added support for non-vt ttys.
+ *
  * Revision 1.5  1994/03/19  14:28:18  johnsonm
  * Removed support for silly two-process idea.  signal mask no longer
  * inverse of what I want.  (I may have fixed this in an earlier
@@ -43,7 +47,7 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: signals.c,v 1.6 1994/03/23 17:01:25 johnsonm Exp $";
+static char rcsid[] = "$Id: signals.c,v 1.7 1994/07/03 12:01:53 johnsonm Exp $";
 
 
 
@@ -99,6 +103,7 @@ void mask_signals(void) {
   sigaddset(&sig, SIGHUP);
   sigaddset(&sig, SIGCHLD);
   sigaddset(&sig, SIGQUIT);
+  sigaddset(&sig, SIGINT);
   sigprocmask(SIG_SETMASK, &sig, &osig);
   
 
@@ -114,6 +119,7 @@ void mask_signals(void) {
   sa.sa_handler = signal_ignorer;
   sigaction(SIGHUP, &sa, NULL);
   sigaction(SIGQUIT, &sa, NULL);
+  sigaction(SIGINT, &sa, NULL);
 }
 
 
