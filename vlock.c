@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: vlock.c,v $
+ * Revision 1.10  1994/07/03  12:15:22  johnsonm
+ * *** empty log message ***
+ *
  * Revision 1.9  1994/03/23  17:00:47  johnsonm
  * Removed appendages for patterns.
  * Added support for non-VT ttys.
@@ -62,7 +65,7 @@
 #include "version.h"
 
 
-static char rcsid[] = "$Id: vlock.c,v 1.10 1994/07/03 12:15:22 johnsonm Exp $";
+static char rcsid[] = "$Id: vlock.c,v 1.11 1994/07/03 12:41:43 johnsonm Exp $";
 
 /* Option globals */
   /* This determines whether the default behavior is to lock only the */
@@ -155,9 +158,3 @@ int main(int argc, char **argv) {
 
 }
 
-/*
- * Local Variables: ***
- * mode:C ***
- * eval:(turn-on-auto-fill) ***
- * End: ***
- */
