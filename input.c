@@ -1,7 +1,7 @@
 /* input.c -- password getting module for vlock
  *
  * This program is copyright (C) 1994 Michael K. Johnson, and is free
- * software, which is freely distributable under the terms of the
+ * software which is freely distributable under the terms of the
  * GNU public license, included as the file COPYING in this
  * distribution.  It is NOT public domain software, and any
  * redistribution not permitted by the GNU Public License is
@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: input.c,v $
+ * Revision 1.9  1994/07/03  12:11:24  johnsonm
+ * Updated shadow comment to explain.
+ *
  * Revision 1.8  1994/03/23  17:00:01  johnsonm
  * Control-function -> Alt-function
  * Added support for non-vt consoles.
@@ -60,7 +63,7 @@
 #define INBUFSIZE 50
 
 
-static char rcsid[] = "$Id: input.c,v 1.9 1994/07/03 12:11:24 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.10 1994/07/03 12:14:49 johnsonm Exp $";
 
 
 /* correct_password() taken with some modifications from the GNU su.c */
@@ -95,6 +98,8 @@ static int correct_password (struct passwd *pw) {
 
   sprintf(user, "%s's password:", pw->pw_name);
   unencrypted = getpass(user);
+  set_signal_mask(0); /* fix signals that probably have been disordered
+			 by getpass() */
   runencrypted = (char *) strdup(unencrypted);
   if (unencrypted == NULL) {
     perror ("getpass: cannot open /dev/tty");
