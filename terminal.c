@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: terminal.c,v $
+ * Revision 1.2  1994/03/17  18:22:08  johnsonm
+ * Removed spurious printf.
+ *
  * Revision 1.1  1994/03/15  18:27:33  johnsonm
  * Initial revision
  *
@@ -26,7 +29,7 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: terminal.c,v 1.2 1994/03/17 18:22:08 johnsonm Exp $";
+static char rcsid[] = "$Id: terminal.c,v 1.3 1994/03/23 17:01:01 johnsonm Exp $";
 
 
 void set_terminal(void) {
@@ -46,9 +49,11 @@ void set_terminal(void) {
 
 void restore_terminal(void) {
 
+  if (is_vt) {
     ioctl(vfd, VT_SETMODE, &ovtm);
-    tcsetattr(STDIN_FILENO, TCSANOW, &oterm);
-    restore_signals();
+  }
+  tcsetattr(STDIN_FILENO, TCSANOW, &oterm);
+  restore_signals();
 
 }
 
