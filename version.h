@@ -12,11 +12,14 @@
 
 /* RCS log:
  * $Log: version.h,v $
+ * Revision 1.2  1994/03/13  17:31:16  johnsonm
+ * Made VERSION say more than a silly number, added a newline.
+ *
  * Revision 1.1  1994/03/13  16:28:16  johnsonm
  * Initial revision
  *
  */
 
-static char rcsid_versionh[] = "$Id: version.h,v 1.2 1994/03/13 17:31:16 johnsonm Exp $";
+static char rcsid_versionh[] = "$Id: version.h,v 1.3 1994/03/19 14:23:08 johnsonm Exp $";
 
-#define VERSION "vlock version 0.1\n"
+#define VERSION "vlock version 0.5\n"
