@@ -12,6 +12,11 @@
 
 /* RCS log:
  * $Log: signals.c,v $
+ * Revision 1.4  1994/03/16  20:11:04  johnsonm
+ * It mostly works -- child can still be killed by sigchld, which
+ * propogates to parent, which kills lock program.  However, locking
+ * all VC's does work if there is no other way to log on...
+ *
  * Revision 1.3  1994/03/15  18:27:33  johnsonm
  * Added a few more signals, in preparation for two-process model.
  *
@@ -33,7 +38,7 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: signals.c,v 1.4 1994/03/16 20:11:04 johnsonm Exp $";
+static char rcsid[] = "$Id: signals.c,v 1.5 1994/03/19 14:28:18 johnsonm Exp $";
 
 
 
@@ -69,19 +74,6 @@ void signal_ignorer(int signo) {
 
 
 
-void signal_die(int signo) {
-
-  if(waitpid(-1, NULL, WNOHANG)) {
-    /* The child must have read the correct password */
-    /* restore the VT settings before exiting */
-    restore_terminal();
-    exit(0);
-  }
-
-}
-
-
-
 static sigset_t osig; /* for both mask_signals() and restore_signals() */
 
 void mask_signals(void) {
@@ -103,7 +95,7 @@ void mask_signals(void) {
   sigaddset(&sig, SIGTTIN);
   sigaddset(&sig, SIGTTOU);
   sigaddset(&sig, SIGHUP);
-  sigdelset(&sig, SIGCHLD);
+  sigaddset(&sig, SIGCHLD);
   sigprocmask(SIG_SETMASK, &sig, &osig);
   
 
@@ -121,23 +113,6 @@ void mask_signals(void) {
   sigaction(SIGTTIN, &sa, NULL);
   sigaction(SIGTTOU, &sa, NULL);
   sigaction(SIGHUP, &sa, NULL);
-
-  /* We also need to get sigchld's so that we know if the child */
-  /* process has "returned" */
-  sa.sa_handler = signal_die;
-  sigaction(SIGCHLD, &sa, NULL);
-
-}
-
-
-void ignore_sigchld(void) {
-
-  static struct sigaction sa;
-
-  sigemptyset(&(sa.sa_mask));
-  sa.sa_flags = 0;
-  sa.sa_handler = signal_ignorer;
-  sigaction(SIGCHLD, &sa, NULL);
 
 }
 
