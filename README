@@ -111,6 +111,8 @@ maintains shadow for Linux.  He says:
   -- Marek Michalkiewicz <marekm@i17linuxb.ists.pwr.wroc.pl>
 
 *** Bugs fixed: ***
+Moved to new PAM conversationg function conventions.  October 10, 1997.
+
 Shadow support was minimal.  Fixed May 16, 1996.
 Used /dev/console instead of /dev/tty.  Fixed May 16, 1996.
 

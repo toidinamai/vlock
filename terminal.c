@@ -4,34 +4,9 @@
  * software which is freely distributable under the terms of the
  * GNU public license, included as the file COPYING in this
  * distribution.  It is NOT public domain software, and any
- * redistribution not permitted by the GNU Public License is
+ * redistribution not permitted by the GNU General Public License is
  * expressly forbidden without prior written permission from
  * the author.
- *
- */
-
-/* RCS log:
- * $Log: terminal.c,v $
- * Revision 1.6  1994/07/03 13:10:06  johnsonm
- * Allow setting terminal state back and forth on echo, but keep ignoring sig,
- *   based on an argument.
- *
- * Revision 1.5  1994/07/03  12:31:26  johnsonm
- * Don't restore signals when restoring the terminal state!  Let other code
- *   do that later, when the correct password has been entered.
- *
- * Revision 1.4  1994/07/03  12:25:26  johnsonm
- * Only get old terminal characteristics the first time.
- *
- * Revision 1.3  1994/03/23  17:01:01  johnsonm
- * Added support for non-vt ttys.
- *
- * Revision 1.2  1994/03/17  18:22:08  johnsonm
- * Removed spurious printf.
- *
- * Revision 1.1  1994/03/15  18:27:33  johnsonm
- * Initial revision
- *
  *
  */
 
@@ -44,7 +19,7 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: terminal.c,v 1.7 1996/05/17 02:50:54 johnsonm Exp $";
+static char rcsid[] = "$Id: terminal.c,v 1.8 1997/10/10 17:08:15 johnsonm Exp $";
 
 
 void set_terminal(int print) {

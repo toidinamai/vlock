@@ -4,46 +4,13 @@
  * software which is freely distributable under the terms of the
  * GNU public license, included as the file COPYING in this
  * distribution.  It is NOT public domain software, and any
- * redistribution not permitted by the GNU Public License is
+ * redistribution not permitted by the GNU General Public License is
  * expressly forbidden without prior written permission from
  * the author.
  *
  */
 
-/* RCS log:
- * $Log: vlock.h,v $
- * Revision 1.9  1994/07/03 13:10:28  johnsonm
- * Added print argument to set_terminal().
- *
- * Revision 1.8  1994/07/03  12:15:03  johnsonm
- * *** empty log message ***
- *
- * Revision 1.7  1994/07/03  12:09:48  johnsonm
- * Added set_signal_mask()
- *
- * Revision 1.6  1994/03/23  17:02:59  johnsonm
- * This time *really* removed the pattern-list support...
- *
- * Revision 1.5  1994/03/23  17:01:54  johnsonm
- * Removed appendages for pattern display.
- * Added support for non-VT ttys.
- *
- * Revision 1.4  1994/03/19  14:29:58  johnsonm
- * No longer need to deal with two-process model.
- *
- * Revision 1.3  1994/03/16  20:13:33  johnsonm
- * Added ignore_sigchld() for second process.  Not sure if that is
- * the right thing yet, since it doesn't seem to work quite.
- *
- * Revision 1.2  1994/03/15  18:27:33  johnsonm
- * Made consistent with all the changes in the other files...
- *
- * Revision 1.1  1994/03/13  16:28:16  johnsonm
- * Initial revision
- *
- */
-
-static char rcsid_vlockh[] = "$Id: vlock.h,v 1.10 1996/05/17 02:52:34 johnsonm Exp $";
+static char rcsid_vlockh[] = "$Id: vlock.h,v 1.11 1997/10/10 17:08:16 johnsonm Exp $";
 
 
 #define O_PATTERN 1

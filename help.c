@@ -4,16 +4,9 @@
  * software, which is freely distributable under the terms of the
  * GNU public license, included as the file COPYING in this
  * distribution.  It is NOT public domain software, and any
- * redistribution not permitted by the GNU Public License is
+ * redistribution not permitted by the GNU General Public License is
  * expressly forbidden without prior written permission from
  * the author.
- *
- */
-
-/* RCS log:
- * $Log: help.c,v $
- * Revision 1.1  1994/03/13  16:28:16  johnsonm
- * Initial revision
  *
  */
 
@@ -23,7 +16,7 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: help.c,v 1.2 1994/03/23 17:00:16 johnsonm Exp $";
+static char rcsid[] = "$Id: help.c,v 1.3 1997/10/10 17:08:14 johnsonm Exp $";
 
 
 void print_help(int exitcode) {

@@ -4,64 +4,9 @@
  * software which is freely distributable under the terms of the
  * GNU public license, included as the file COPYING in this
  * distribution.  It is NOT public domain software, and any
- * redistribution not permitted by the GNU Public License is
+ * redistribution not permitted by the GNU General Public License is
  * expressly forbidden without prior written permission from
  * the author.
- *
- */
-
-/* RCS log:
- * $Log: input.c,v $
- * Revision 1.14  1996/05/17 02:49:46  johnsonm
- * Added Marek's changes, which add proper shadow support, and fix
- * a few other niggling bugs.
- *
- * Revision 1.13  1994/07/03 13:07:47  johnsonm
- * Set and restore signals and terminal settings correctly.
- *
- * Revision 1.12  1994/07/03  12:29:27  johnsonm
- * Don't restore terminal, which restores signals, which makes vlock -a
- *   completely ineffective, until the correct password has been entered.
- *
- * Revision 1.11  1994/07/03  12:19:29  johnsonm
- * Moved shadow comment to first SHADOW define.
- *
- * Revision 1.10  1994/07/03  12:14:49  johnsonm
- * Restores signal mask after getting password
- *
- * Revision 1.9  1994/07/03  12:11:24  johnsonm
- * Updated shadow comment to explain.
- *
- * Revision 1.8  1994/03/23  17:00:01  johnsonm
- * Control-function -> Alt-function
- * Added support for non-vt consoles.
- *
- * Revision 1.7  1994/03/21  17:33:33  johnsonm
- * Reformatted "This TTY is now locked" message to read easier.
- *
- * Revision 1.6  1994/03/21  17:30:55  johnsonm
- * Allow root to lock console.  Was only disallowed because I took
- * the correct_password function from gnu su, where of course root
- * automatically succeeds at entering the password without haveing
- * to enter it.  Oops.
- *
- * Revision 1.5  1994/03/20  13:13:48  johnsonm
- * Added code so that root password unlocks the session too.
- *
- * Revision 1.4  1994/03/19  17:53:20  johnsonm
- * Password reading now works, thanks to the correct_password() routine
- * from GNU su.  No point in re-inventing the wheel...
- *
- * Revision 1.3  1994/03/19  14:24:33  johnsonm
- * Removed silly two-process model.  It's certainly not needed.
- * Also fixed occasional core dump.
- *
- * Revision 1.2  1994/03/16  20:12:06  johnsonm
- * Now almost working.  Need to get signals straightened out for
- * second process.
- *
- * Revision 1.1  1994/03/15  18:27:33  johnsonm
- * Initial revision
  *
  */
 
@@ -122,6 +67,7 @@ static char *PAM_password;
 /* PAM conversation function
  * Here we assume (for now, at least) that echo on means login name, and
  * echo off means password.
+ * FIXME: move to misc_conv and do things the right way!
  */
 static int PAM_conv (int num_msg,
                      const struct pam_message **msg,
@@ -131,36 +77,41 @@ static int PAM_conv (int num_msg,
   struct pam_response *reply = NULL;
   int size = sizeof(struct pam_response);
 
-  #define GET_MEM if (reply) realloc(reply, size); else reply = malloc(size); \
-  if (!reply) return PAM_CONV_ERR; \
-  size += sizeof(struct pam_response)
+  reply = malloc(sizeof(struct pam_response) * num_msg);
+  if (!reply) {
+    return PAM_CONV_ERR;
+  }
+
   #define COPY_STRING(s) (s) ? strdup(s) : NULL
 
-  for (count = 0; count < num_msg; count++) {
+  for (count = 0; count < num_msg; count++, replies++) {
     switch (msg[count]->msg_style) {
       case PAM_PROMPT_ECHO_ON:
-        GET_MEM;
         reply[replies].resp_retcode = PAM_SUCCESS;
-	reply[replies++].resp = COPY_STRING(PAM_username);
+	reply[replies].resp = COPY_STRING(PAM_username);
           /* PAM frees resp */
         break;
       case PAM_PROMPT_ECHO_OFF:
-        GET_MEM;
         reply[replies].resp_retcode = PAM_SUCCESS;
-	reply[replies++].resp = COPY_STRING(PAM_password);
+	reply[replies].resp = COPY_STRING(PAM_password);
           /* PAM frees resp */
         break;
       case PAM_TEXT_INFO:
+        reply[replies].resp_retcode = PAM_SUCCESS;
+	reply[replies].resp = NULL;
         /* ignore it... */
         break;
       case PAM_ERROR_MSG:
+        reply[replies].resp_retcode = PAM_SUCCESS;
+	reply[replies].resp = NULL;
+	break;
       default:
         /* Must be an error of some sort... */
         free (reply);
         return PAM_CONV_ERR;
     }
   }
-  if (reply) *resp = reply;
+  *resp = reply;
   return PAM_SUCCESS;
 }
 static struct pam_conv PAM_conversation = {
@@ -172,7 +123,7 @@ static struct pam_conv PAM_conversation = {
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.15 1996/06/21 23:27:17 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.16 1997/10/10 17:08:14 johnsonm Exp $";
 
 
 static char username[40]; /* current user's name */
