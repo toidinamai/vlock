@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: terminal.c,v $
+ * Revision 1.5  1994/07/03  12:31:26  johnsonm
+ * Don't restore signals when restoring the terminal state!  Let other code
+ *   do that later, when the correct password has been entered.
+ *
  * Revision 1.4  1994/07/03  12:25:26  johnsonm
  * Only get old terminal characteristics the first time.
  *
@@ -35,10 +39,10 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: terminal.c,v 1.5 1994/07/03 12:31:26 johnsonm Exp $";
+static char rcsid[] = "$Id: terminal.c,v 1.6 1994/07/03 13:10:06 johnsonm Exp $";
 
 
-void set_terminal(void) {
+void set_terminal(int print) {
 
   static struct termios term;
   static int already=0;
@@ -48,9 +52,13 @@ void set_terminal(void) {
     term=oterm;
     term.c_iflag &= !BRKINT;
     term.c_iflag |= IGNBRK;
-    term.c_lflag &= !(ECHO | ECHOCTL | ISIG);
+    term.c_lflag &= !(ISIG);
     already=1;
   }
+  if (print)
+    term.c_lflag |= (ECHO & ECHOCTL);
+  else
+    term.c_lflag &= !(ECHO | ECHOCTL);
   tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
 }
