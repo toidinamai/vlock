@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: vlock.c,v $
+ * Revision 1.5  1994/03/19  14:25:16  johnsonm
+ * Removed silly two-process model.  Must have been half asleep when
+ * I came up with that idea.  vlock works now.
+ *
  * Revision 1.4  1994/03/16  20:14:06  johnsonm
  * Cleaned up, putting most real work into child functions, which
  * cleaned up the interface.  The whole program is almost all
@@ -44,7 +48,7 @@
 #include "version.h"
 
 
-static char rcsid[] = "$Id: vlock.c,v 1.5 1994/03/19 14:25:16 johnsonm Exp $";
+static char rcsid[] = "$Id: vlock.c,v 1.6 1994/03/19 14:36:08 johnsonm Exp $";
 
 /* Option globals */
   /* This determines whether the default behavior is to lock only the */
@@ -125,7 +129,7 @@ int main(int argc, char **argv) {
   ioctl(vfd, VT_SETMODE, &vtm);
 
   if (o_lock_all) {
-    printf("This TTY is now completely locked.\n");
+    printf("The entire console display is now completely locked.\n");
   } else {
     printf("This TTY is now locked.  Use Control-function keys to switch\n"
 	   "to other virtual consoles.\n");
