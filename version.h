@@ -12,6 +12,11 @@
 
 /* RCS log:
  * $Log: version.h,v $
+ * Revision 1.5  1994/07/03 13:23:42  johnsonm
+ * Version 0.8 fixes several security bugs, including -a not working on
+ *   second and subsequent tries at the password, and SIGINT possibly
+ *   killing it, and Ctrl-Z giving it problems on some platforms.
+ *
  * Revision 1.4  1994/03/21  17:41:59  johnsonm
  * Bumped to version 0.6 for root bug fix.
  *
@@ -26,6 +31,6 @@
  *
  */
 
-static char rcsid_versionh[] = "$Id: version.h,v 1.5 1994/07/03 13:23:42 johnsonm Exp $";
+static char rcsid_versionh[] = "$Id: version.h,v 1.6 1996/05/17 02:37:40 johnsonm Exp $";
 
-#define VERSION "vlock version 0.8\n"
+#define VERSION "vlock version 0.9\n"
