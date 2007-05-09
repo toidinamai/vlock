@@ -20,6 +20,7 @@ void acquire_vt(int signo);
 void set_signal_mask(int save);
 void mask_signals(void);
 void restore_signals(void);
+void mask_sysrq(void);
 void set_terminal(int print);
 void restore_terminal(void);
 void get_password(void);
