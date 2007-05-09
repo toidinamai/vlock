@@ -9,7 +9,7 @@ vlock: $(OBJS)
 vlock.man: vlock.1
 	groff -man -Tascii $< > $@
 
-vlock.html.1: vlock.1
+vlock.1.html: vlock.1
 	groff -man -Thtml $< > $@
 
 vlock.o: vlock.h version.h
