@@ -26,14 +26,15 @@
         if getpass() fails.
   */
 
-#define _XOPEN_SOURCE 1 /* so unistd.h will define crypt() */
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <pwd.h>
+#define _XOPEN_SOURCE 1 /* so unistd.h will define crypt() */
+#include <unistd.h>
 #ifdef SHADOW_PWD
   /* Shadow passwd support; THIS IS NOT SAFE with some very old versions
      of the shadow password suite, where some signals get ignored, and
