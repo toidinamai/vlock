@@ -112,6 +112,7 @@ int main(int argc, char **argv) {
   mask_signals();
 
   if (o_lock_all && o_disable_sysrq)
+    /* disable the sysrq keys so we can't be killed through SAK or other keys */
     mask_sysrq();
 
   if (is_vt) {
