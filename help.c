@@ -26,6 +26,8 @@ void print_help(int exitcode) {
 	  "       switch to other virtual consoles.\n"
 	  "-a or --all: lock all virtual consoles by preventing other users\n"
 	  "       from switching virtual consoles.\n"
+	  "-s or --disable-sysrq: disable sysrq while consoles are locked to\n"
+	  "       prevent killing vlock with SAK, requires --all.\n"
 	  "-v or --version: Print the version number of vlock and exit.\n"
 	  "-h or --help: Print this help message and exit.\n"
 	  );
