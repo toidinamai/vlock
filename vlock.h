@@ -14,6 +14,9 @@
 #define O_VERSION 2
 #define O_HELP    3
 
+#ifndef LOCK_LOCATION
+#define LOCK_LOCATION "/var/run/vlock.lock"
+#endif
 
 void release_vt(int signo);
 void acquire_vt(int signo);
