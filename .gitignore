@@ -1,2 +1,4 @@
 *.o
 vlock
+vlock.man
+vlock.1.html
