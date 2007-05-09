@@ -6,7 +6,7 @@ RPM_OPT_FLAGS=-O2
 CFLAGS = $(RPM_OPT_FLAGS) -DUSE_PAM
 LDFLAGS = -ldl -lpam -lpam_misc
 
-OBJS = vlock.o signals.o help.o terminal.o input.o
+OBJS = vlock.o signals.o help.o terminal.o input.o sysrq.o
 
 vlock: $(OBJS)
 
