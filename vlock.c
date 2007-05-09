@@ -30,6 +30,10 @@
   /* current VT or all of them.  0 means current, 1 means all. */
   int o_lock_all = 0;
 
+  /* This determines whether the kernel.sysrq variable should be disabled */
+  /* while the VT is locked. This implies that all VTs should be locked. */
+  int o_disable_sysrq = 0;
+
 /* Other globals */
   struct vt_mode ovtm;
   struct termios oterm;
@@ -39,8 +43,9 @@
 int main(int argc, char **argv) {
 
   static struct option long_options[] = { /* For parsing long arguments */
-    {"current", 0, &o_lock_all, 0},
-    {"all", 0, &o_lock_all, 1},
+    {"current", no_argument, &o_lock_all, 0},
+    {"all", no_argument, &o_lock_all, 1},
+    {"disable-sysrq", no_argument, &o_disable_sysrq, 1},
     {"version", no_argument, 0, O_VERSION},
     {"help", no_argument, 0, O_HELP},
     {0, 0, 0, 0},
@@ -50,14 +55,17 @@ int main(int argc, char **argv) {
   struct vt_mode vtm;
 
   /* First we parse all the command line arguments */
-  while ((c = getopt_long(argc, argv, "acvh",
+  while ((c = getopt_long(argc, argv, "acsvh",
 			  long_options, &option_index)) != -1) {
     switch(c) {
     case 'c':
-      o_lock_all = 0;
+      o_lock_current = 0;
       break;
     case 'a':
       o_lock_all = 1;
+      break;
+    case 's':
+      o_disable_sysrq = 1;
       break;
     case 'v':
     case O_VERSION:
