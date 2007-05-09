@@ -1,17 +1,16 @@
 # vlock makefile
 
-CC = gcc
-# remove the -DUSE_PAM, -ldl, and -lpam if you aren't using PAM
-RPM_OPT_FLAGS=-O2
-CFLAGS = $(RPM_OPT_FLAGS) -DUSE_PAM
-LDFLAGS = -ldl -lpam -lpam_misc
+include config.mk
 
 OBJS = vlock.o signals.o help.o terminal.o input.o sysrq.o
 
 vlock: $(OBJS)
 
 vlock.man: vlock.1
-	groff -man -Tascii vlock.1 > vlock.man
+	groff -man -Tascii $< > $@
+
+vlock.html.1: vlock.1
+	groff -man -Thtml $< > $@
 
 vlock.o: vlock.h version.h
 signals.o: vlock.h
@@ -19,6 +18,11 @@ help.o: vlock.h
 terminal.o: vlock.h
 input.o: vlock.h
 
-clean:
-	rm -f $(OBJS) vlock core core.vlock
+.PHONY: install
+install: vlock
+	$(INSTALL) -m 4711 -o root -g root vlock $(PREFIX)/bin
+	$(INSTALL) -m 644 -o root -g root vlock.1 $(PREFIX)/share/man/man1
 
+.PHONY: clean
+clean:
+	rm -f $(OBJS) vlock vlock.man vlock.1.html
