@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
 			  long_options, &option_index)) != -1) {
     switch(c) {
     case 'c':
-      o_lock_current = 0;
+      o_lock_all = 0;
       break;
     case 'a':
       o_lock_all = 1;
@@ -110,6 +110,9 @@ int main(int argc, char **argv) {
   /* Now set the signals so we can't be summarily executed or stopped, */
   /* and handle SIGUSR{1,2} and SIGCHLD */
   mask_signals();
+
+  if (o_lock_all && o_disable_sysrq)
+    mask_sysrq();
 
   if (is_vt) {
     ovtm = vtm; /* Keep a copy around to restore at appropriate times */
