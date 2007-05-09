@@ -15,7 +15,7 @@
 #include <string.h>
 #include <errno.h>
 
-#define OLD_VALUE_LENGTH 256
+#define OLD_VALUE_LENGTH 8
 
 static const char SYSRQ_PATH[] = "/proc/sys/kernel/sysrq";
 static const char SYSRQ_DISABLE_VALUE[] = "0\n";
