@@ -2,7 +2,7 @@
  *
  * This program is copyright (C) 1994 Michael K. Johnson, and is free
  * software which is freely distributable under the terms of the
- * GNU public license, included as the file COPYING in this
+ * GNU public license version 2, included as the file COPYING in this
  * distribution.  It is NOT public domain software, and any
  * redistribution not permitted by the GNU General Public License is
  * expressly forbidden without prior written permission from
@@ -13,10 +13,6 @@
 #define O_PATTERN 1
 #define O_VERSION 2
 #define O_HELP    3
-
-#ifndef LOCK_LOCATION
-#define LOCK_LOCATION "/var/run/vlock.lock"
-#endif
 
 void release_vt(int signo);
 void acquire_vt(int signo);
