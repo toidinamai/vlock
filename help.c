@@ -28,10 +28,6 @@ void print_help(int exitcode) {
 	  "       from switching virtual consoles.\n"
 	  "-s or --disable-sysrq: disable sysrq while consoles are locked to\n"
 	  "       prevent killing vlock with SAK, requires --all.\n"
-	  "-n or --new-console: switch to a new console before locking the\n"
-	  "       display, requires --all.\n"
-	  "-o or --once: make sure the entire display is only locked once by\n"
-	  "       creating a lock file at " LOCK_LOCATION "\n"
 	  "-v or --version: Print the version number of vlock and exit.\n"
 	  "-h or --help: Print this help message and exit.\n"
 	  );
