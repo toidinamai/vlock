@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: signals.c,v $
+ * Revision 1.7  1994/07/03  12:01:53  johnsonm
+ * Added SIGINT handling so ctrl-break won't kill it.
+ *
  * Revision 1.6  1994/03/23  17:01:25  johnsonm
  * Fixed SIGQUIT bug.
  * Added support for non-vt ttys.
@@ -47,7 +50,7 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: signals.c,v 1.7 1994/07/03 12:01:53 johnsonm Exp $";
+static char rcsid[] = "$Id: signals.c,v 1.8 1994/07/03 13:09:18 johnsonm Exp $";
 
 
 
@@ -85,7 +88,9 @@ void signal_ignorer(int signo) {
 
 static sigset_t osig; /* for both mask_signals() and restore_signals() */
 
-void mask_signals(void) {
+
+
+void set_signal_mask(int save) {
 
   static sigset_t sig;
   static struct sigaction sa;
@@ -104,8 +109,10 @@ void mask_signals(void) {
   sigaddset(&sig, SIGCHLD);
   sigaddset(&sig, SIGQUIT);
   sigaddset(&sig, SIGINT);
-  sigprocmask(SIG_SETMASK, &sig, &osig);
-  
+  if (save)
+    sigprocmask(SIG_SETMASK, &sig, &osig);
+  else
+    sigprocmask(SIG_SETMASK, &sig, NULL);
 
   /* we set SIGUSR{1,2} to point to *_vt() above */
   sigemptyset(&(sa.sa_mask));
@@ -120,14 +127,25 @@ void mask_signals(void) {
   sigaction(SIGHUP, &sa, NULL);
   sigaction(SIGQUIT, &sa, NULL);
   sigaction(SIGINT, &sa, NULL);
+  sigaction(SIGTSTP, &sa, NULL);
 }
 
+
+
+
+
+void mask_signals(void) {
+
+  set_signal_mask(1);  /* set the signal masks and handlers and save */
+
+}
 
 
 void restore_signals(void) {
 
   /* This probably isn't useful, but I'm including it anyway... */
-  /* It might become useful later. */
+  /* It might become useful later, specifically if someone wants
+     to include this code within another program. */
   sigprocmask(SIG_SETMASK, &osig, NULL);
 
 
