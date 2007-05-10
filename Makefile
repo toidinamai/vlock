@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -O2
-LDFLAGS = -N -s
+LDFLAGS = -s
 
 OBJS = vlock.o signals.o help.o terminal.o input.o
 
