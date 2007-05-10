@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: signals.c,v $
+ * Revision 1.2  1994/03/13  17:27:44  johnsonm
+ * Now using SIGUSR{1,2} correctly with release_vt() and acquire_vt() to
+ * keep from switching VC's.
+ *
  * Revision 1.1  1994/03/13  16:28:16  johnsonm
  * Initial revision
  *
@@ -21,28 +25,28 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
+#include <waitflags.h>
 #include <linux/vt.h>
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: signals.c,v 1.2 1994/03/13 17:27:44 johnsonm Exp $";
+static char rcsid[] = "$Id: signals.c,v 1.3 1994/03/15 18:27:33 johnsonm Exp $";
 
 
 
 /* In release_vt() and acquire_vt(), anything which is done in
- * release_vt() must be undone in acquire_vt().
+ * release_vt() must be undone in acquire_vt().  Right now, that's
+ * not much...
  */
 
 
 /* This is called by a signal whenever a user tries to change the VC
    with a ALT-Fn key */
 void release_vt(int signo) {
-  printf("here\n");
-  if (!o_lock_all) {
-    ioctl(STDIN_FILENO, VT_RELDISP, 1); /* kernel is allowed to switch */
-  }
+  if (!o_lock_all)
+    ioctl(vfd, VT_RELDISP, 1); /* kernel is allowed to switch */
   else
-    ioctl(STDIN_FILENO, VT_RELDISP, 0); /* kernel is not allowed to switch */
+    ioctl(vfd, VT_RELDISP, 0); /* kernel is not allowed to switch */
 }
 
 
@@ -50,22 +54,47 @@ void release_vt(int signo) {
 void acquire_vt(int signo) {
   /* This call is not currently required under Linux, but it won't hurt,
      either... */
-  ioctl(STDIN_FILENO, VT_RELDISP, VT_ACKACQ);
+  ioctl(vfd, VT_RELDISP, VT_ACKACQ);
 }
 
 
 
-static sigset_t osig;
+void signal_ignorer(int signo) {
+  return;
+}
+
+
+
+
+void signal_die(int signo) {
+
+  if(!waitpid(-1, NULL, WNOHANG)) {
+    /* The child must have read the correct password */
+    /* restore the VT settings before exiting */
+    restore_terminal();
+    exit(0);
+  }
+
+}
+
+
+
+static sigset_t osig; /* for both mask_signals() and restore_signals() */
 
 void mask_signals(void) {
 
   static sigset_t sig;
   static struct sigaction sa;
 
-  /* We don't want to get any job control signals (or others...). */
+  /* We don't want to get any signals we don't have to. */
   sigemptyset(&sig);
   sigaddset(&sig, SIGUSR1);
   sigaddset(&sig, SIGUSR2);
+  sigaddset(&sig, SIGTSTP);
+  sigaddset(&sig, SIGTTIN);
+  sigaddset(&sig, SIGTTOU);
+  sigaddset(&sig, SIGHUP);
+  sigaddset(&sig, SIGCHLD);
   sigprocmask(SIG_SETMASK, &sig, &osig);
 
   /* we set SIGUSR{1,2} to point to *_vt() above */
@@ -76,10 +105,23 @@ void mask_signals(void) {
   sa.sa_handler = acquire_vt;
   sigaction(SIGUSR2, &sa, NULL);
 
+  /* Need to handle some signals so that we don't get killed by them */
+  sa.sa_handler = signal_ignorer;
+  sigaction(SIGTSTP, &sa, NULL);
+  sigaction(SIGTTIN, &sa, NULL);
+  sigaction(SIGTTOU, &sa, NULL);
+  sigaction(SIGHUP, &sa, NULL);
+
+  /* We also need to get sigchld's so that we know if the child 
+     process has "returned" */
+  sa.sa_handler = signal_die;
+  sigaction(SIGCHLD, &sa, NULL);
+
 }
 
 void restore_signals(void) {
 
+  /* This probably isn't necessary, but I'm doing it anyway... */
   sigprocmask(SIG_SETMASK, &osig, NULL);
 
 }
