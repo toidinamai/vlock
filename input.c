@@ -71,7 +71,7 @@ static struct pam_conv PAM_conversation = {
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.21 1997/10/10 19:38:58 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.22 1997/10/10 21:30:14 johnsonm Exp $";
 
 
 static char prompt[100];  /* password prompt ("user's password: ") */
@@ -91,11 +91,7 @@ correct_password(void)
 #ifdef USE_PAM
   pam_handle_t *pamh;
   int pam_error;
-#else
-  char *pass;
-#endif
 
-#ifdef USE_PAM
   /* Now use PAM to do authentication.
    */
   #define PAM_BAIL if (pam_error != PAM_SUCCESS) { \
@@ -106,7 +102,7 @@ correct_password(void)
      }
   pam_error = pam_start("vlock", username, &PAM_conversation, &pamh);
   PAM_BAIL;
-  sprintf(prompt, "%s's password: ", username);
+  printf("%s's ", username); fflush(stdout);
   pam_error = pam_set_item(pamh, PAM_USER_PROMPT, strdup(prompt));
   PAM_BAIL;
   pam_error = pam_authenticate(pamh, 0);
@@ -117,7 +113,7 @@ correct_password(void)
 #else
   if (pam_error != PAM_SUCCESS) {
     /* Try as root; bail if no success there either */
-    sprintf(prompt, "root's password: ");
+    printf("root's "); fflush(stdout);
     pam_error = pam_set_item(pamh, PAM_USER_PROMPT, strdup(prompt));
     PAM_BAIL;
     pam_error = pam_set_item(pamh, PAM_USER, "root");
@@ -135,6 +131,8 @@ correct_password(void)
 
 
 #else /* !PAM */
+  char *pass;
+
   if (strcmp(crypt(pass, userpw), userpw) == 0) {
     memset(pass, 0, strlen(pass));
     return 1;
@@ -187,13 +185,18 @@ get_password(void)
     /* make it happen, even knowing the code and knowing how to try.      */
     /* If you manage to kill vlock from the terminal while in this code,  */
     /* please tell me how you did it.                                     */
+#ifndef USE_PAM
+    /* This is policy; when we use PAM, we should let it determine policy */
     sleep(++times);
+#endif
     printf(" *** That password is incorrect; please try again. *** \n");
+#ifndef USE_PAM
     if (times >= 15) {
       printf("Slow down and try again in a while.\n");
       sleep(times);
       times = 2; /* don't make things too easy for someone to break in */
     }
+#endif
     printf("\n");
 
   } while (1);
