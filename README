@@ -28,13 +28,13 @@ use the -a or --all flag to cause vlock to not allow any user
 to switch to any console without typing your password.
 
   WARNING: If you lock all the consoles, they will be *really*
-  locked.  Unless you have a serial terminal or a network to log
-  in from remotely to kill vlock, you *will not* be able to
-  get back to your terminal session without entering the
-  correct password.  While I was developing this program, a
-  few small bugs forced me to do *hard resets*.  If you loose
-  data because you have to reset your computer because of
-  vlock -a, it is your own problem, not mine.  I warned you.
+  locked.  Unless you have a serial terminal, or can log in
+  remotely via a network to kill vlock, you *will not* be able
+  to get back to your terminal session without entering the
+  correct password.  While I was developing this program, a few
+  small bugs forced me to do *hard resets*.  If you loose data
+  because you have to reset your computer because of vlock -a,
+  it is your own problem, not mine.  I warned you.
 
 The root password will *always* be able to unlock any vlock
 session.  If anyone else can log in as you, they can send a
@@ -62,13 +62,8 @@ console, and now will even try to lock other sessions as well.
 I hope that non-VC sessions will be locked securely, but I
 don't know for sure.
 
-I have removed the hooks for possible pattern displays.  Instead,
-if Linux ever gets a screen saver, I will consider making vlock
-cooperate with the screen saver.
-
-
 *** Shadow passwords: ***
-Compile with -SHADOW_PWD, and make vlock setuid root or setgid shadow
+Compile with -DSHADOW_PWD, and make vlock setuid root or setgid shadow
 (however your shadow password setup is done).  However, there are
 bugs in several flavors of the shadow library which make it impossible
 to make vlock secure on those systems when compiled with shadow.
@@ -85,8 +80,36 @@ any damages caused by this program or your use of it.  I
 give no warranty of merchantability or fitness for a
 particular purpose.
 
+For version 0.9, Marek Michalkiewicz rewrote the shadow
+password support correctly.  He should know, since he
+maintains shadow for Linux.  He says:
+
+  Shadow support redone properly (I hope) - the program has to
+  be installed setuid root, but it will drop privileges as soon
+  as possible.  It should be safe (insert standard disclaimers
+  here).  The use of setgid shadow is not recommended - ypserv
+  may require that you connect from privileged port (to make
+  NIS slightly less insecure), and you must be root for that.
+
+  With ELF libc-5.x the problems with buggy shadow libraries
+  are gone - no need to link with them at all :-) (because
+  shadow passwords are now supported in the standard libc).
+
+  The shadow-aware vlock works fine with non-shadow passwords
+  too, so it's OK to always define SHADOW_PWD when creating
+  distribution binaries (this will make the transition to
+  shadow passwords easier - one less program to recompile).
+
+  I also fixed a few bugs, cleaned up the code a bit, and
+  made some enhancements.  My changes are public domain.
+
+  April 9, 1996
+  -- Marek Michalkiewicz <marekm@i17linuxb.ists.pwr.wroc.pl>
 
 *** Bugs fixed: ***
+Shadow support was minimal.  Fixed May 16, 1996.
+Used /dev/console instead of /dev/tty.  Fixed May 16, 1996.
+
 Ctrl-Break was able to kill vlock.  Fixed July 3, 1994.
 
 With vlock -a, after guessing the password wrong once, it was
@@ -106,10 +129,8 @@ This was fixed March 23, 1994.
 
 Please send me any comments you have about vlock.  My
 name is Michael K. Johnson, and my email address is
-johnsonm@sunsite.unc.edu.
+johnsonm@redhat.com
 
-I wrote this code as a demonstration of the VT ioctls
-for the Linux Journal.  I encourage anyone who does
-not have a subscription to subscribe:  email
-linux@fylz.com for subscription information.
-
+I wrote this code as a demonstration of the VT ioctls for Linux
+Journal.  Subscription information is available on the web at
+http://www.ssc.com/lj and via email through info@ssc.com
