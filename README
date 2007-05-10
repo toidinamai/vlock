@@ -67,9 +67,18 @@ vlock supports PAM authentication with the USE_PAM compile-time
 flag.  It will try to authenticate the user's password in a
 separate pass from root's password, instead of quietly trying
 the password as both the user and root.  This is to let PAM do
-all the authentication including asking for the password itself.
+all the authentication, including asking for the password, itself.
 
 *** Shadow passwords: ***
+First of all, if your system supports PAM, use USE_PAM, not SHADOW_PWD.
+PAM is capable of supporting shadow passwords WITHOUT requiring that
+an application be setuid root or setgid shadow; it uses a special
+helper application to check passwords.  On a shadow system with PAM,
+the only reason to make vlock setuid root is for the root password to
+be able to unlock a session; on a shadow system with a non-root
+application (like vlock normally is), PAM will only allow you to
+check your own password, not anyone else's.
+
 Compile with -DSHADOW_PWD, and make vlock setuid root or setgid shadow
 (however your shadow password setup is done).  However, there are
 bugs in several flavors of the shadow library which make it impossible
@@ -114,6 +123,9 @@ maintains shadow for Linux.  He says:
   -- Marek Michalkiewicz <marekm@i17linuxb.ists.pwr.wroc.pl>
 
 *** Bugs fixed: ***
+Quits if the tty is closed (not applicable to VCs).
+Asks for password on non-PAM systems.  March 12, 1998.
+
 Moved to new PAM conversationg function conventions.  October 10, 1997.
 
 Shadow support was minimal.  Fixed May 16, 1996.
