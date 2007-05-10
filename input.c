@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: input.c,v $
+ * Revision 1.5  1994/03/20  13:13:48  johnsonm
+ * Added code so that root password unlocks the session too.
+ *
  * Revision 1.4  1994/03/19  17:53:20  johnsonm
  * Password reading now works, thanks to the correct_password() routine
  * from GNU su.  No point in re-inventing the wheel...
@@ -44,7 +47,7 @@
 #define INBUFSIZE 50
 
 
-static char rcsid[] = "$Id: input.c,v 1.5 1994/03/20 13:13:48 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.6 1994/03/21 17:30:55 johnsonm Exp $";
 
 
 /* correct_password() taken with some modifications from the GNU su.c */
@@ -68,7 +71,10 @@ static int correct_password (struct passwd *pw) {
 #endif
   correct = pw->pw_passwd;
 
-  if (getuid () == 0 || correct == 0 || correct[0] == '\0')
+  /* if account has no password, it can't be locked.  I'm not */
+  /* going to fake it.  The user can write a shell script to  */
+  /* fake it if he wants to...                                */
+  if (correct == 0 || correct[0] == '\0')
     return 1;
 
   sprintf(user, "%s's password:", pw->pw_name);
