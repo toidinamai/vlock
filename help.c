@@ -11,7 +11,10 @@
  */
 
 /* RCS log:
- * $Log$
+ * $Log: help.c,v $
+ * Revision 1.1  1994/03/13  16:28:16  johnsonm
+ * Initial revision
+ *
  */
 
 
@@ -20,7 +23,7 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: help.c,v 1.1 1994/03/13 16:28:16 johnsonm Exp $";
+static char rcsid[] = "$Id: help.c,v 1.2 1994/03/23 17:00:16 johnsonm Exp $";
 
 
 void print_help(int exitcode) {
@@ -32,9 +35,6 @@ void print_help(int exitcode) {
 	  "       switch to other virtual consoles.\n"
 	  "-a or --all: lock all virtual consoles by preventing other users\n"
 	  "       from switching virtual consoles.\n"
-	  "-p <list> or --pattern <list>: choose a pattern or list of patterns\n"
-	  "       to be chosen randomly for the screen display while locked.\n"
-	  "       This is currently not supported.\n"
 	  "-v or --version: Print the version number of vlock and exit.\n"
 	  "-h or --help: Print this help message and exit.\n"
 	  );
