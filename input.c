@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: input.c,v $
+ * Revision 1.8  1994/03/23  17:00:01  johnsonm
+ * Control-function -> Alt-function
+ * Added support for non-vt consoles.
+ *
  * Revision 1.7  1994/03/21  17:33:33  johnsonm
  * Reformatted "This TTY is now locked" message to read easier.
  *
@@ -56,7 +60,7 @@
 #define INBUFSIZE 50
 
 
-static char rcsid[] = "$Id: input.c,v 1.8 1994/03/23 17:00:01 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.9 1994/07/03 12:11:24 johnsonm Exp $";
 
 
 /* correct_password() taken with some modifications from the GNU su.c */
@@ -70,7 +74,10 @@ static int correct_password (struct passwd *pw) {
   static struct passwd rpw;
 
 #ifdef SHADOW_PWD
-  /* Shadow passwd support; untested.  */
+  /* Shadow passwd support; THIS IS NOT SAFE with some shadow password
+     versions, where some signals get ignored, and simple keystrokes
+     can terminate vlock.  This cannot be solved here; you have to
+     fix your shadow library or use a working one. */
   struct spwd *sp = getspnam(pw->pw_name);
 
   endspent ();
