@@ -26,16 +26,6 @@ password!  Unless you are able to kill vlock by logging in remotely via a
 serial terminal or network, a hard reset is the only method of ``unlocking''
 the display.
 .PP
-.B vlock
-tries to allow the root password to unlock sessions.  This only works if
-.B vlock
-has sufficient permissions to read the crypted password for root.  This
-is not the case on systems with shadow passwords and PAM.  In that case,
-when it prompts for the root password, it will always fail, even if you
-type in the right password.  While this looks like a bug, it isn't, it
-is just a natural limitation of "negative privileges" on shadow password
-systems.
-.PP
 When locking the entire console display it is still possible to kill vlock
 using the Secure Access Key (SAK) or other commands that are available
 through the sysrq mechanism when that was enabled.  When the \fB-s,--disable-sysrq\fR
