@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: input.c,v $
+ * Revision 1.11  1994/07/03  12:19:29  johnsonm
+ * Moved shadow comment to first SHADOW define.
+ *
  * Revision 1.10  1994/07/03  12:14:49  johnsonm
  * Restores signal mask after getting password
  *
@@ -70,7 +73,7 @@
 #define INBUFSIZE 50
 
 
-static char rcsid[] = "$Id: input.c,v 1.11 1994/07/03 12:19:29 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.12 1994/07/03 12:29:27 johnsonm Exp $";
 
 
 /* correct_password() taken with some modifications from the GNU su.c */
@@ -157,8 +160,10 @@ void get_password(void) {
     printf("Please enter the password to unlock.\n");
     fflush(stdout);
 
-    if (correct_password(&pwd))
+    if (correct_password(&pwd)) {
+      restore_terminal();
       return;
+    }
 
     /* Need to slow down people who are trying to break in by brute force */
     /* Note that it is technically possible to break this, but I can't    */
@@ -174,7 +179,6 @@ void get_password(void) {
       times = 2; /* don't make things too easy for someone to break in */
     }
     printf("\n");
-    restore_terminal();
 
   } while (1);
 
