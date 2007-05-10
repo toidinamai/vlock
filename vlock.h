@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: vlock.h,v $
+ * Revision 1.9  1994/07/03 13:10:28  johnsonm
+ * Added print argument to set_terminal().
+ *
  * Revision 1.8  1994/07/03  12:15:03  johnsonm
  * *** empty log message ***
  *
@@ -40,7 +43,7 @@
  *
  */
 
-static char rcsid_vlockh[] = "$Id: vlock.h,v 1.9 1994/07/03 13:10:28 johnsonm Exp $";
+static char rcsid_vlockh[] = "$Id: vlock.h,v 1.10 1996/05/17 02:52:34 johnsonm Exp $";
 
 
 #define O_PATTERN 1
@@ -56,6 +59,8 @@ void restore_signals(void);
 void set_terminal(int print);
 void restore_terminal(void);
 void get_password(void);
+void init_passwords(void);
+void print_help(int exitcode);
 
 
 /* Global variables: */
