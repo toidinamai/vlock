@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: vlock.h,v $
+ * Revision 1.3  1994/03/16  20:13:33  johnsonm
+ * Added ignore_sigchld() for second process.  Not sure if that is
+ * the right thing yet, since it doesn't seem to work quite.
+ *
  * Revision 1.2  1994/03/15  18:27:33  johnsonm
  * Made consistent with all the changes in the other files...
  *
@@ -20,7 +24,7 @@
  *
  */
 
-static char rcsid_vlockh[] = "$Id: vlock.h,v 1.3 1994/03/16 20:13:33 johnsonm Exp $";
+static char rcsid_vlockh[] = "$Id: vlock.h,v 1.4 1994/03/19 14:29:58 johnsonm Exp $";
 
 /* Pattern lists are not yet really supported, but we'll put in the */
 /* infrastructure for when they are. */
@@ -38,7 +42,6 @@ void release_vt(int signo);
 void acquire_vt(int signo);
 void mask_signals(void);
 void restore_signals(void);
-void ignore_sigchld(void);
 void set_terminal(void);
 void restore_terminal(void);
 void get_password(void);
