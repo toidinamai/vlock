@@ -26,6 +26,7 @@
         if getpass() fails.
   */
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -59,64 +60,10 @@
 #endif
 
 #include <security/pam_appl.h>
-/* Static variables used to communicate between the conversation function
- * and the server_login function
- */
-static char *PAM_username;
-static char *PAM_password;
+#include <security/pam_misc.h>
 
-/* PAM conversation function
- * Here we assume (for now, at least) that echo on means login name, and
- * echo off means password.
- * FIXME: move to misc_conv and do things the right way!
- */
-static int PAM_conv (int num_msg,
-                     const struct pam_message **msg,
-		     struct pam_response **resp,
-		     void *appdata_ptr) {
-  int replies = 0;
-  struct pam_response *reply = NULL;
-  int size = sizeof(struct pam_response);
-
-  reply = (struct pam_response *)malloc(sizeof(struct pam_response) * num_msg);
-  if (!reply) {
-    return PAM_CONV_ERR;
-  }
-
-  #define COPY_STRING(s) (s) ? strdup(s) : NULL
-
-  for (replies = 0; replies < num_msg; replies++) {
-    switch (msg[replies]->msg_style) {
-      case PAM_PROMPT_ECHO_ON:
-        reply[replies].resp_retcode = PAM_SUCCESS;
-	reply[replies].resp = COPY_STRING(PAM_username);
-          /* PAM frees resp */
-        break;
-      case PAM_PROMPT_ECHO_OFF:
-        reply[replies].resp_retcode = PAM_SUCCESS;
-	reply[replies].resp = COPY_STRING(PAM_password);
-          /* PAM frees resp */
-        break;
-      case PAM_TEXT_INFO:
-        reply[replies].resp_retcode = PAM_SUCCESS;
-	reply[replies].resp = NULL;
-        /* ignore it... */
-        break;
-      case PAM_ERROR_MSG:
-        reply[replies].resp_retcode = PAM_SUCCESS;
-	reply[replies].resp = NULL;
-	break;
-      default:
-        /* Must be an error of some sort... */
-        free (reply);
-        return PAM_CONV_ERR;
-    }
-  }
-  *resp = reply;
-  return PAM_SUCCESS;
-}
 static struct pam_conv PAM_conversation = {
-    &PAM_conv,
+    &misc_conv,
     NULL
 };
 
@@ -124,11 +71,11 @@ static struct pam_conv PAM_conversation = {
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.20 1997/10/10 18:05:55 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.21 1997/10/10 19:38:58 johnsonm Exp $";
 
 
-static char username[40]; /* current user's name */
 static char prompt[100];  /* password prompt ("user's password: ") */
+static char username[40]; /* current user's name */
 #ifndef USE_PAM
 static char userpw[200];  /* current user's encrypted password */
 #ifndef NO_ROOT_PASS
@@ -141,49 +88,51 @@ static char rootpw[200];  /* root's encrypted password */
 static int
 correct_password(void)
 {
-  char *pass;
 #ifdef USE_PAM
   pam_handle_t *pamh;
   int pam_error;
+#else
+  char *pass;
 #endif
-
-  pass = getpass(prompt);
-  if (!pass) {
-    perror("getpass: cannot open /dev/tty");
-    restore_terminal();
-    exit(1);
-  }
-  /* fix signals that probably have been disordered by getpass() */
-  set_signal_mask(0);
 
 #ifdef USE_PAM
   /* Now use PAM to do authentication.
    */
   #define PAM_BAIL if (pam_error != PAM_SUCCESS) { \
      pam_end(pamh, 0); \
-     memset(pass, 0, strlen(pass)); \
+     /* fix signals that may have been disordered by pam */ \
+     set_signal_mask(0); \
      return 0; \
      }
-  PAM_password = pass;
-  PAM_username = username;
   pam_error = pam_start("vlock", username, &PAM_conversation, &pamh);
   PAM_BAIL;
+  sprintf(prompt, "%s's password: ", username);
+  pam_error = pam_set_item(pamh, PAM_USER_PROMPT, strdup(prompt));
+  PAM_BAIL;
   pam_error = pam_authenticate(pamh, 0);
+  /* fix signals that may have been disordered by pam */
+  set_signal_mask(0);
 #ifdef NO_ROOT_PASS
   PAM_BAIL;
 #else
   if (pam_error != PAM_SUCCESS) {
     /* Try as root; bail if no success there either */
+    sprintf(prompt, "root's password: ");
+    pam_error = pam_set_item(pamh, PAM_USER_PROMPT, strdup(prompt));
+    PAM_BAIL;
     pam_error = pam_set_item(pamh, PAM_USER, "root");
     PAM_BAIL;
     pam_error = pam_authenticate(pamh, 0);
+    /* fix signals that may have been disordered by pam */
+    set_signal_mask(0);
     PAM_BAIL;
   }
 #endif /* !NO_ROOT_PASS */
   pam_end(pamh, PAM_SUCCESS);
   /* If this point is reached, the user has been authenticated. */
-  memset(pass, 0, strlen(pass));
   return 1;
+
+
 
 #else /* !PAM */
   if (strcmp(crypt(pass, userpw), userpw) == 0) {
@@ -197,9 +146,9 @@ correct_password(void)
     return 1;
   }
 #endif
-#endif /* !USE_PAM */
-
   memset(pass, 0, strlen(pass));
+
+#endif /* !USE_PAM */
   return 0;
 }
 
@@ -276,7 +225,7 @@ my_getpwuid(uid_t uid)
 
   pw = getpwuid(uid);
   if (!pw) {
-    fprintf(stderr, "vlock: getpwuid(%d) failed!\n", (int) uid);
+    fprintf(stderr, "vlock: getpwuid(%d) failed: %s\n", uid, strerror(errno));
     exit(1);
   }
 #ifdef SHADOW_PWD
@@ -321,8 +270,8 @@ init_passwords(void)
 
   /* We don't need root privileges any longer.  */
   setuid(getuid());
-#endif /* !USE_PAM */
 
   sprintf(prompt, "%s's password: ", username);
+#endif /* !USE_PAM */
 }
 

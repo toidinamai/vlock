@@ -3,7 +3,7 @@
 CC = gcc
 # remove the -DUSE_PAM, -ldl, and -lpam if you aren't using PAM
 CFLAGS = -O2 -DUSE_PAM
-LDFLAGS = -ldl -lpam
+LDFLAGS = -ldl -lpam -lpam_misc
 
 OBJS = vlock.o signals.o help.o terminal.o input.o
 
