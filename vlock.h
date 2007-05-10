@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: vlock.h,v $
+ * Revision 1.4  1994/03/19  14:29:58  johnsonm
+ * No longer need to deal with two-process model.
+ *
  * Revision 1.3  1994/03/16  20:13:33  johnsonm
  * Added ignore_sigchld() for second process.  Not sure if that is
  * the right thing yet, since it doesn't seem to work quite.
@@ -24,18 +27,12 @@
  *
  */
 
-static char rcsid_vlockh[] = "$Id: vlock.h,v 1.4 1994/03/19 14:29:58 johnsonm Exp $";
+static char rcsid_vlockh[] = "$Id: vlock.h,v 1.5 1994/03/23 17:01:54 johnsonm Exp $";
 
-/* Pattern lists are not yet really supported, but we'll put in the */
-/* infrastructure for when they are. */
-typedef struct __pattern {
-  char *name;
-} Pattern;
 
 #define O_PATTERN 1
 #define O_VERSION 2
 #define O_HELP    3
-
 
 
 void release_vt(int signo);
@@ -62,4 +59,4 @@ void get_password(void);
   extern struct vt_mode ovtm;
   extern struct termios oterm;
   extern int vfd;
-
+  extern int is_vt;
