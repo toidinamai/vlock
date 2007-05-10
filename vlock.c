@@ -11,15 +11,20 @@
  */
 
 /* RCS log:
- * $Log$
+ * $Log: vlock.c,v $
+ * Revision 1.1  1994/03/13  16:28:16  johnsonm
+ * Initial revision
+ *
  */
 
 
 #include <stdio.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <termios.h>
 #include <pwd.h>
+#include <signal.h>
 #include <sys/vt.h>
 #include <sys/kd.h>
 #include <linux/keyboard.h>
@@ -27,7 +32,7 @@
 #include "version.h"
 
 
-static char rcsid[] = "$Id: vlock.c,v 1.1 1994/03/13 16:28:16 johnsonm Exp $";
+static char rcsid[] = "$Id: vlock.c,v 1.2 1994/03/13 17:28:56 johnsonm Exp $";
 
 /* Option globals */
   /* This determines whether the default behavior is to lock only the */
@@ -54,6 +59,7 @@ int main(int argc, char **argv) {
   int c;
   struct vt_mode vtm;
   struct termios oterm, term;
+  int fd;
 
   /* First we parse all the command line arguments */
   while ((c = getopt_long(argc, argv, "acvhp:",
@@ -85,22 +91,24 @@ int main(int argc, char **argv) {
   }
 
   /* Now we have parsed the options, and can get on with life */
+  /* get the file descriptor (should check this...) */
+  fd = open("/dev/console", O_RDWR);
   /* First we will set process control of VC switching; if this fails, */
   /* then we know that we aren't on a VC, and will print a message and */
   /* exit. */
-  c = ioctl(STDOUT_FILENO, VT_GETMODE, &vtm);
+  c = ioctl(fd, VT_GETMODE, &vtm);
   if (c < 0) {
     fprintf(stderr, "This tty is not a VC (virtual console), and cannot be locked.\n\n");
     print_help(1);
   }
   ovtm = vtm; /* Keep a copy around to restore at appropriate times */
   vtm.mode = VT_PROCESS;
-  vtm.relsig = release_vt;
-  vtm.acqsig = acquire_vt;
-  ioctl(STDOUT_FILENO, VT_SETMODE, &vtm);
-
-  /* Now set the signals so we can't be summarily executed or stopped */
+  vtm.relsig = SIGUSR1; /* handled by release_vt() */
+  vtm.acqsig = SIGUSR2; /* handled by acquire_vt() */
+  /* Now set the signals so we can't be summarily executed or stopped, */
+  /* and handle SIGUSR{1,2} */
   mask_signals();
+  c = ioctl(fd, VT_SETMODE, &vtm);
 
   printf("Your TTY is now locked.  Please enter the password to unlock.\n");
   printf("%s's password:", getpwuid(getuid())->pw_name);
@@ -117,7 +125,7 @@ int main(int argc, char **argv) {
   printf("\n");
 
   /* restore the VT settings before exiting */
-  ioctl(STDOUT_FILENO, VT_SETMODE, &ovtm);
+  c = ioctl(fd, VT_SETMODE, &ovtm);
   tcsetattr(STDIN_FILENO, TCSANOW, &oterm);
 
 }
