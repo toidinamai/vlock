@@ -12,6 +12,11 @@
 
 /* RCS log:
  * $Log: vlock.c,v $
+ * Revision 1.4  1994/03/16  20:14:06  johnsonm
+ * Cleaned up, putting most real work into child functions, which
+ * cleaned up the interface.  The whole program is almost all
+ * working now.
+ *
  * Revision 1.3  1994/03/15  18:27:33  johnsonm
  * Moved terminal handling stuff into terminal.c, and changed the
  * end to support a two-process model for async I/O.
@@ -39,7 +44,7 @@
 #include "version.h"
 
 
-static char rcsid[] = "$Id: vlock.c,v 1.4 1994/03/16 20:14:06 johnsonm Exp $";
+static char rcsid[] = "$Id: vlock.c,v 1.5 1994/03/19 14:25:16 johnsonm Exp $";
 
 /* Option globals */
   /* This determines whether the default behavior is to lock only the */
@@ -126,23 +131,10 @@ int main(int argc, char **argv) {
 	   "to other virtual consoles.\n");
   }
 
-  /* start new process to get IO asynchronously, and exit, causing a */
-  /* SIGCHLD, when the password is entered correctly.  This call     */
-  /* returns immediately. */
+  /* get_password() sets the terminal characteristics and does not */
+  /* return until the correct password has been read.              */
   get_password();
 
-  /* Now we need to close stdin so the child will get it the input, */
-  /* and we don't need it anymore.                                  */
-  fclose(stdin);
-
-  /* Now, get_password has forked the child process and returned, and */
-  /* signal_die() will get the SIGCHLD.  In the meantime, we need to  */
-  /* make a way for all signals to get through as soon as they come.  */
-  /* signal_die() will be responsible for exiting if a SIGCHLD is     */
-  /* received from the password-getting child exiting.  That child is */
-  /* responsible not to die until it gets a proper password.          */
-  while(1)
-    pause();
 
 }
 
