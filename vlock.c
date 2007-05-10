@@ -24,8 +24,6 @@
 #include "version.h"
 
 
-static char rcsid[] = "$Id: vlock.c,v 1.13 1997/10/10 17:08:15 johnsonm Exp $";
-
 /* Option globals */
   /* This determines whether the default behavior is to lock only the */
   /* current VT or all of them.  0 means current, 1 means all. */

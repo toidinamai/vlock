@@ -16,9 +16,6 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: help.c,v 1.3 1997/10/10 17:08:14 johnsonm Exp $";
-
-
 void print_help(int exitcode) {
   fprintf(stderr,
 	  "vlock: locks virtual consoles, saving your current session.\n"

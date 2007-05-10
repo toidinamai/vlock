@@ -72,9 +72,6 @@ static struct pam_conv PAM_conversation = {
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.25 1998/03/30 14:55:02 johnsonm Exp $";
-
-
 static char prompt[100];  /* password prompt ("user's password: ") */
 static char username[40]; /* current user's name */
 #ifndef USE_PAM

@@ -20,10 +20,6 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: signals.c,v 1.11 1998/03/29 23:34:06 johnsonm Exp $";
-
-
-
 /* In release_vt() and acquire_vt(), anything which is done in
  * release_vt() must be undone in acquire_vt().  Right now, that's
  * not much...
