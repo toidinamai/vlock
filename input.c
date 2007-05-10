@@ -74,18 +74,18 @@ static int PAM_conv (int num_msg,
                      const struct pam_message **msg,
 		     struct pam_response **resp,
 		     void *appdata_ptr) {
-  int count = 0, replies = 0;
+  int replies = 0;
   struct pam_response *reply = NULL;
   int size = sizeof(struct pam_response);
 
-  reply = malloc(sizeof(struct pam_response) * num_msg);
+  reply = (pam_response *)malloc(sizeof(struct pam_response) * num_msg);
   if (!reply) {
     return PAM_CONV_ERR;
   }
 
   #define COPY_STRING(s) (s) ? strdup(s) : NULL
 
-  for (count = 0; count < num_msg; count++, replies++) {
+  for (replies = 0; replies < num_msg; replies++) {
     switch (msg[count]->msg_style) {
       case PAM_PROMPT_ECHO_ON:
         reply[replies].resp_retcode = PAM_SUCCESS;
@@ -124,7 +124,7 @@ static struct pam_conv PAM_conversation = {
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.17 1997/10/10 17:10:27 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.18 1997/10/10 18:05:02 johnsonm Exp $";
 
 
 static char username[40]; /* current user's name */
