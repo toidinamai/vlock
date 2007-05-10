@@ -21,6 +21,7 @@ or the root password is typed.
 * Fri Oct 10 1997 Michael K. Johnson <johnsonm@redhat.com>
 
 - Moved to new pam conventions.
+- Use pam according to spec, rather than abusing it as before.
 - Updated to version 1.1.
 - BuildRoot
 
