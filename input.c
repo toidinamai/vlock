@@ -86,7 +86,7 @@ static int PAM_conv (int num_msg,
   #define COPY_STRING(s) (s) ? strdup(s) : NULL
 
   for (replies = 0; replies < num_msg; replies++) {
-    switch (msg[count]->msg_style) {
+    switch (msg[replies]->msg_style) {
       case PAM_PROMPT_ECHO_ON:
         reply[replies].resp_retcode = PAM_SUCCESS;
 	reply[replies].resp = COPY_STRING(PAM_username);
@@ -124,7 +124,7 @@ static struct pam_conv PAM_conversation = {
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.19 1997/10/10 18:05:35 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.20 1997/10/10 18:05:55 johnsonm Exp $";
 
 
 static char username[40]; /* current user's name */
