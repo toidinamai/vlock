@@ -31,7 +31,7 @@
   int o_lock_all = 0;
 
   /* This determines whether the kernel.sysrq variable should be disabled */
-  /* while the VT is locked. This implies that all VTs should be locked. */
+  /* while the VT is locked.  This requires that all VTs should be locked. */
   int o_disable_sysrq = 0;
 
 /* Other globals */
