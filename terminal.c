@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: terminal.c,v $
+ * Revision 1.6  1994/07/03 13:10:06  johnsonm
+ * Allow setting terminal state back and forth on echo, but keep ignoring sig,
+ *   based on an argument.
+ *
  * Revision 1.5  1994/07/03  12:31:26  johnsonm
  * Don't restore signals when restoring the terminal state!  Let other code
  *   do that later, when the correct password has been entered.
@@ -35,11 +39,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <termios.h>
+#include <sys/ioctl.h>
 #include <sys/vt.h>
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: terminal.c,v 1.6 1994/07/03 13:10:06 johnsonm Exp $";
+static char rcsid[] = "$Id: terminal.c,v 1.7 1996/05/17 02:50:54 johnsonm Exp $";
 
 
 void set_terminal(int print) {
@@ -50,15 +55,15 @@ void set_terminal(int print) {
   if (!already) {
     tcgetattr(STDIN_FILENO, &oterm);
     term=oterm;
-    term.c_iflag &= !BRKINT;
+    term.c_iflag &= ~BRKINT;
     term.c_iflag |= IGNBRK;
-    term.c_lflag &= !(ISIG);
+    term.c_lflag &= ~ISIG;
     already=1;
   }
   if (print)
     term.c_lflag |= (ECHO & ECHOCTL);
   else
-    term.c_lflag &= !(ECHO | ECHOCTL);
+    term.c_lflag &= ~(ECHO | ECHOCTL);
   tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
 }
