@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: vlock.c,v $
+ * Revision 1.8  1994/03/20  11:21:20  johnsonm
+ * Now check /dev/console after opening it to make sure the call succeeded
+ *
  * Revision 1.7  1994/03/19  17:54:42  johnsonm
  * Moved printing the lock message to get_password.  Added a return
  * code again.
@@ -55,27 +58,24 @@
 #include "version.h"
 
 
-static char rcsid[] = "$Id: vlock.c,v 1.8 1994/03/20 11:21:20 johnsonm Exp $";
+static char rcsid[] = "$Id: vlock.c,v 1.9 1994/03/23 17:00:47 johnsonm Exp $";
 
 /* Option globals */
   /* This determines whether the default behavior is to lock only the */
   /* current VT or all of them.  0 means current, 1 means all. */
   int o_lock_all = 0;
-  /* Pattern lists are not yet really supported, but we'll put in the */
-  /* infrastructure for when they are. */
-  Pattern *o_pattern_list = (Pattern *)0;
 
 /* Other globals */
   struct vt_mode ovtm;
   struct termios oterm;
   int vfd;
+  int is_vt;
 
 int main(int argc, char **argv) {
 
   static struct option long_options[] = { /* For parsing long arguments */
     {"current", 0, &o_lock_all, 0},
     {"all", 0, &o_lock_all, 1},
-    {"pattern", required_argument, 0, O_PATTERN},
     {"version", no_argument, 0, O_VERSION},
     {"help", no_argument, 0, O_HELP},
     {0, 0, 0, 0},
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
   struct vt_mode vtm;
 
   /* First we parse all the command line arguments */
-  while ((c = getopt_long(argc, argv, "acvhp:",
+  while ((c = getopt_long(argc, argv, "acvh",
 			  long_options, &option_index)) != -1) {
     switch(c) {
     case 'c':
@@ -103,10 +103,6 @@ int main(int argc, char **argv) {
     case O_HELP:
       print_help(0);
       break;
-    case 'p':
-    case O_PATTERN:
-      fprintf(stderr, "The pattern list option is not yet supported.\n");
-      break;
     case '?':
       print_help(1);
       break;
@@ -120,27 +116,35 @@ int main(int argc, char **argv) {
   }
 
   /* First we will set process control of VC switching; if this fails, */
-  /* then we know that we aren't on a VC, and will print a message and */
-  /* exit.   If it doesn't fail, it gets the current VT status... */
+  /* then we know that we aren't on a VC, and will print a warning message */
+  /* If it doesn't fail, it gets the current VT status... */
   c = ioctl(vfd, VT_GETMODE, &vtm);
   if (c < 0) {
-    fprintf(stderr, "This tty is not a VC (virtual console), and cannot be locked.\n\n");
-    print_help(1);
+    fprintf(stderr, " *** This tty is not a VC (virtual console). ***\n"
+	    " *** It may not be securely locked. ***\n\n");
+    is_vt = 0;
+    o_lock_all = 0;
+  } else {
+    is_vt = 1;
   }
 
   /* Now set the signals so we can't be summarily executed or stopped, */
   /* and handle SIGUSR{1,2} and SIGCHLD */
   mask_signals();
 
-  ovtm = vtm; /* Keep a copy around to restore at appropriate times */
-  vtm.mode = VT_PROCESS;
-  vtm.relsig = SIGUSR1; /* handled by release_vt() */
-  vtm.acqsig = SIGUSR2; /* handled by acquire_vt() */
-  ioctl(vfd, VT_SETMODE, &vtm);
+  if (is_vt) {
+    ovtm = vtm; /* Keep a copy around to restore at appropriate times */
+    vtm.mode = VT_PROCESS;
+    vtm.relsig = SIGUSR1; /* handled by release_vt() */
+    vtm.acqsig = SIGUSR2; /* handled by acquire_vt() */
+    ioctl(vfd, VT_SETMODE, &vtm);
+  }
 
   /* get_password() sets the terminal characteristics and does not */
   /* return until the correct password has been read.              */
   get_password();
+
+  /* vt status was restored in restore_terminal() already... */
 
   /* we should really return something... */
   return (0);
