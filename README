@@ -3,7 +3,7 @@
    VV       VV  LL          OOO       CCCCC  KK   KK
     VV     VV   LL        OO   OO   CC       KK KK    written by
      VV   VV    LL       OO     OO  CC       KK        Michael K. Johnson
-      VV VV     LL        OO   OO   CC       KK KK    for the Linux Journal
+      VV VV     LL        OO   OO   CC       KK KK    for Linux Journal
        VVV      LLLLLLLL    OOO       CCCCC  KK   KK
 
 
@@ -52,6 +52,10 @@ use the source...
 
 "vlock -h" or "vlock --help" will get you a help message.
 
+If you have the "open" program, try doing `open vlock -a' to
+run vlock on a new VC.  This will keep your current VC from getting
+obscured by silly password messages...
+
 *** Features: ***
 Currently, vlock doesn't have very many features.  It locks the
 console, and now will even try to lock other sessions as well.
@@ -64,13 +68,10 @@ cooperate with the screen saver.
 
 
 *** Shadow passwords: ***
-I don't use shadow passwords, so I can't test this with shadow
-passwords.  If you have shadow passwords, please compile this
-(at least input.c) with -SHADOW_PWD, and make vlock setuid
-root or setgid shadow (however your shadow password setup
-is done) and try it.  I have been given some patches for shadow
-support, and I hope that they work for everyone.  Please tell
-me if they don't.
+Compile with -SHADOW_PWD, and make vlock setuid root or setgid shadow
+(however your shadow password setup is done).  However, there are
+bugs in several flavors of the shadow library which make it impossible
+to make vlock secure on those systems when compiled with shadow.
 
   NOTICE:  Except for shadow passwords, this program does not
   need to run with any setuid or setgid priviledges, and I do
@@ -86,6 +87,11 @@ particular purpose.
 
 
 *** Bugs fixed: ***
+Ctrl-Break was able to kill vlock.  Fixed July 3, 1994.
+
+With vlock -a, after guessing the password wrong once, it was
+possible to switch VC's.  Fixed July 3, 1994.
+
 Root was not allowed to lock his tty because I took my
 password reading program from GNU su, for which it is
 appropriate for root not to be asked to enter a password...
