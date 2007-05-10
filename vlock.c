@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: vlock.c,v $
+ * Revision 1.11  1994/07/03 12:41:43  johnsonm
+ * Removed emacs variables.
+ *
  * Revision 1.10  1994/07/03  12:15:22  johnsonm
  * *** empty log message ***
  *
@@ -60,12 +63,12 @@
 #include <signal.h>
 #include <sys/vt.h>
 #include <sys/kd.h>
-#include <linux/keyboard.h>
+#include <sys/ioctl.h>
 #include "vlock.h"
 #include "version.h"
 
 
-static char rcsid[] = "$Id: vlock.c,v 1.11 1994/07/03 12:41:43 johnsonm Exp $";
+static char rcsid[] = "$Id: vlock.c,v 1.12 1996/05/17 02:52:03 johnsonm Exp $";
 
 /* Option globals */
   /* This determines whether the default behavior is to lock only the */
@@ -117,8 +120,14 @@ int main(int argc, char **argv) {
   }
 
   /* Now we have parsed the options, and can get on with life */
-  if (vfd = open("/dev/console", O_RDWR) < 0) {
-    perror("vlock: could not open /dev/console");
+
+  /* Get the user's and root's encrypted passwords.  This needs
+     to run as root when using shadow passwords, but will drop
+     root privileges as soon as they are no longer needed.  */
+  init_passwords();
+
+  if ((vfd = open("/dev/tty", O_RDWR)) < 0) {
+    perror("vlock: could not open /dev/tty");
     exit (1);
   }
 
