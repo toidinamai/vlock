@@ -2,6 +2,7 @@
 USE_PAM = y
 USE_ROOT_PASS = y
 PREFIX = /usr/local
+DESTDIR =
 
 CC = gcc
 CFLAGS = -O2
