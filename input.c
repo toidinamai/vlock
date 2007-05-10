@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: input.c,v $
+ * Revision 1.3  1994/03/19  14:24:33  johnsonm
+ * Removed silly two-process model.  It's certainly not needed.
+ * Also fixed occasional core dump.
+ *
  * Revision 1.2  1994/03/16  20:12:06  johnsonm
  * Now almost working.  Need to get signals straightened out for
  * second process.
@@ -26,71 +30,93 @@
 #include <unistd.h>
 #include <signal.h>
 #include <pwd.h>
+#ifdef SHADOW_PWD
+#include <shadow.h>
+#endif
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.3 1994/03/19 14:24:33 johnsonm Exp $";
+/* size of input buffer. */
+#define INBUFSIZE 50
 
 
-void synch(void) {
- return;
+static char rcsid[] = "$Id: input.c,v 1.4 1994/03/19 17:53:20 johnsonm Exp $";
+
+
+/* correct_password() taken with some modifications from the GNU su.c */
+
+static int correct_password (struct passwd *pw) {
+
+  char *unencrypted, *encrypted, *correct, user[INBUFSIZE];
+
+#ifdef SHADOW_PWD
+  /* Shadow passwd stuff for SVR3 and maybe other systems.  */
+  struct spwd *sp = getspnam (pw->pw_name);
+
+  endspent ();
+  if (sp)
+    correct = sp->sp_pwdp;
+  else
+#endif
+  correct = pw->pw_passwd;
+
+  if (getuid () == 0 || correct == 0 || correct[0] == '\0')
+    return 1;
+
+  sprintf(user, "%s's password:", pw->pw_name);
+  unencrypted = getpass (user);
+  if (unencrypted == NULL) {
+    perror ("getpass: cannot open /dev/tty");
+    /* Need to exit, or computer might be locked up... */
+    exit (1);
+  }
+  encrypted = crypt (unencrypted, correct);
+  memset (unencrypted, 0, strlen (unencrypted));
+  return (strcmp (encrypted, correct) == 0);
 }
+
 
 
 /* get_password() should not return until a correct password has been */
 /* entered. */
 
-/* size of input buffer. */
-#define INBUFSIZE 40
-
 void get_password(void) {
 
-  int c, i;
-  pid_t pid;
-  static char inbuf[INBUFSIZE];
-  char *inptr;
-  static struct passwd pwd;
+  struct passwd *pwd;
+  int times = 0;
 
   do {
+    pwd = getpwuid(getuid());
+    if (o_lock_all) {
+      printf("The entire console display is now completely locked.\n"
+	     "You will not be able to switch to another virtual console.\n");
+
+    } else {
+      printf("This TTY is now locked.  Use Control-function keys to switch\n"
+	     "to other virtual consoles.\n");
+    }
     printf("Please enter the password to unlock.\n");
-    printf("%s's password:", getpwuid(getuid())->pw_name);
     fflush(stdout);
 
-    /* set the terminal characteristics to not echo, etc... */
+    if (correct_password(pwd))
+      return;
+
+    /* Need to slow down people who are trying to break in by brute force */
+    /* Note that it is technically possible to break this, but I can't    */
+    /* make it happen, even knowing the code and knowing how to try.      */
+    /* If you manage to kill vlock from the terminal while in this code,  */
+    /* please tell me how you did it.                                     */
     set_terminal();
-
-    /* get password from user -- fgets() doesn't seem to work,
-       probably because we have screwed with terminal settings */
-    while (c = read(STDIN_FILENO, &inbuf[i], 1)) {
-      synch(); /* possible compiler bug... */
-      if (c > 0) {
-	if (i+c >= INBUFSIZE) {
-	  i = 0;
-	  continue;
-	}
-	if ((inbuf[i+c-1] == '\n') || (inbuf[i+c-1] == '\r')) {
-	  inbuf[i+c-1] == '\000';
-	  break; /* done reading password */
-	}
-	else
-	  i += c; /* read more */
-      } else
-	if (c == 0) {
-	  i = 0;
-	}
+    sleep(++times);
+    printf(" *** That password is incorrect; please try again. *** \n");
+    if (times >= 15) {
+      printf("Slow down and try again in a while.\n");
+      sleep(times);
+      times = 2; /* don't make things too easy for someone to break in */
     }
+    printf("\n");
+    restore_terminal();
 
-    /* get rid of return or newline */
-    if(inptr = strchr(inbuf, '\r') || (inptr = strchr(inbuf, '\n')))
-      *inptr = '\000';
+  } while (1);
 
-    /* should get password from /etc/password and encrypt user-provided
-       one and see if they match */
-
-  } while (0); /* this should strcmp the encrypted strings */
-
-  /* reset the terminal characteristics to echo again before exiting */
-  restore_terminal();
-  printf("\n");
-  
 }
