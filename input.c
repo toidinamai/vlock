@@ -67,11 +67,13 @@ static struct pam_conv PAM_conversation = {
     NULL
 };
 
+#else /* !USE_PAM */
+#include <crypt.h>
 #endif /* USE_PAM */
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.23 1998/03/12 13:11:04 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.24 1998/03/29 23:34:06 johnsonm Exp $";
 
 
 static char prompt[100];  /* password prompt ("user's password: ") */
@@ -291,6 +293,7 @@ init_passwords(void)
 
   /* We don't need root privileges any longer.  */
   setuid(getuid());
+  setgid(getgid());
 
   sprintf(prompt, "%s's password: ", username);
 #endif /* !USE_PAM */

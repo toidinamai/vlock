@@ -14,13 +14,13 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
-#include <waitflags.h>
+#include <sys/wait.h>
 #include <sys/ioctl.h>
 #include <sys/vt.h>
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: signals.c,v 1.10 1997/10/10 17:08:15 johnsonm Exp $";
+static char rcsid[] = "$Id: signals.c,v 1.11 1998/03/29 23:34:06 johnsonm Exp $";
 
 
 
@@ -86,7 +86,7 @@ void set_signal_mask(int save) {
 
   /* we set SIGUSR{1,2} to point to *_vt() above */
   sigemptyset(&(sa.sa_mask));
-  sa.sa_flags = 0;
+  sa.sa_flags = SA_RESTART;
   sa.sa_handler = release_vt;
   sigaction(SIGUSR1, &sa, NULL);
   sa.sa_handler = acquire_vt;
