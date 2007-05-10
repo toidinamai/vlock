@@ -78,7 +78,7 @@ static int PAM_conv (int num_msg,
   struct pam_response *reply = NULL;
   int size = sizeof(struct pam_response);
 
-  reply = (pam_response *)malloc(sizeof(struct pam_response) * num_msg);
+  reply = (struct pam_response *)malloc(sizeof(struct pam_response) * num_msg);
   if (!reply) {
     return PAM_CONV_ERR;
   }
@@ -124,7 +124,7 @@ static struct pam_conv PAM_conversation = {
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.18 1997/10/10 18:05:02 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.19 1997/10/10 18:05:35 johnsonm Exp $";
 
 
 static char username[40]; /* current user's name */
