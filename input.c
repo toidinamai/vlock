@@ -26,6 +26,7 @@
         if getpass() fails.
   */
 
+#define _XOPEN_SOURCE 1 /* so unistd.h will define crypt() */
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -67,13 +68,11 @@ static struct pam_conv PAM_conversation = {
     NULL
 };
 
-#else /* !USE_PAM */
-#include <crypt.h>
 #endif /* USE_PAM */
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: input.c,v 1.24 1998/03/29 23:34:06 johnsonm Exp $";
+static char rcsid[] = "$Id: input.c,v 1.25 1998/03/30 14:55:02 johnsonm Exp $";
 
 
 static char prompt[100];  /* password prompt ("user's password: ") */
