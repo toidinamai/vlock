@@ -46,14 +46,17 @@ use the source...
 
 "vlock -h" or "vlock --help" will get you a help message.
 
-Features:
+*** Features: ***
 Currently, vlock doesn't have very many features.  It locks the
 console.  I started putting in hooks for fancy screen-saving
 neat-looking displays using vgalib, but haven't implemented
 anything yet, and probably never will.  If anyone is interested
-in doing this, please contact me.
+in doing this, please contact me.  A good screen saver, as is
+being discussed in c.o.l.d as I write this, would be far better.
+It would just have to be able to cooperate with vlock, or
+vice versa.
 
-Shadow passwords:
+*** Shadow passwords: ***
 I don't use shadow passwords, so I can't test this with shadow
 passwords.  If you have shadow passwords, please compile this
 (at least input.c) with -SHADOW_PWD, and make vlock setuid
@@ -74,6 +77,12 @@ give no warranty of merchantability or fitness for a
 particular purpose.
 
 
+*** Bugs fixed: ***
+Root was not allowed to lock his tty because I took my
+password reading program from GNU su, for which it is
+appropriate for root not to be asked to enter a password...
+This was fixed March 21, 1994.
+
 
 Please send me any comments you have about vlock.  My
 name is Michael K. Johnson, and my email address is
@@ -83,3 +92,4 @@ I wrote this code as a demonstration of the VT ioctls
 for the Linux Journal.  I encourage anyone who does
 not have a subscription to subscribe:  email
 linux@fylz.com for subscription information.
+
