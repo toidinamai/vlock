@@ -5,7 +5,6 @@ Release: 1
 Copyright: GPL
 Group: Utilities/Console
 Source: ftp://tsx-11.mit.edu:/pub/linux/sources/usr.bin/vlock-1.1.tar.gz
-Source1: vlock.pamd
 Requires: pam >= 0.59
 BuildRoot: /tmp/vlock
 
