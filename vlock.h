@@ -11,10 +11,13 @@
  */
 
 /* RCS log:
- * $Log$
+ * $Log: vlock.h,v $
+ * Revision 1.1  1994/03/13  16:28:16  johnsonm
+ * Initial revision
+ *
  */
 
-static char rcsid_vlockh[] = "$Id: vlock.h,v 1.1 1994/03/13 16:28:16 johnsonm Exp $";
+static char rcsid_vlockh[] = "$Id: vlock.h,v 1.2 1994/03/15 18:27:33 johnsonm Exp $";
 
 /* Pattern lists are not yet really supported, but we'll put in the */
 /* infrastructure for when they are. */
@@ -32,7 +35,9 @@ void release_vt(int signo);
 void acquire_vt(int signo);
 void mask_signals(void);
 void restore_signals(void);
-
+void set_terminal(void);
+void restore_terminal(void);
+void get_password(void);
 
 
 /* Global variables: */
@@ -48,4 +53,6 @@ void restore_signals(void);
 /* Other globals: */
   /* Copy of the VT mode when the program was started */
   extern struct vt_mode ovtm;
+  extern struct termios oterm;
+  extern int vfd;
 
