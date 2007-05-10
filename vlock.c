@@ -12,6 +12,9 @@
 
 /* RCS log:
  * $Log: vlock.c,v $
+ * Revision 1.6  1994/03/19  14:36:08  johnsonm
+ * Made a better explanation for when the --all or -a flag is chosen.
+ *
  * Revision 1.5  1994/03/19  14:25:16  johnsonm
  * Removed silly two-process model.  Must have been half asleep when
  * I came up with that idea.  vlock works now.
@@ -48,7 +51,7 @@
 #include "version.h"
 
 
-static char rcsid[] = "$Id: vlock.c,v 1.6 1994/03/19 14:36:08 johnsonm Exp $";
+static char rcsid[] = "$Id: vlock.c,v 1.7 1994/03/19 17:54:42 johnsonm Exp $";
 
 /* Option globals */
   /* This determines whether the default behavior is to lock only the */
@@ -128,17 +131,12 @@ int main(int argc, char **argv) {
   vtm.acqsig = SIGUSR2; /* handled by acquire_vt() */
   ioctl(vfd, VT_SETMODE, &vtm);
 
-  if (o_lock_all) {
-    printf("The entire console display is now completely locked.\n");
-  } else {
-    printf("This TTY is now locked.  Use Control-function keys to switch\n"
-	   "to other virtual consoles.\n");
-  }
-
   /* get_password() sets the terminal characteristics and does not */
   /* return until the correct password has been read.              */
   get_password();
 
+  /* we should really return something... */
+  return (0);
 
 }
 
