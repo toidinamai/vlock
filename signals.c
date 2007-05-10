@@ -12,6 +12,11 @@
 
 /* RCS log:
  * $Log: signals.c,v $
+ * Revision 1.5  1994/03/19  14:28:18  johnsonm
+ * Removed support for silly two-process idea.  signal mask no longer
+ * inverse of what I want.  (I may have fixed this in an earlier
+ * version, and forgotten to log it.)
+ *
  * Revision 1.4  1994/03/16  20:11:04  johnsonm
  * It mostly works -- child can still be killed by sigchld, which
  * propogates to parent, which kills lock program.  However, locking
@@ -38,7 +43,7 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: signals.c,v 1.5 1994/03/19 14:28:18 johnsonm Exp $";
+static char rcsid[] = "$Id: signals.c,v 1.6 1994/03/23 17:01:25 johnsonm Exp $";
 
 
 
@@ -86,9 +91,6 @@ void mask_signals(void) {
   /* signal mask and change it or to do a sigfillset and go from there. */
   /* The code should handle either, I think. */
   sigprocmask(SIG_SETMASK, NULL, &sig);
-  /*
-  sigfillset(&sig);
-  */
   sigdelset(&sig, SIGUSR1);
   sigdelset(&sig, SIGUSR2);
   sigaddset(&sig, SIGTSTP);
@@ -96,6 +98,7 @@ void mask_signals(void) {
   sigaddset(&sig, SIGTTOU);
   sigaddset(&sig, SIGHUP);
   sigaddset(&sig, SIGCHLD);
+  sigaddset(&sig, SIGQUIT);
   sigprocmask(SIG_SETMASK, &sig, &osig);
   
 
@@ -109,11 +112,8 @@ void mask_signals(void) {
 
   /* Need to handle some signals so that we don't get killed by them */
   sa.sa_handler = signal_ignorer;
-  sigaction(SIGTSTP, &sa, NULL);
-  sigaction(SIGTTIN, &sa, NULL);
-  sigaction(SIGTTOU, &sa, NULL);
   sigaction(SIGHUP, &sa, NULL);
-
+  sigaction(SIGQUIT, &sa, NULL);
 }
 
 
