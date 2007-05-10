@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: vlock.c,v $
+ * Revision 1.3  1994/03/15  18:27:33  johnsonm
+ * Moved terminal handling stuff into terminal.c, and changed the
+ * end to support a two-process model for async I/O.
+ *
  * Revision 1.2  1994/03/13  17:28:56  johnsonm
  * Now using SIGUSR{1,2} correctly to announce VC switches.  Fixed a few
  * other minor bugs.
@@ -27,7 +31,6 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <termios.h>
-#include <pwd.h>
 #include <signal.h>
 #include <sys/vt.h>
 #include <sys/kd.h>
@@ -36,7 +39,7 @@
 #include "version.h"
 
 
-static char rcsid[] = "$Id: vlock.c,v 1.3 1994/03/15 18:27:33 johnsonm Exp $";
+static char rcsid[] = "$Id: vlock.c,v 1.4 1994/03/16 20:14:06 johnsonm Exp $";
 
 /* Option globals */
   /* This determines whether the default behavior is to lock only the */
@@ -116,16 +119,23 @@ int main(int argc, char **argv) {
   vtm.acqsig = SIGUSR2; /* handled by acquire_vt() */
   ioctl(vfd, VT_SETMODE, &vtm);
 
-  printf("Your TTY is now locked.  Please enter the password to unlock.\n");
-  printf("%s's password:", getpwuid(getuid())->pw_name);
+  if (o_lock_all) {
+    printf("This TTY is now completely locked.\n");
+  } else {
+    printf("This TTY is now locked.  Use Control-function keys to switch\n"
+	   "to other virtual consoles.\n");
+  }
 
-  set_terminal();
-
-  /* I'd like to use getchar() here for testing now, but I can't; */
-  /* signals aren't being handled until that system call returns. */
+  /* start new process to get IO asynchronously, and exit, causing a */
+  /* SIGCHLD, when the password is entered correctly.  This call     */
+  /* returns immediately. */
   get_password();
 
-  /* Now, get_password will fork the child process and return, and    */
+  /* Now we need to close stdin so the child will get it the input, */
+  /* and we don't need it anymore.                                  */
+  fclose(stdin);
+
+  /* Now, get_password has forked the child process and returned, and */
   /* signal_die() will get the SIGCHLD.  In the meantime, we need to  */
   /* make a way for all signals to get through as soon as they come.  */
   /* signal_die() will be responsible for exiting if a SIGCHLD is     */
