@@ -1,7 +1,7 @@
 /* vlock.c -- main routine for vlock, the VT locking program for linux
  *
  * This program is copyright (C) 1994 Michael K. Johnson, and is free
- * software, which is freely distributable under the terms of the
+ * software which is freely distributable under the terms of the
  * GNU public license, included as the file COPYING in this
  * distribution.  It is NOT public domain software, and any
  * redistribution not permitted by the GNU Public License is
@@ -12,6 +12,10 @@
 
 /* RCS log:
  * $Log: vlock.c,v $
+ * Revision 1.9  1994/03/23  17:00:47  johnsonm
+ * Removed appendages for patterns.
+ * Added support for non-VT ttys.
+ *
  * Revision 1.8  1994/03/20  11:21:20  johnsonm
  * Now check /dev/console after opening it to make sure the call succeeded
  *
@@ -58,7 +62,7 @@
 #include "version.h"
 
 
-static char rcsid[] = "$Id: vlock.c,v 1.9 1994/03/23 17:00:47 johnsonm Exp $";
+static char rcsid[] = "$Id: vlock.c,v 1.10 1994/07/03 12:15:22 johnsonm Exp $";
 
 /* Option globals */
   /* This determines whether the default behavior is to lock only the */
