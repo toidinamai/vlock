@@ -4,53 +4,9 @@
  * software which is freely distributable under the terms of the
  * GNU public license, included as the file COPYING in this
  * distribution.  It is NOT public domain software, and any
- * redistribution not permitted by the GNU Public License is
+ * redistribution not permitted by the GNU General Public License is
  * expressly forbidden without prior written permission from
  * the author.
- *
- */
-
-/* RCS log:
- * $Log: vlock.c,v $
- * Revision 1.11  1994/07/03 12:41:43  johnsonm
- * Removed emacs variables.
- *
- * Revision 1.10  1994/07/03  12:15:22  johnsonm
- * *** empty log message ***
- *
- * Revision 1.9  1994/03/23  17:00:47  johnsonm
- * Removed appendages for patterns.
- * Added support for non-VT ttys.
- *
- * Revision 1.8  1994/03/20  11:21:20  johnsonm
- * Now check /dev/console after opening it to make sure the call succeeded
- *
- * Revision 1.7  1994/03/19  17:54:42  johnsonm
- * Moved printing the lock message to get_password.  Added a return
- * code again.
- *
- * Revision 1.6  1994/03/19  14:36:08  johnsonm
- * Made a better explanation for when the --all or -a flag is chosen.
- *
- * Revision 1.5  1994/03/19  14:25:16  johnsonm
- * Removed silly two-process model.  Must have been half asleep when
- * I came up with that idea.  vlock works now.
- *
- * Revision 1.4  1994/03/16  20:14:06  johnsonm
- * Cleaned up, putting most real work into child functions, which
- * cleaned up the interface.  The whole program is almost all
- * working now.
- *
- * Revision 1.3  1994/03/15  18:27:33  johnsonm
- * Moved terminal handling stuff into terminal.c, and changed the
- * end to support a two-process model for async I/O.
- *
- * Revision 1.2  1994/03/13  17:28:56  johnsonm
- * Now using SIGUSR{1,2} correctly to announce VC switches.  Fixed a few
- * other minor bugs.
- *
- * Revision 1.1  1994/03/13  16:28:16  johnsonm
- * Initial revision
  *
  */
 
@@ -68,7 +24,7 @@
 #include "version.h"
 
 
-static char rcsid[] = "$Id: vlock.c,v 1.12 1996/05/17 02:52:03 johnsonm Exp $";
+static char rcsid[] = "$Id: vlock.c,v 1.13 1997/10/10 17:08:15 johnsonm Exp $";
 
 /* Option globals */
   /* This determines whether the default behavior is to lock only the */

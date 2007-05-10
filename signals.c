@@ -4,45 +4,9 @@
  * software which is freely distributable under the terms of the
  * GNU public license, included as the file COPYING in this
  * distribution.  It is NOT public domain software, and any
- * redistribution not permitted by the GNU Public License is
+ * redistribution not permitted by the GNU General Public License is
  * expressly forbidden without prior written permission from
  * the author.
- *
- */
-
-/* RCS log:
- * $Log: signals.c,v $
- * Revision 1.8  1994/07/03 13:09:18  johnsonm
- * Added support for setting the signal mask with or without saving the
- *   old mask.
- * Added handling SIGTSTP back in; apparantly it is important in some cases.
- *
- * Revision 1.7  1994/07/03  12:01:53  johnsonm
- * Added SIGINT handling so ctrl-break won't kill it.
- *
- * Revision 1.6  1994/03/23  17:01:25  johnsonm
- * Fixed SIGQUIT bug.
- * Added support for non-vt ttys.
- *
- * Revision 1.5  1994/03/19  14:28:18  johnsonm
- * Removed support for silly two-process idea.  signal mask no longer
- * inverse of what I want.  (I may have fixed this in an earlier
- * version, and forgotten to log it.)
- *
- * Revision 1.4  1994/03/16  20:11:04  johnsonm
- * It mostly works -- child can still be killed by sigchld, which
- * propogates to parent, which kills lock program.  However, locking
- * all VC's does work if there is no other way to log on...
- *
- * Revision 1.3  1994/03/15  18:27:33  johnsonm
- * Added a few more signals, in preparation for two-process model.
- *
- * Revision 1.2  1994/03/13  17:27:44  johnsonm
- * Now using SIGUSR{1,2} correctly with release_vt() and acquire_vt() to
- * keep from switching VC's.
- *
- * Revision 1.1  1994/03/13  16:28:16  johnsonm
- * Initial revision
  *
  */
 
@@ -56,7 +20,7 @@
 #include "vlock.h"
 
 
-static char rcsid[] = "$Id: signals.c,v 1.9 1996/05/17 02:50:28 johnsonm Exp $";
+static char rcsid[] = "$Id: signals.c,v 1.10 1997/10/10 17:08:15 johnsonm Exp $";
 
 
 
