@@ -10,4 +10,4 @@
  *
  */
 
-#define VERSION "vlock version 1.4-rc2\n"
+#define VERSION "vlock version 1.4\n"
