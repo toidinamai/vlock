@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 
 #define OLD_VALUE_LENGTH 8
 
@@ -29,7 +30,7 @@ int disable_sysrq(void) {
 
   if (!sysrq_file) {
     fprintf(stderr, "Warning: couldn't open '%s': %s\n", SYSRQ_PATH, strerror(errno));
-    return;
+    return 0;
   }
 
   if (!fgets(old_value, OLD_VALUE_LENGTH, sysrq_file)) {
@@ -50,10 +51,11 @@ int disable_sysrq(void) {
 
   rewind(sysrq_file);
 
-  return;
+  return 1;
 error:
   fclose(sysrq_file);
   sysrq_file = NULL;
+  return 0;
 }
 
 void restore_sysrq(void) {
