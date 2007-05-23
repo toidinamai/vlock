@@ -33,33 +33,6 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <pwd.h>
-#define _XOPEN_SOURCE 1 /* so unistd.h will define crypt() */
-#include <unistd.h>
-#ifdef SHADOW_PWD
-  /* Shadow passwd support; THIS IS NOT SAFE with some very old versions
-     of the shadow password suite, where some signals get ignored, and
-     simple keystrokes can terminate vlock.  This cannot be solved here;
-     you have to fix your shadow library or use a working one. */
-
-  /* Current shadow maintainer's note: it should no longer be a problem
-     with libc5 because we don't need to link with libshadow.a at all
-     (shadow passwords are now supported in the standard libc). */
-
-
-#include <shadow.h>
-#endif
-
-
-#ifdef USE_PAM
-  /* PAM -- Pluggable Authentication Modules support
-     With any luck, PAM will be *the* method through which authentication
-     is done under Linux.  Very flexible; allows any authentication method
-     to work according to a configuration file.
-  */
-  /* PAM subsumes shadow, and doesn't mesh with shadow-specific code */
-#ifdef SHADOW_PWD
-#error "Shadow and PAM don't mix!"
-#endif
 
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
@@ -69,25 +42,16 @@ static struct pam_conv PAM_conversation = {
     NULL
 };
 
-#endif /* USE_PAM */
 #include "vlock.h"
 
 
 static char prompt[100];  /* password prompt ("user's password: ") */
 static char username[40]; /* current user's name */
-#ifndef USE_PAM
-static char userpw[200];  /* current user's encrypted password */
-#ifndef NO_ROOT_PASS
-static char rootpw[200];  /* root's encrypted password */
-#endif
-#endif /* !USE_PAM */
-
 
 
 static int
 correct_password(void)
 {
-#ifdef USE_PAM
   pam_handle_t *pamh;
   int pam_error;
 
@@ -126,34 +90,6 @@ correct_password(void)
   pam_end(pamh, PAM_SUCCESS);
   /* If this point is reached, the user has been authenticated. */
   return 1;
-
-
-
-#else /* !PAM */
-  char *pass;
-
-  pass = getpass(prompt);
-  if (!pass) {
-    perror("getpass: cannot open /dev/tty");
-    restore_terminal();
-    exit(1);
-  }
-
-  if (strcmp(crypt(pass, userpw), userpw) == 0) {
-    memset(pass, 0, strlen(pass));
-    return 1;
-  }
-#ifndef NO_ROOT_PASS
-  if (strcmp(crypt(pass, rootpw), rootpw) == 0) {
-    memset(pass, 0, strlen(pass));
-    /* To do: for the paranoid, maybe log the use of root password? */
-    return 1;
-  }
-#endif
-  memset(pass, 0, strlen(pass));
-
-#endif /* !USE_PAM */
-  return 0;
 }
 
 
@@ -162,8 +98,6 @@ correct_password(void)
 void
 get_password(void)
 {
-  int times = 0;
-
   set_terminal(0);
   do {
     if (o_lock_all) {
@@ -202,18 +136,7 @@ get_password(void)
     /* make it happen, even knowing the code and knowing how to try.      */
     /* If you manage to kill vlock from the terminal while in this code,  */
     /* please tell me how you did it.                                     */
-#ifndef USE_PAM
-    /* This is policy; when we use PAM, we should let it determine policy */
-    sleep(++times);
-#endif
     printf(" *** That password is incorrect; please try again. *** \n");
-#ifndef USE_PAM
-    if (times >= 15) {
-      printf("Slow down and try again in a while.\n");
-      sleep(times);
-      times = 2; /* don't make things too easy for someone to break in */
-    }
-#endif
     printf("\n");
 
   } while (1);
@@ -239,21 +162,12 @@ static struct passwd *
 my_getpwuid(uid_t uid)
 {
   struct passwd *pw;
-#ifdef SHADOW_PWD
-  struct spwd *sp;
-#endif
 
   pw = getpwuid(uid);
   if (!pw) {
     fprintf(stderr, "vlock: getpwuid(%d) failed: %s\n", uid, strerror(errno));
     exit(1);
   }
-#ifdef SHADOW_PWD
-  sp = getspnam(pw->pw_name);
-  if (sp)
-    pw->pw_passwd = sp->sp_pwdp;
-  endspent();
-#endif
   return pw;
 }
 
@@ -268,31 +182,4 @@ init_passwords(void)
   /* Save the results where they will not get overwritten.  */
   strncpy(username, pw->pw_name, sizeof(username) - 1);
   username[sizeof(username) - 1] = '\0';
-
-#ifndef USE_PAM
-  strncpy(userpw, pw->pw_passwd, sizeof(userpw) - 1);
-  userpw[sizeof(userpw) - 1] = '\0';
-
-  if (strlen(userpw) < 13) {
-    /* To do: ask for password to use instead of login password.  */
-    fprintf(stderr,
-      " *** No valid password for user %s - will not lock.  ***\n", username);
-    exit(1);
-  }
-
-#ifndef NO_ROOT_PASS
-  /* Now get and save the encrypted root password.  */
-  pw = my_getpwuid(0);
-
-  strncpy(rootpw, pw->pw_passwd, sizeof(rootpw) - 1);
-  rootpw[sizeof(rootpw) - 1] = '\0';
-#endif /* !NO_ROOT_PASS */
-
-  /* We don't need root privileges any longer.  */
-  setuid(getuid());
-  setgid(getgid());
-
-  sprintf(prompt, "%s's password: ", username);
-#endif /* !USE_PAM */
 }
-
