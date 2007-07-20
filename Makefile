@@ -20,8 +20,8 @@ input.o: vlock.h
 
 .PHONY: install
 install: vlock
-	$(INSTALL) -m 4711 -o root -g root vlock $(DESTDIR)$(PREFIX)/bin
-	$(INSTALL) -m 644 -o root -g root vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1
+	$(INSTALL) -D -m 4711 -o root -g root vlock $(DESTDIR)$(PREFIX)/bin/vlock
+	$(INSTALL) -D -m 644 -o root -g root vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
 
 .PHONY: clean
 clean:
