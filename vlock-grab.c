@@ -15,14 +15,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <getopt.h>
-#include <termios.h>
-#include <signal.h>
 #include <sys/vt.h>
-#include <sys/kd.h>
 #include <sys/ioctl.h>
-#include "vlock.h"
-#include "version.h"
 
 #define VTNAME "/dev/tty%d"
 
@@ -121,7 +115,7 @@ int main(int argc, char **argv) {
   }
 
   close(vtfd);
-  waitpid(pid, &status, 0);
+  waitpid(pid, NULL, 0);
 
   /* globally enable virtual console switching */
   if (ioctl(consfd, VT_UNLOCKSWITCH) < 0) {
