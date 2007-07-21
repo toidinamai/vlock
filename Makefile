@@ -3,7 +3,7 @@
 include config.mk
 
 OBJS = vlock.o signals.o help.o terminal.o input.o sysrq.o
-PROGRAMS = vlock vlock-grab vlock-lockswitch vlock-unlockswitch
+PROGRAMS = vlock vlock-grab vlock-lockswitch vlock-unlockswitch vlock-nosysrq
 
 .PHONY: all
 all: $(PROGRAMS)

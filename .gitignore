@@ -3,5 +3,6 @@ vlock
 vlock-grab
 vlock-lockswitch
 vlock-unlockswitch
+vlock-nosysrq
 vlock.man
 vlock.1.html
