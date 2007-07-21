@@ -44,25 +44,33 @@ int main(int argc, char **argv) {
     exit (111);
   }
 
+  /* open the current terminal */
   if ((consfd = open("/dev/tty", O_RDWR)) < 0) {
     perror("vlock: could not open /dev/tty");
     exit (1);
   }
 
+  /* get the virtual console status */
   if (ioctl(consfd, VT_GETSTATE, &vtstat) < 0) {
-    /* this tty is not a virtual console, try harder */
+    /* the current terminal does not belong to the virtual console */
     close(consfd);
+
+    /* XXX: add a PAM check here */
+
+    /* open the virtual console directly */
     if ((consfd = open("/dev/console", O_RDWR)) < 0) {
       perror("vlock: cannot open virtual console");
       exit (1);
     }
 
+    /* get the virtual console status, again */
     if (ioctl(consfd, VT_GETSTATE, &vtstat) < 0) {
       perror("vlock: virtual console not a virtual console");
       exit (1);
     }
   }
 
+  /* get a free virtual terminal number */
   if (ioctl(consfd, VT_OPENQRY, &vtno) < 0)  {
     perror("vlock: could not find a free virtual terminal");
     exit (1);
@@ -72,11 +80,13 @@ int main(int argc, char **argv) {
     fprintf(stderr, "virtual terminal number too large\n");
   }
 
+  /* open the free virtual terminal */
   if ((vtfd = open(vtname, O_RDWR)) < 0) {
     perror("vlock: cannot open new console");
     exit (1);
   }
 
+  /* get the virtual terminal's mode */
   if (ioctl(vtfd, VT_GETMODE, &vtm) < 0) {
     perror("vlock: could not get virtual terminal mode");
     exit (1);
@@ -84,6 +94,7 @@ int main(int argc, char **argv) {
 
   /* XXX: set signals to prevent console switching here */
 
+  /* switch to the virtual terminal */
   if (ioctl(consfd, VT_ACTIVATE, vtno) < 0
       || ioctl(consfd, VT_WAITACTIVE, vtno) < 0) {
     perror("vlock: could not activate new terminal");
@@ -94,15 +105,19 @@ int main(int argc, char **argv) {
 
   if (pid < 0) {
     perror("vlock: could not create child process");
-  } else if (pid == 0) { /* child */
+  } else if (pid == 0) {
+    /* child */
+
+    /* XXX: chown virtual terminal? */
     /* drop privleges */
-    uid_t uid = getuid();
-    setuid(uid);
+    setuid(getuid());
+    /* redirect stdio */
     dup2(vtfd, 0);
     dup2(vtfd, 1);
     dup2(vtfd, 2);
     close(vtfd);
 
+    /* run child */
     execvp(*(argv+1), argv+1);
     perror("vlock: exec failed");
     _exit(127);
@@ -111,11 +126,13 @@ int main(int argc, char **argv) {
   close(vtfd);
   waitpid(pid, &status, 0);
 
+  /* switch back to former virtual terminal */
   if (ioctl(consfd, VT_ACTIVATE, vtstat.v_active) < 0
       || ioctl(consfd, VT_WAITACTIVE, vtstat.v_active) < 0) {
     perror("vlock: could not activate old console");
   }
 
+  /* deallocate virtual terminal */
   if (ioctl(consfd, VT_DISALLOCATE, vtno) < 0) {
     perror("vlock: could not disallocate console");
   }
