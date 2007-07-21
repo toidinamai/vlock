@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <sys/vt.h>
 #include <sys/ioctl.h>
+#include <sys/wait.h>
 
 #define VTNAME "/dev/tty%d"
 
@@ -95,9 +96,7 @@ int main(int argc, char **argv) {
 
   pid = fork();
 
-  if (pid < 0) {
-    perror("vlock: could not create child process");
-  } else if (pid == 0) {
+  if (pid == 0) {
     /* child */
 
     /* XXX: chown virtual terminal? */
@@ -116,7 +115,14 @@ int main(int argc, char **argv) {
   }
 
   close(vtfd);
-  waitpid(pid, NULL, 0);
+
+  if (pid > 0) {
+    if (waitpid(pid, &status, 0) < 0) {
+      perror("vlock: child process missing");
+      pid = -1;
+    }
+  } else
+    perror("vlock: could not create child process");
 
   /* globally enable virtual console switching */
   if (ioctl(consfd, VT_UNLOCKSWITCH) < 0) {
@@ -133,6 +139,16 @@ int main(int argc, char **argv) {
   /* deallocate virtual terminal */
   if (ioctl(consfd, VT_DISALLOCATE, vtno) < 0) {
     perror("vlock: could not disallocate console");
+  }
+
+  /* exit with the exit status of the child or 200+signal if
+   * it was killed */
+  if (pid > 0) {
+    if (WIFEXITED(status)) {
+      exit (WEXITSTATUS(status));
+    } else if (WIFSIGNALED(status)) {
+      exit (200+WTERMSIG(status));
+    }
   }
 
   return 0;
