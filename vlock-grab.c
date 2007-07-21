@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     /* the current terminal does not belong to the virtual console */
     close(consfd);
 
-    /* XXX: add a PAM check here */
+    /* XXX: add optional PAM check here */
 
     /* open the virtual console directly */
     if ((consfd = open("/dev/console", O_RDWR)) < 0) {
@@ -112,17 +112,15 @@ int main(int argc, char **argv) {
     execvp(*(argv+1), argv+1);
     perror("vlock: exec failed");
     _exit(127);
-  }
+  } else if (pid < 0)
+    perror("vlock: could not create child process");
 
   close(vtfd);
 
-  if (pid > 0) {
-    if (waitpid(pid, &status, 0) < 0) {
-      perror("vlock: child process missing");
-      pid = -1;
-    }
-  } else
-    perror("vlock: could not create child process");
+  if (pid > 0 && waitpid(pid, &status, 0) < 0) {
+    perror("vlock: child process missing");
+    pid = -1;
+  }
 
   /* globally enable virtual console switching */
   if (ioctl(consfd, VT_UNLOCKSWITCH) < 0) {
