@@ -1,4 +1,5 @@
 *.o
 vlock
+vlock-grab
 vlock.man
 vlock.1.html

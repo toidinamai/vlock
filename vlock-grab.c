@@ -1,0 +1,124 @@
+/* vlock-grab.c -- console grabbing routine for vlock,
+ *                   the VT locking program for linux
+ *
+ * This program is copyright (C) 2007 Frank Benkstein, and is free
+ * software which is freely distributable under the terms of the
+ * GNU General Public License version 2, included as the file COPYING in this
+ * distribution.  It is NOT public domain software, and any
+ * redistribution not permitted by the GNU General Public License is
+ * expressly forbidden without prior written permission from
+ * the author.
+ *
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <getopt.h>
+#include <termios.h>
+#include <signal.h>
+#include <sys/vt.h>
+#include <sys/kd.h>
+#include <sys/ioctl.h>
+#include "vlock.h"
+#include "version.h"
+
+#define VTNAME "/dev/tty%d"
+
+/* Grab a new console and run the program given by argv+1 there.  Console
+ * switching is locked as long as the program is running.  When the program
+ * is finished, remove locking and switch back to former console. */
+int main(int argc, char **argv) {
+  int consfd = -1;
+  struct vt_stat vtstat;
+  struct vt_mode vtm;
+  int vtno;
+  int vtfd;
+  char vtname[sizeof VTNAME + 2];
+  int pid;
+  int status;
+
+  if (argc < 2) {
+    fprintf(stderr, "usage: %s child\n", *argv);
+    exit (111);
+  }
+
+  if ((consfd = open("/dev/tty", O_RDWR)) < 0) {
+    perror("vlock: could not open /dev/tty");
+    exit (1);
+  }
+
+  if (ioctl(consfd, VT_GETSTATE, &vtstat) < 0) {
+    /* this tty is not a virtual console, try harder */
+    close(consfd);
+    if ((consfd = open("/dev/console", O_RDWR)) < 0) {
+      perror("vlock: cannot open virtual console");
+      exit (1);
+    }
+
+    if (ioctl(consfd, VT_GETSTATE, &vtstat) < 0) {
+      perror("vlock: virtual console not a virtual console");
+      exit (1);
+    }
+  }
+
+  if (ioctl(consfd, VT_OPENQRY, &vtno) < 0)  {
+    perror("vlock: could not find a free virtual terminal");
+    exit (1);
+  }
+
+  if (snprintf(vtname, sizeof vtname, VTNAME, vtno) > sizeof vtname) {
+    fprintf(stderr, "virtual terminal number too large\n");
+  }
+
+  if ((vtfd = open(vtname, O_RDWR)) < 0) {
+    perror("vlock: cannot open new console");
+    exit (1);
+  }
+
+  if (ioctl(vtfd, VT_GETMODE, &vtm) < 0) {
+    perror("vlock: could not get virtual terminal mode");
+    exit (1);
+  }
+
+  /* XXX: set signals to prevent console switching here */
+
+  if (ioctl(consfd, VT_ACTIVATE, vtno) < 0
+      || ioctl(consfd, VT_WAITACTIVE, vtno) < 0) {
+    perror("vlock: could not activate new terminal");
+    exit (1);
+  }
+
+  pid = fork();
+
+  if (pid < 0) {
+    perror("vlock: could not create child process");
+  } else if (pid == 0) { /* child */
+    /* drop privleges */
+    uid_t uid = getuid();
+    setuid(uid);
+    dup2(vtfd, 0);
+    dup2(vtfd, 1);
+    dup2(vtfd, 2);
+    close(vtfd);
+
+    execvp(*(argv+1), argv+1);
+    perror("vlock: exec failed");
+    _exit(127);
+  }
+
+  close(vtfd);
+  waitpid(pid, &status, 0);
+
+  if (ioctl(consfd, VT_ACTIVATE, vtstat.v_active) < 0
+      || ioctl(consfd, VT_WAITACTIVE, vtstat.v_active) < 0) {
+    perror("vlock: could not activate old console");
+  }
+
+  if (ioctl(consfd, VT_DISALLOCATE, vtno) < 0) {
+    perror("vlock: could not disallocate console");
+  }
+
+  return 0;
+}

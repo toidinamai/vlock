@@ -4,6 +4,9 @@ include config.mk
 
 OBJS = vlock.o signals.o help.o terminal.o input.o sysrq.o
 
+.PHONY: all
+all: vlock vlock-grab
+
 vlock: $(OBJS)
 
 vlock.man: vlock.1
@@ -25,4 +28,4 @@ install: vlock
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) vlock vlock.man vlock.1.html
+	rm -f $(OBJS) vlock vlock-grab vlock.man vlock.1.html
