@@ -32,7 +32,6 @@
 int main(int argc, char **argv) {
   int consfd = -1;
   struct vt_stat vtstat;
-  struct vt_mode vtm;
   int vtno;
   int vtfd;
   char vtname[sizeof VTNAME + 2];
@@ -86,18 +85,16 @@ int main(int argc, char **argv) {
     exit (1);
   }
 
-  /* get the virtual terminal's mode */
-  if (ioctl(vtfd, VT_GETMODE, &vtm) < 0) {
-    perror("vlock: could not get virtual terminal mode");
-    exit (1);
-  }
-
-  /* XXX: set signals to prevent console switching here */
-
   /* switch to the virtual terminal */
   if (ioctl(consfd, VT_ACTIVATE, vtno) < 0
       || ioctl(consfd, VT_WAITACTIVE, vtno) < 0) {
     perror("vlock: could not activate new terminal");
+    exit (1);
+  }
+
+  /* globally disable virtual console switching */
+  if (ioctl(consfd, VT_LOCKSWITCH) < 0) {
+    perror("vlock: could not disable console switching");
     exit (1);
   }
 
@@ -112,9 +109,9 @@ int main(int argc, char **argv) {
     /* drop privleges */
     setuid(getuid());
     /* redirect stdio */
-    dup2(vtfd, 0);
-    dup2(vtfd, 1);
-    dup2(vtfd, 2);
+    dup2(vtfd, STDIN_FILENO);
+    dup2(vtfd, STDOUT_FILENO);
+    dup2(vtfd, STDERR_FILENO);
     close(vtfd);
 
     /* run child */
@@ -125,6 +122,12 @@ int main(int argc, char **argv) {
 
   close(vtfd);
   waitpid(pid, &status, 0);
+
+  /* globally enable virtual console switching */
+  if (ioctl(consfd, VT_UNLOCKSWITCH) < 0) {
+    perror("vlock: could not enable console switching");
+    exit (1);
+  }
 
   /* switch back to former virtual terminal */
   if (ioctl(consfd, VT_ACTIVATE, vtstat.v_active) < 0
