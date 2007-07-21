@@ -1,5 +1,7 @@
 *.o
 vlock
 vlock-grab
+vlock-lockswitch
+vlock-unlockswitch
 vlock.man
 vlock.1.html

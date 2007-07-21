@@ -5,7 +5,7 @@ include config.mk
 OBJS = vlock.o signals.o help.o terminal.o input.o sysrq.o
 
 .PHONY: all
-all: vlock vlock-grab
+all: vlock vlock-grab vlock-lockswitch vlock-unlockswitch
 
 vlock: $(OBJS)
 
