@@ -69,6 +69,7 @@ int main(int argc, char **argv) {
     exit (1);
   }
 
+  /* format the virtual terminal filename from the number */
   if (snprintf(vtname, sizeof vtname, VTNAME, vtno) > sizeof vtname) {
     fprintf(stderr, "virtual terminal number too large\n");
   }
