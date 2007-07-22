@@ -25,9 +25,10 @@
 
 /* Try to authenticate the user.  When the user is successfully authenticated
  * this function exits the program with exit status 0.  When the authentication
- * failed because of bad user input this function returns 1.  For all other
- * errors -1 is returned. */
-int auth_exit(const char *user) {
+ * fails for whatever reason the function sleeps the specified amount of seconds
+ * and then returns.
+ */
+void auth_exit(const char *user, unsigned int seconds) {
   pam_handle_t *pamh;
   int pam_status;
   int pam_end_status;
@@ -61,15 +62,10 @@ end:
     fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_end_status));
   }
 
-  switch (pam_status) {
-    case PAM_SUCCESS:
-      exit (0);
-    case PAM_USER_UNKNOWN:
-    case PAM_AUTH_ERR:
-      return 1;
-    default:
-      return -1;
-  }
+  if (pam_status == PAM_SUCCESS)
+    exit (0);
+  else
+    sleep(seconds);
 }
 
 int main(void) {
@@ -105,12 +101,10 @@ int main(void) {
 
     fflush(stderr);
 
-    if (auth_exit(user) < 0)
-      sleep(1);
+    auth_exit(user, 1);
 
 #ifndef NO_ROOT_PASS
-    if (auth_exit("root") < 0)
-      sleep(1);
+    auth_exit("root", 1);
 #endif
   }
 }
