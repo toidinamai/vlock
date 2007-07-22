@@ -36,6 +36,7 @@ int auth_exit(const char *user) {
     NULL
   };
 
+  /* initialize pam */
   pam_status = pam_start("vlock", user, &pamc, &pamh);
 
   if (pam_status != PAM_SUCCESS) {
@@ -43,7 +44,9 @@ int auth_exit(const char *user) {
     goto end;
   }
 
+  /* put the username before the password prompt */
   fprintf(stderr, "%s's ", user); fflush(stderr);
+  /* authenticate the user */
   pam_status = pam_authenticate(pamh, 0);
 
   if (pam_status != PAM_SUCCESS) {
@@ -51,6 +54,7 @@ int auth_exit(const char *user) {
   }
 
 end:
+  /* finish pam */
   pam_end_status = pam_end(pamh, pam_status);
 
   if (pam_end_status != PAM_SUCCESS) {
@@ -70,25 +74,33 @@ end:
 
 int main(void) {
   char user[40];
-  char *vlock_message = getenv("VLOCK_MESSAGE");
-  struct passwd *pw = getpwuid(getuid());
+  char *vlock_message;
+  struct passwd *pw;
 
+  /* ignore some signals */
   signal(SIGINT, SIG_IGN);
   signal(SIGQUIT, SIG_IGN);
   signal(SIGTSTP, SIG_IGN);
 
-  if (pw == NULL) {
+  /* get the password entry */
+  if ((pw = getpwuid(getuid())) == NULL) {
     perror("vlock: getpwuid() failed");
     exit (111);
   }
 
+  /* copy the username */
   strncpy(user, pw->pw_name, sizeof user - 1);
   user[sizeof user - 1] = '\0';
 
+  /* get the vlock message from the environment */
+  vlock_message = getenv("VLOCK_MESSAGE");
+
   for (;;) {
+    /* clear the screen */
     fprintf(stderr, CLEAR_SCREEN);
 
     if (vlock_message)
+      /* print vlock message */
       fprintf(stderr, "%s\n", vlock_message);
 
     fflush(stderr);
