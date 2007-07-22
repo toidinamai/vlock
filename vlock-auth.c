@@ -16,14 +16,21 @@
 #include <pwd.h>
 #include <string.h>
 #include <stdio.h>
+#include <signal.h>
 
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
 
-int auth(const char *user) {
+#define CLEAR_SCREEN "\033[H\033[J"
+
+/* Try to authenticate the user.  When the user is successfully authenticated
+ * this function exits the program with exit status 0.  When the authentication
+ * failed because of bad user input this function returns 1.  For all other
+ * errors -1 is returned. */
+int auth_exit(const char *user) {
   pam_handle_t *pamh;
   int pam_status;
-  int auth_status;
+  int pam_end_status;
   struct pam_conv pamc = {
     &misc_conv,
     NULL
@@ -33,39 +40,42 @@ int auth(const char *user) {
 
   if (pam_status != PAM_SUCCESS) {
     fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
-    auth_status = -1;
-    goto out;
+    goto end;
   }
 
-  fprintf(stderr, "%s's ", user); fflush(stdout);
+  fprintf(stderr, "%s's ", user); fflush(stderr);
   pam_status = pam_authenticate(pamh, 0);
-
-  if (pam_status == PAM_SUCCESS) {
-    auth_status = 1;
-  } else if (pam_status == PAM_AUTH_ERR) {
-    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
-    auth_status = 0;
-  } else {
-    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
-    auth_status = -1;
-  }
-
-out:
-  pam_status = pam_end(pamh, pam_status);
 
   if (pam_status != PAM_SUCCESS) {
     fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
   }
 
-  if (auth_status < 0)
-    exit (111);
-  else
-    return auth_status;
+end:
+  pam_end_status = pam_end(pamh, pam_status);
+
+  if (pam_end_status != PAM_SUCCESS) {
+    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_end_status));
+  }
+
+  switch (pam_status) {
+    case PAM_SUCCESS:
+      exit (0);
+    case PAM_USER_UNKNOWN:
+    case PAM_AUTH_ERR:
+      return 1;
+    default:
+      return -1;
+  }
 }
 
 int main(void) {
   char user[40];
+  char *vlock_message = getenv("VLOCK_MESSAGE");
   struct passwd *pw = getpwuid(getuid());
+
+  signal(SIGINT, SIG_IGN);
+  signal(SIGQUIT, SIG_IGN);
+  signal(SIGTSTP, SIG_IGN);
 
   if (pw == NULL) {
     perror("vlock: getpwuid() failed");
@@ -75,13 +85,20 @@ int main(void) {
   strncpy(user, pw->pw_name, sizeof user - 1);
   user[sizeof user - 1] = '\0';
 
-  if (auth(user) != 0)
-    exit (0);
+  for (;;) {
+    fprintf(stderr, CLEAR_SCREEN);
+
+    if (vlock_message)
+      fprintf(stderr, "%s\n", vlock_message);
+
+    fflush(stderr);
+
+    if (auth_exit(user) < 0)
+      sleep(1);
 
 #ifndef NO_ROOT_PASS
-  if (auth("root") != 0)
-    exit (0);
+    if (auth_exit("root") < 0)
+      sleep(1);
 #endif
-
-  exit (1);
+  }
 }
