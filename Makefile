@@ -2,7 +2,7 @@
 
 include config.mk
 
-VLOCK_VERSION = "vlock version 1.4"
+VLOCK_VERSION = "vlock version 2.0 alpha1"
 
 PROGRAMS = vlock vlock-auth vlock-grab vlock-lockswitch vlock-unlockswitch vlock-nosysrq
 
