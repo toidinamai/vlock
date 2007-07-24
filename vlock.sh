@@ -8,19 +8,17 @@ VLOCK_AUTH=%PREFIX%/sbin/vlock-auth
 VLOCK_VERSION=%VLOCK_VERSION%
 
 print_help() {
-  cat >&2 <<HELP
-vlock: locks virtual consoles, saving your current session.
-Usage: vlock [options]
-       Where [options] are any of:
--c or --current: lock only this virtual console, allowing user to
-       switch to other virtual consoles.
--a or --all: lock all virtual consoles by preventing other users
-       from switching virtual consoles.
--s or --disable-sysrq: disable sysrq while consoles are locked to
-       prevent killing vlock with SAK, requires --all.
--v or --version: Print the version number of vlock and exit.
--h or --help: Print this help message and exit.
-HELP
+  echo >&2 "vlock: locks virtual consoles, saving your current session."
+  echo >&2 "Usage: vlock [options]"
+  echo >&2 "       Where [options] are any of:"
+  echo >&2 "-c or --current: lock only this virtual console, allowing user to"
+  echo >&2 "       switch to other virtual consoles."
+  echo >&2 "-a or --all: lock all virtual consoles by preventing other users"
+  echo >&2 "       from switching virtual consoles."
+  echo >&2 "-s or --disable-sysrq: disable sysrq while consoles are locked to"
+  echo >&2 "       prevent killing vlock with SAK, requires --all."
+  echo >&2 "-v or --version: Print the version number of vlock and exit."
+  echo >&2 "-h or --help: Print this help message and exit."
   exit $1
 }
 
