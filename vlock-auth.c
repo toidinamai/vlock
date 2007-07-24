@@ -75,6 +75,7 @@ int main(void) {
 
   /* ignore some signals */
   signal(SIGINT, SIG_IGN);
+  signal(SIGHUP, SIG_IGN);
   signal(SIGQUIT, SIG_IGN);
   signal(SIGTSTP, SIG_IGN);
 
