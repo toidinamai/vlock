@@ -20,6 +20,7 @@
 #include <sys/wait.h>
 
 #define VTNAME "/dev/tty%d"
+#define CONSOLE "/dev/tty0"
 
 /* Grab a new console and run the program given by argv+1 there.  Console
  * switching is locked as long as the program is running.  When the program
@@ -52,7 +53,7 @@ int main(int argc, char **argv) {
     /* XXX: add optional PAM check here */
 
     /* open the virtual console directly */
-    if ((consfd = open("/dev/console", O_RDWR)) < 0) {
+    if ((consfd = open(CONSOLE, O_RDWR)) < 0) {
       perror("vlock: cannot open virtual console");
       exit (1);
     }

@@ -19,10 +19,12 @@
 #include <sys/ioctl.h>
 #include <sys/vt.h>
 
+#define CONSOLE "/dev/tty0"
+
 int main(void) {
   int consfd;
 
-  if ((consfd = open("/dev/console", O_RDWR)) < 0) {
+  if ((consfd = open(CONSOLE, O_RDWR)) < 0) {
     perror("vlock: cannot open virtual console");
     exit (1);
   }
