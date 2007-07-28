@@ -4,7 +4,7 @@ trap : HUP INT QUIT TSTP
 
 VLOCK_GRAB=%PREFIX%/sbin/vlock-grab
 VLOCK_NOSYSRQ=%PREFIX%/sbin/vlock-nosysrq
-VLOCK_AUTH=%PREFIX%/sbin/vlock-auth
+VLOCK_LOCK=%PREFIX%/sbin/vlock-lock
 VLOCK_VERSION=%VLOCK_VERSION%
 
 print_help() {
@@ -83,7 +83,7 @@ You will not be able to switch to another virtual console.
 
   export VLOCK_MESSAGE
 
-  exec $programs $VLOCK_AUTH
+  exec $programs $VLOCK_LOCK
 }
 
 main "$@"

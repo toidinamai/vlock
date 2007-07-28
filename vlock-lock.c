@@ -1,4 +1,4 @@
-/* vlock-auth.c -- authentification routine for vlock,
+/* vlock-lock.c -- locking routine for vlock,
  *                   the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free

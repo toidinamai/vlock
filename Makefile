@@ -4,7 +4,7 @@ include config.mk
 
 VLOCK_VERSION = "vlock version 1.4"
 
-PROGRAMS = vlock vlock-auth vlock-grab vlock-lockswitch vlock-unlockswitch vlock-nosysrq
+PROGRAMS = vlock vlock-lock vlock-grab vlock-lockswitch vlock-unlockswitch vlock-nosysrq
 
 .PHONY: all
 all: $(PROGRAMS)
@@ -17,21 +17,20 @@ vlock: vlock.sh
 		-e 's,%PREFIX%,$(PREFIX),' \
 		-e 's,%VLOCK_VERSION%,$(VLOCK_VERSION),' \
 		$< > $@
-	chmod a+x $@
 
 ifneq ($(USE_ROOT_PASS),y)
-vlock-auth : CFLAGS += -DNO_ROOT_PASS
+vlock-lock : CFLAGS += -DNO_ROOT_PASS
 endif
 
 ifeq ($(AUTH_METHOD),pam)
-vlock-auth : LDFLAGS += $(PAM_LIBS)
+vlock-lock : LDFLAGS += $(PAM_LIBS)
 endif
 
 ifeq ($(AUTH_METHOD),shadow)
-vlock-auth : LDFLAGS += -lcrypt
+vlock-lock : LDFLAGS += -lcrypt
 endif
 
-vlock-auth: vlock-auth.c auth-$(AUTH_METHOD).c
+vlock-lock: vlock-lock.c auth-$(AUTH_METHOD).c
 
 ifeq ($(USE_PAM_PERM),y)
 vlock-nosysrq vlock-grab : LDFLAGS += $(PAM_LIBS)
@@ -46,7 +45,7 @@ vlock.1.html: vlock.1
 .PHONY: install
 install: $(PROGRAMS)
 	$(INSTALL) -D -m 755 -o root -g root vlock $(DESTDIR)$(PREFIX)/bin/vlock
-	$(INSTALL) -D -m 4711 -o root -g root vlock-auth $(DESTDIR)$(PREFIX)/sbin/vlock-auth
+	$(INSTALL) -D -m 4711 -o root -g root vlock-lock $(DESTDIR)$(PREFIX)/sbin/vlock-lock
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-grab $(DESTDIR)$(PREFIX)/sbin/vlock-grab
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-nosysrq $(DESTDIR)$(PREFIX)/sbin/vlock-nosysrq
 	$(INSTALL) -D -m 755 -o root -g root vlock-lockswitch $(DESTDIR)$(PREFIX)/sbin/vlock-lockswitch
