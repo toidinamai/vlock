@@ -16,7 +16,11 @@
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
 
-int auth_service(const char *user, const char *service) {
+/* Try to authenticate the user.  When the user is successfully authenticated
+ * this function returns 1.  When the authentication fails for whatever reason
+ * the function returns 0.
+ */
+int auth(const char *user) {
   pam_handle_t *pamh;
   int pam_status;
   int pam_end_status;
@@ -26,7 +30,7 @@ int auth_service(const char *user, const char *service) {
   };
 
   /* initialize pam */
-  pam_status = pam_start(service, user, &pamc, &pamh);
+  pam_status = pam_start("vlock", user, &pamc, &pamh);
 
   if (pam_status != PAM_SUCCESS) {
     fprintf(stderr, "vlock-auth: %s\n", pam_strerror(pamh, pam_status));
@@ -51,8 +55,4 @@ end:
   }
 
   return (pam_status == PAM_SUCCESS);
-}
-
-int auth(const char *user) {
-  return auth_service(user, "vlock");
 }
