@@ -9,7 +9,6 @@ PROGRAMS = vlock vlock-lock vlock-grab vlock-lockswitch vlock-unlockswitch vlock
 .PHONY: all
 all: $(PROGRAMS)
 
-.PHONY: vlock
 vlock: vlock.sh
 	$(BOURNE_SHELL) -n $<
 	sed \
