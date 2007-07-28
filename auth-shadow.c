@@ -36,8 +36,8 @@ int auth(const char *user) {
   /* lock the password buffer */
   (void) mlock(buffer, sizeof buffer);
   
-  /* prompt */
-  fprintf(stderr, "%s's Password: ", user);
+  /* write out the prompt */
+  fprintf(stderr, "%s's Password: ", user); fflush(stderr);
 
   /* read the password */
   if (fgets(buffer, sizeof buffer, stdin) == NULL)
@@ -48,6 +48,8 @@ int auth(const char *user) {
   /* strip the newline */
   if (buffer[pwlen-1] == '\n')
     buffer[pwlen-1] = '\0';
+  else
+    fputc('\n', stderr);
 
   /* get the shadow password */
   if ((spw = getspnam(user)) == NULL)
