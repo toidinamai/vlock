@@ -4,7 +4,7 @@ trap : HUP INT QUIT TSTP
 
 VLOCK_GRAB=%PREFIX%/sbin/vlock-grab
 VLOCK_NOSYSRQ=%PREFIX%/sbin/vlock-nosysrq
-VLOCK_AUTH=%PREFIX%/sbin/vlock-auth
+VLOCK_LOCK=%PREFIX%/sbin/vlock-lock
 VLOCK_VERSION=%VLOCK_VERSION%
 
 print_help() {
@@ -77,13 +77,15 @@ main() {
 The entire console display is now completely locked.
 You will not be able to switch to another virtual console.
 "
+    # work around an annoying X11 bug
+    sleep 1
   else
     VLOCK_MESSAGE="This TTY is now locked."
   fi
 
   export VLOCK_MESSAGE
 
-  exec $programs $VLOCK_AUTH
+  exec $programs $VLOCK_LOCK
 }
 
 main "$@"

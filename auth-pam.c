@@ -1,4 +1,4 @@
-/* vlock-auth.c -- authentification routine for vlock,
+/* auth-pam.c -- PAM authentification routine for vlock,
  *                   the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
@@ -11,24 +11,16 @@
  *
  */
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
-#include <string.h>
 #include <stdio.h>
-#include <signal.h>
 
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
 
-#define CLEAR_SCREEN "\033[H\033[J"
-
 /* Try to authenticate the user.  When the user is successfully authenticated
- * this function exits the program with exit status 0.  When the authentication
- * fails for whatever reason the function sleeps the specified amount of seconds
- * and then returns.
+ * this function returns 1.  When the authentication fails for whatever reason
+ * the function returns 0.
  */
-void auth_exit(const char *user, unsigned int seconds) {
+int auth(const char *user) {
   pam_handle_t *pamh;
   int pam_status;
   int pam_end_status;
@@ -62,50 +54,5 @@ end:
     fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_end_status));
   }
 
-  if (pam_status == PAM_SUCCESS)
-    exit (0);
-  else
-    sleep(seconds);
-}
-
-int main(void) {
-  char user[40];
-  char *vlock_message;
-  struct passwd *pw;
-
-  /* ignore some signals */
-  signal(SIGINT, SIG_IGN);
-  signal(SIGHUP, SIG_IGN);
-  signal(SIGQUIT, SIG_IGN);
-  signal(SIGTSTP, SIG_IGN);
-
-  /* get the password entry */
-  if ((pw = getpwuid(getuid())) == NULL) {
-    perror("vlock: getpwuid() failed");
-    exit (111);
-  }
-
-  /* copy the username */
-  strncpy(user, pw->pw_name, sizeof user - 1);
-  user[sizeof user - 1] = '\0';
-
-  /* get the vlock message from the environment */
-  vlock_message = getenv("VLOCK_MESSAGE");
-
-  for (;;) {
-    /* clear the screen */
-    fprintf(stderr, CLEAR_SCREEN);
-
-    if (vlock_message)
-      /* print vlock message */
-      fprintf(stderr, "%s\n", vlock_message);
-
-    fflush(stderr);
-
-    auth_exit(user, 1);
-
-#ifndef NO_ROOT_PASS
-    auth_exit("root", 1);
-#endif
-  }
+  return (pam_status == PAM_SUCCESS);
 }

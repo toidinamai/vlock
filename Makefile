@@ -2,9 +2,9 @@
 
 include config.mk
 
-VLOCK_VERSION = "vlock version 2.0 alpha1"
+VLOCK_VERSION = "vlock version 2.0 alpha2"
 
-PROGRAMS = vlock vlock-auth vlock-grab vlock-lockswitch vlock-unlockswitch vlock-nosysrq
+PROGRAMS = vlock vlock-lock vlock-grab vlock-lockswitch vlock-unlockswitch vlock-nosysrq
 
 .PHONY: all
 all: $(PROGRAMS)
@@ -17,16 +17,24 @@ vlock: vlock.sh
 		-e 's,%PREFIX%,$(PREFIX),' \
 		-e 's,%VLOCK_VERSION%,$(VLOCK_VERSION),' \
 		$< > $@
-	chmod a+x $@
 
 ifneq ($(USE_ROOT_PASS),y)
-vlock-auth : CFLAGS += -DNO_ROOT_PASS
+vlock-lock : override CFLAGS += -DNO_ROOT_PASS
 endif
 
-vlock-auth : LDFLAGS += $(PAM_LIBS)
+ifeq ($(AUTH_METHOD),pam)
+vlock-lock : override LDFLAGS += $(PAM_LIBS)
+endif
 
-ifeq ($(USE_PAM_PERM),y)
-vlock-nosysrq vlock-grab : LDFLAGS += $(PAM_LIBS)
+ifeq ($(AUTH_METHOD),shadow)
+vlock-lock : override LDFLAGS += -lcrypt
+endif
+
+vlock-lock: vlock-lock.c auth-$(AUTH_METHOD).c
+
+ifeq ($(USE_PAM),y)
+vlock-nosysrq vlock-grab : override LDFLAGS += $(PAM_LIBS)
+vlock-nosysrq vlock-grab : override CFLAGS += -DUSE_PAM
 endif
 
 vlock.man: vlock.1
@@ -35,10 +43,21 @@ vlock.man: vlock.1
 vlock.1.html: vlock.1
 	groff -man -Thtml $< > $@
 
+ifndef VLOCK_GROUP
+VLOCK_GROUP = root
+ifndef VLOCK_MODE
+VLOCK_MODE = 4711
+endif
+else # VLOCK_GROUP is defined
+ifndef VLOCK_MODE
+VLOCK_MODE = 4710
+endif
+endif
+
 .PHONY: install
 install: $(PROGRAMS)
 	$(INSTALL) -D -m 755 -o root -g root vlock $(DESTDIR)$(PREFIX)/bin/vlock
-	$(INSTALL) -D -m 4711 -o root -g root vlock-auth $(DESTDIR)$(PREFIX)/sbin/vlock-auth
+	$(INSTALL) -D -m 4711 -o root -g root vlock-lock $(DESTDIR)$(PREFIX)/sbin/vlock-lock
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-grab $(DESTDIR)$(PREFIX)/sbin/vlock-grab
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-nosysrq $(DESTDIR)$(PREFIX)/sbin/vlock-nosysrq
 	$(INSTALL) -D -m 755 -o root -g root vlock-lockswitch $(DESTDIR)$(PREFIX)/sbin/vlock-lockswitch
