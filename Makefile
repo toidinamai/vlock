@@ -4,7 +4,13 @@ include config.mk
 
 VLOCK_VERSION = "2.0 alpha2"
 
-PROGRAMS = vlock vlock-lock vlock-grab vlock-lockswitch vlock-unlockswitch vlock-nosysrq
+PROGRAMS = \
+					 vlock \
+					 vlock-lock \
+					 vlock-grab \
+					 vlock-lockswitch \
+					 vlock-unlockswitch \
+					 vlock-nosysrq
 
 .PHONY: all
 all: $(PROGRAMS)
