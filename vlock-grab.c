@@ -113,8 +113,9 @@ int main(int argc, char **argv) {
     execvp(*(argv+1), argv+1);
     perror("vlock-grab: exec failed");
     _exit(127);
-  } else if (pid < 0)
+  } else if (pid < 0) {
     perror("vlock-grab: could not create child process");
+  }
 
   close(vtfd);
 
