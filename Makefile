@@ -27,6 +27,10 @@ ifeq ($(AUTH_METHOD),pam)
 vlock-auth : LDFLAGS += $(PAM_LIBS)
 endif
 
+ifeq ($(AUTH_METHOD),shadow)
+vlock-auth : LDFLAGS += -lcrypt
+endif
+
 vlock-auth: vlock-auth.c auth-$(AUTH_METHOD).c
 
 ifeq ($(USE_PAM_PERM),y)
