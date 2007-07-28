@@ -1,5 +1,5 @@
-# use pam for authentification
-USE_PAM = y
+# authentification method
+AUTH_METHOD = pam
 # use pam for permission checking
 USE_PAM_PERM = n
 # also prompt for the root password in adition to the user's

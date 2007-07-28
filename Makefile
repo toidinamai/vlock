@@ -23,7 +23,11 @@ ifneq ($(USE_ROOT_PASS),y)
 vlock-auth : CFLAGS += -DNO_ROOT_PASS
 endif
 
+ifeq ($(AUTH_METHOD),pam)
 vlock-auth : LDFLAGS += $(PAM_LIBS)
+endif
+
+vlock-auth: vlock-auth.c auth-$(AUTH_METHOD).c
 
 ifeq ($(USE_PAM_PERM),y)
 vlock-nosysrq vlock-grab : LDFLAGS += $(PAM_LIBS)

@@ -21,55 +21,9 @@
 #include <sys/types.h>
 #include <signal.h>
 
-#include <security/pam_appl.h>
-#include <security/pam_misc.h>
-
 #define CLEAR_SCREEN "\033[H\033[J"
 
-/* Try to authenticate the user.  When the user is successfully authenticated
- * this function exits the program with exit status 0.  When the authentication
- * fails for whatever reason the function sleeps the specified amount of seconds
- * and then returns.
- */
-void auth_exit(const char *user, unsigned int seconds) {
-  pam_handle_t *pamh;
-  int pam_status;
-  int pam_end_status;
-  struct pam_conv pamc = {
-    &misc_conv,
-    NULL
-  };
-
-  /* initialize pam */
-  pam_status = pam_start("vlock", user, &pamc, &pamh);
-
-  if (pam_status != PAM_SUCCESS) {
-    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
-    goto end;
-  }
-
-  /* put the username before the password prompt */
-  fprintf(stderr, "%s's ", user); fflush(stderr);
-  /* authenticate the user */
-  pam_status = pam_authenticate(pamh, 0);
-
-  if (pam_status != PAM_SUCCESS) {
-    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
-  }
-
-end:
-  /* finish pam */
-  pam_end_status = pam_end(pamh, pam_status);
-
-  if (pam_end_status != PAM_SUCCESS) {
-    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_end_status));
-  }
-
-  if (pam_status == PAM_SUCCESS)
-    exit (0);
-  else
-    sleep(seconds);
-}
+int auth(const char *user);
 
 int main(void) {
   char user[40];
@@ -105,10 +59,16 @@ int main(void) {
 
     fflush(stderr);
 
-    auth_exit(user, 1);
+    if (auth(user))
+      exit (0);
+    else
+      sleep(1);
 
 #ifndef NO_ROOT_PASS
-    auth_exit("root", 1);
+    if (auth("root"))
+      exit (0);
+    else
+      sleep(1);
 #endif
   }
 }
