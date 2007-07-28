@@ -17,6 +17,7 @@
 
 #include <pwd.h>
 
+#include <termios.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <signal.h>
@@ -29,6 +30,8 @@ int main(void) {
   char user[40];
   char *vlock_message;
   struct passwd *pw;
+  struct termios term, term_bak;
+  int restore_term = 0;
 
   /* ignore some signals */
   signal(SIGINT, SIG_IGN);
@@ -49,6 +52,13 @@ int main(void) {
   /* get the vlock message from the environment */
   vlock_message = getenv("VLOCK_MESSAGE");
 
+  /* disable terminal echoing and signals */
+  if (tcgetattr(STDIN_FILENO, &term) == 0) {
+    term_bak = term;
+    term.c_lflag &= ~(ECHO|ISIG);
+    restore_term = (tcsetattr(STDIN_FILENO, TCSANOW, &term) == 0);
+  }
+
   for (;;) {
     /* clear the screen */
     fprintf(stderr, CLEAR_SCREEN);
@@ -60,15 +70,21 @@ int main(void) {
     fflush(stderr);
 
     if (auth(user))
-      exit (0);
+      break;
     else
       sleep(1);
 
 #ifndef NO_ROOT_PASS
     if (auth("root"))
-      exit (0);
+      break;
     else
       sleep(1);
 #endif
   }
+
+  /* restore the terminal */
+  if (restore_term)
+    (void) tcsetattr(STDIN_FILENO, TCSANOW, &term_bak);
+
+  exit (0);
 }

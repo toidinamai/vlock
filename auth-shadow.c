@@ -43,13 +43,14 @@ int auth(const char *user) {
   if (fgets(buffer, sizeof buffer, stdin) == NULL)
     goto out;
 
+  /* put newline */
+  fputc('\n', stderr);
+
   pwlen = strlen(buffer);
 
   /* strip the newline */
   if (buffer[pwlen-1] == '\n')
     buffer[pwlen-1] = '\0';
-  else
-    fputc('\n', stderr);
 
   /* get the shadow password */
   if ((spw = getspnam(user)) == NULL)
