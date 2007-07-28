@@ -58,7 +58,7 @@ int auth(const char *user) {
 
   /* hash the password */
   if ((cryptpw = crypt(buffer, spw->sp_pwdp)) == NULL) {
-    perror("vlock: crypt()");
+    perror("vlock-auth: crypt()");
     goto out_shadow;
   }
 

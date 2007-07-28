@@ -25,7 +25,7 @@ int main(void) {
   int consfd;
 
   if ((consfd = open(CONSOLE, O_RDWR)) < 0) {
-    perror("vlock: cannot open virtual console");
+    perror("vlock-lockswitch: cannot open virtual console");
     exit (1);
   }
 

@@ -25,13 +25,13 @@ int main(void) {
   int consfd;
 
   if ((consfd = open(CONSOLE, O_RDWR)) < 0) {
-    perror("vlock: cannot open virtual console");
+    perror("vlock-unlockswitch: cannot open virtual console");
     exit (1);
   }
 
   /* globally enable virtual console switching */
   if (ioctl(consfd, VT_UNLOCKSWITCH) < 0) {
-    perror("vlock-lockswitch: could not disable console switching");
+    perror("vlock-unlockswitch: could not disable console switching");
     exit (1);
   }
 

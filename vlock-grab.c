@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 
   /* open the current terminal */
   if ((consfd = open("/dev/tty", O_RDWR)) < 0) {
-    perror("vlock: could not open /dev/tty");
+    perror("vlock-grab: could not open /dev/tty");
     exit (1);
   }
 
@@ -54,44 +54,44 @@ int main(int argc, char **argv) {
 
     /* open the virtual console directly */
     if ((consfd = open(CONSOLE, O_RDWR)) < 0) {
-      perror("vlock: cannot open virtual console");
+      perror("vlock-grab: cannot open virtual console");
       exit (1);
     }
 
     /* get the virtual console status, again */
     if (ioctl(consfd, VT_GETSTATE, &vtstat) < 0) {
-      perror("vlock: virtual console not a virtual console");
+      perror("vlock-grab: virtual console not a virtual console");
       exit (1);
     }
   }
 
   /* get a free virtual terminal number */
   if (ioctl(consfd, VT_OPENQRY, &vtno) < 0)  {
-    perror("vlock: could not find a free virtual terminal");
+    perror("vlock-grab: could not find a free virtual terminal");
     exit (1);
   }
 
   /* format the virtual terminal filename from the number */
   if ((size_t)snprintf(vtname, sizeof vtname, VTNAME, vtno) > sizeof vtname) {
-    fprintf(stderr, "virtual terminal number too large\n");
+    fprintf(stderr, "vlock-grab: virtual terminal number too large\n");
   }
 
   /* open the free virtual terminal */
   if ((vtfd = open(vtname, O_RDWR)) < 0) {
-    perror("vlock: cannot open new console");
+    perror("vlock-grab: cannot open new console");
     exit (1);
   }
 
   /* switch to the virtual terminal */
   if (ioctl(consfd, VT_ACTIVATE, vtno) < 0
       || ioctl(consfd, VT_WAITACTIVE, vtno) < 0) {
-    perror("vlock: could not activate new terminal");
+    perror("vlock-grab: could not activate new terminal");
     exit (1);
   }
 
   /* globally disable virtual console switching */
   if (ioctl(consfd, VT_LOCKSWITCH) < 0) {
-    perror("vlock: could not disable console switching");
+    perror("vlock-grab: could not disable console switching");
     exit (1);
   }
 
@@ -111,33 +111,33 @@ int main(int argc, char **argv) {
 
     /* run child */
     execvp(*(argv+1), argv+1);
-    perror("vlock: exec failed");
+    perror("vlock-grab: exec failed");
     _exit(127);
   } else if (pid < 0)
-    perror("vlock: could not create child process");
+    perror("vlock-grab: could not create child process");
 
   close(vtfd);
 
   if (pid > 0 && waitpid(pid, &status, 0) < 0) {
-    perror("vlock: child process missing");
+    perror("vlock-grab: child process missing");
     pid = -1;
   }
 
   /* globally enable virtual console switching */
   if (ioctl(consfd, VT_UNLOCKSWITCH) < 0) {
-    perror("vlock: could not enable console switching");
+    perror("vlock-grab: could not enable console switching");
     exit (1);
   }
 
   /* switch back to former virtual terminal */
   if (ioctl(consfd, VT_ACTIVATE, vtstat.v_active) < 0
       || ioctl(consfd, VT_WAITACTIVE, vtstat.v_active) < 0) {
-    perror("vlock: could not activate old console");
+    perror("vlock-grab: could not activate previous console");
   }
 
   /* deallocate virtual terminal */
   if (ioctl(consfd, VT_DISALLOCATE, vtno) < 0) {
-    perror("vlock: could not disallocate console");
+    perror("vlock-grab: could not disallocate console");
   }
 
   /* exit with the exit status of the child or 200+signal if

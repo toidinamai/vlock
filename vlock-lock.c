@@ -41,7 +41,7 @@ int main(void) {
 
   /* get the password entry */
   if ((pw = getpwuid(getuid())) == NULL) {
-    perror("vlock: getpwuid() failed");
+    perror("vlock-lock: getpwuid() failed");
     exit (111);
   }
 
