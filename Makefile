@@ -19,21 +19,22 @@ vlock: vlock.sh
 		$< > $@
 
 ifneq ($(USE_ROOT_PASS),y)
-vlock-lock : CFLAGS += -DNO_ROOT_PASS
+vlock-lock : override CFLAGS += -DNO_ROOT_PASS
 endif
 
 ifeq ($(AUTH_METHOD),pam)
-vlock-lock : LDFLAGS += $(PAM_LIBS)
+vlock-lock : override LDFLAGS += $(PAM_LIBS)
 endif
 
 ifeq ($(AUTH_METHOD),shadow)
-vlock-lock : LDFLAGS += -lcrypt
+vlock-lock : override LDFLAGS += -lcrypt
 endif
 
 vlock-lock: vlock-lock.c auth-$(AUTH_METHOD).c
 
-ifeq ($(USE_PAM_PERM),y)
-vlock-nosysrq vlock-grab : LDFLAGS += $(PAM_LIBS)
+ifeq ($(USE_PAM),y)
+vlock-nosysrq vlock-grab : override LDFLAGS += $(PAM_LIBS)
+vlock-nosysrq vlock-grab : override CFLAGS += -DUSE_PAM
 endif
 
 vlock.man: vlock.1
@@ -41,6 +42,17 @@ vlock.man: vlock.1
 
 vlock.1.html: vlock.1
 	groff -man -Thtml $< > $@
+
+ifndef VLOCK_GROUP
+VLOCK_GROUP = root
+ifndef VLOCK_MODE
+VLOCK_MODE = 4711
+endif
+else # VLOCK_GROUP is defined
+ifndef VLOCK_MODE
+VLOCK_MODE = 4710
+endif
+endif
 
 .PHONY: install
 install: $(PROGRAMS)
