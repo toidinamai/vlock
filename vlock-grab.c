@@ -1,5 +1,5 @@
 /* vlock-grab.c -- console grabbing routine for vlock,
- *                   the VT locking program for linux
+ *                 the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
  * software which is freely distributable under the terms of the
@@ -19,8 +19,7 @@
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 
-#define VTNAME "/dev/tty%d"
-#define CONSOLE "/dev/tty0"
+#include "vlock.h"
 
 /* Grab a new console and run the program given by argv+1 there.  Console
  * switching is locked as long as the program is running.  When the program

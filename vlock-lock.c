@@ -22,9 +22,7 @@
 #include <sys/types.h>
 #include <signal.h>
 
-#define CLEAR_SCREEN "\033[H\033[J"
-
-int auth(const char *user);
+#include "vlock.h"
 
 int main(void) {
   char user[40];

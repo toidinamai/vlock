@@ -22,10 +22,6 @@
 
 #define PWD_BUFFER_SIZE 256
 
-/* Try to authenticate the user.  When the user is successfully authenticated
- * this function returns 1.  When the authentication fails for whatever reason
- * the function returns 0.
- */
 int auth(const char *user) {
   char buffer[PWD_BUFFER_SIZE];
   size_t pwlen;

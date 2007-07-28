@@ -19,7 +19,7 @@
 #include <sys/ioctl.h>
 #include <sys/vt.h>
 
-#define CONSOLE "/dev/tty0"
+#include "vlock.h"
 
 int main(void) {
   int consfd;

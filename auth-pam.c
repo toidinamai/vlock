@@ -53,10 +53,6 @@ end:
   return (pam_status == PAM_SUCCESS);
 }
 
-/* Try to authenticate the user.  When the user is successfully authenticated
- * this function returns 1.  When the authentication fails for whatever reason
- * the function returns 0.
- */
 int auth(const char *user) {
   return auth_service(user, "vlock");
 }
