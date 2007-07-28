@@ -77,6 +77,8 @@ main() {
 The entire console display is now completely locked.
 You will not be able to switch to another virtual console.
 "
+    # work around an annoying X11 bug
+    sleep 1
   else
     VLOCK_MESSAGE="This TTY is now locked."
   fi
