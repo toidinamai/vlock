@@ -9,7 +9,7 @@ PROGRAMS = vlock vlock-lock vlock-grab vlock-lockswitch vlock-unlockswitch vlock
 .PHONY: all
 all: $(PROGRAMS)
 
-vlock: vlock.sh
+vlock: vlock.sh config.mk Makefile
 	$(BOURNE_SHELL) -n $<
 	sed \
 		-e 's,%BOURNE_SHELL%,$(BOURNE_SHELL),' \
