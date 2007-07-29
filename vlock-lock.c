@@ -65,9 +65,8 @@ int main(void) {
       /* print vlock message */
       fprintf(stderr, "%s\n", vlock_message);
 
-    fflush(stderr);
-
-    fprintf(stderr, "Please press enter to unlock.\n");
+    /* wait for enter to be pressed */
+    fprintf(stderr, "Please press [ENTER] to unlock.\n");
     while (fgetc(stdin) != '\n');
 
     if (auth(user))
