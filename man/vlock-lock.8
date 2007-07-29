@@ -1,0 +1,27 @@
+.TH VLOCK-LOCK 8 "28 July 2007" "Linux" "Linux Programmer's Manual"
+.SH NAME
+vlock-lock \- lock current virtual console
+.SH SYNOPSIS
+.B vlock-lock
+.SH DESCRIPTION
+\fBvlock-lock\fR is part of \fBvlock\fR, the Virtual Console locking program
+for Linux.  It locks the current virtual console by only exiting if correct
+authentification data (either the current user's or root's) is received.
+Authentification can be done against PAM or shadow, determined at compile time.
+.SH ENVIRONMENT VARIABLES
+.B USER
+.IP
+When \fBvlock-lock\fR is run as root (uid 0) and this environment variable is
+set \fBvlock-lock\fR works the same as if it was run by that user.
+.PP
+.B VLOCK_MESSAGE
+.IP
+When this environment variable is set \fBvlock-lock\fR prints its contents
+before each password prompt.
+.SH EXIT CODES
+\fBvlock-lock\fR exits 111 when username can not be determined.
+.SH SIGNALS
+SIGINT, SIGHUP, SIGQUIT, and SIGTSTP are ignored ignored.  In case
+\fBvlock-lock\fR is killed by any other signal the terminal is not restored.
+.SH AUTHORS
+Frank Benkstein <frank-vlock@benkstein.net>
