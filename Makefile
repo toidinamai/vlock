@@ -45,12 +45,6 @@ vlock-nosysrq vlock-grab : override LDFLAGS += $(PAM_LIBS)
 vlock-nosysrq vlock-grab : override CFLAGS += -DUSE_PAM
 endif
 
-vlock.man: vlock.1
-	groff -man -Tascii $< > $@
-
-vlock.1.html: vlock.1
-	groff -man -Thtml $< > $@
-
 ifndef VLOCK_GROUP
 VLOCK_GROUP = root
 ifndef VLOCK_MODE
@@ -71,7 +65,7 @@ install: $(PROGRAMS)
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-new $(DESTDIR)$(PREFIX)/sbin/vlock-new
 	$(INSTALL) -D -m 755 -o root -g root vlock-lockswitch $(DESTDIR)$(PREFIX)/sbin/vlock-lockswitch
 	$(INSTALL) -D -m 755 -o root -g root vlock-unlockswitch $(DESTDIR)$(PREFIX)/sbin/vlock-unlockswitch
-	$(INSTALL) -D -m 644 -o root -g root vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
+	$(INSTALL) -D -m 644 -o root -g root man/vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
 
 .PHONY: clean
 clean:
