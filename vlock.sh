@@ -1,5 +1,6 @@
 #!%BOURNE_SHELL%
 
+# ignore some signals
 trap : HUP INT QUIT TSTP
 
 VLOCK_GRAB=%PREFIX%/sbin/vlock-grab
@@ -81,6 +82,8 @@ main() {
 
   if [ $switch_new -ne 0 ] && [ $lock_all -ne 0 ] ; then
     programs="$programs $VLOCK_NEW"
+    # work around an annoying X11 bug
+    sleep 1
   fi
 
   if [ $lock_all -ne 0 ] ; then
@@ -89,8 +92,6 @@ main() {
 The entire console display is now completely locked.
 You will not be able to switch to another virtual console.
 "
-    # work around an annoying X11 bug
-    sleep 1
   else
     VLOCK_MESSAGE="This TTY is now locked."
   fi
