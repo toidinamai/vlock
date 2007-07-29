@@ -18,8 +18,7 @@
 #include <sys/vt.h>
 #include <sys/ioctl.h>
 #include <sys/wait.h>
-
-#include "vlock.h"
+#include <errno.h>
 
 /* Grab a the current and run the program given by argv+1.  Console switching
  * is forbidden as long as the program is running.
@@ -27,7 +26,6 @@
  * CAP_SYS_TTY_CONFIG is needed for the locking to succeed.
  */
 int main(int argc, char **argv) {
-  int consfd = -1;
   struct vt_stat vtstat;
   int pid;
   int status;
@@ -39,20 +37,18 @@ int main(int argc, char **argv) {
 
   /* XXX: add optional PAM check here */
 
-  /* open the virtual console directly */
-  if ((consfd = open(CONSOLE, O_RDWR)) < 0) {
-    perror("vlock-grab: cannot open virtual console");
-    exit (1);
-  }
-
   /* get the virtual console status */
-  if (ioctl(consfd, VT_GETSTATE, &vtstat) < 0) {
-    perror("vlock-grab: virtual console is not a virtual console");
+  if (ioctl(STDIN_FILENO, VT_GETSTATE, &vtstat) < 0) {
+    if (errno == ENOTTY || errno == EINVAL) {
+      fprintf(stderr, "vlock-grab: this terminal is not a virtual console\n");
+    } else {
+      perror("vlock-grab: could not get virtual console status");
+    }
     exit (1);
   }
 
   /* globally disable virtual console switching */
-  if (ioctl(consfd, VT_LOCKSWITCH) < 0) {
+  if (ioctl(STDIN_FILENO, VT_LOCKSWITCH) < 0) {
     perror("vlock-grab: could not disable console switching");
     exit (1);
   }
@@ -79,7 +75,7 @@ int main(int argc, char **argv) {
   }
 
   /* globally enable virtual console switching */
-  if (ioctl(consfd, VT_UNLOCKSWITCH) < 0) {
+  if (ioctl(STDIN_FILENO, VT_UNLOCKSWITCH) < 0) {
     perror("vlock-grab: could not enable console switching");
     exit (1);
   }
