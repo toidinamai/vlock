@@ -67,6 +67,9 @@ int main(void) {
 
     fflush(stderr);
 
+    fprintf(stderr, "Please press enter to unlock.\n");
+    while (fgetc(stdin) != '\n');
+
     if (auth(user))
       break;
     else
