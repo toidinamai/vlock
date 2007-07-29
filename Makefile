@@ -16,6 +16,7 @@ PROGRAMS = \
 .PHONY: all
 all: $(PROGRAMS)
 
+.PHONY: vlock
 vlock: vlock.sh config.mk Makefile
 	$(BOURNE_SHELL) -n $<
 	sed \
