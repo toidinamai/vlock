@@ -23,7 +23,8 @@ vlock: vlock.sh config.mk Makefile
 		-e 's,%BOURNE_SHELL%,$(BOURNE_SHELL),' \
 		-e 's,%PREFIX%,$(PREFIX),' \
 		-e 's,%VLOCK_VERSION%,$(VLOCK_VERSION),' \
-		$< > $@
+		$< > $@.tmp
+	mv -f $@.tmp $@
 
 ifneq ($(USE_ROOT_PASS),y)
 vlock-lock : override CFLAGS += -DNO_ROOT_PASS
