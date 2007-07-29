@@ -27,9 +27,10 @@
 int main(void) {
   char user[40];
   char *vlock_message;
-  struct passwd *pw;
   struct termios term, term_bak;
   int restore_term = 0;
+  /* get the user name from the environment */
+  char *envuser = getenv("USER"); 
 
   /* ignore some signals */
   signal(SIGINT, SIG_IGN);
@@ -37,15 +38,23 @@ int main(void) {
   signal(SIGQUIT, SIG_IGN);
   signal(SIGTSTP, SIG_IGN);
 
-  /* get the password entry */
-  if ((pw = getpwuid(getuid())) == NULL) {
-    perror("vlock-lock: getpwuid() failed");
-    exit (111);
-  }
+  if (getuid() || (envuser == NULL)) {
+    /* get the password entry */
+    struct passwd *pw = getpwuid(getuid());
 
-  /* copy the username */
-  strncpy(user, pw->pw_name, sizeof user - 1);
-  user[sizeof user - 1] = '\0';
+    if (pw == NULL) {
+      perror("vlock-lock: getpwuid() failed");
+      exit (111);
+    }
+
+    /* copy the username */
+    strncpy(user, pw->pw_name, sizeof user - 1);
+    user[sizeof user - 1] = '\0';
+  } else {
+    /* copy the username */
+    strncpy(user, envuser, sizeof user - 1);
+    user[sizeof user - 1] = '\0';
+  }
 
   /* get the vlock message from the environment */
   vlock_message = getenv("VLOCK_MESSAGE");
