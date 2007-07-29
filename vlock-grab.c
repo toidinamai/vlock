@@ -23,6 +23,8 @@
 
 /* Grab a the current and run the program given by argv+1.  Console switching
  * is forbidden as long as the program is running.
+ *
+ * CAP_SYS_TTY_CONFIG is needed for the locking to succeed.
  */
 int main(int argc, char **argv) {
   int consfd = -1;
