@@ -18,10 +18,12 @@ set \fBvlock-lock\fR works the same as if it was run by that user.
 .IP
 When this environment variable is set \fBvlock-lock\fR prints its contents
 before each password prompt.
-.SH EXIT CODES
+.SH "EXIT CODES"
 \fBvlock-lock\fR exits 111 when username can not be determined.
 .SH SIGNALS
 SIGINT, SIGHUP, SIGQUIT, and SIGTSTP are ignored ignored.  In case
 \fBvlock-lock\fR is killed by any other signal the terminal is not restored.
+.SH "SEE ALSO"
+.BR vlock (1)
 .SH AUTHORS
 Frank Benkstein <frank-vlock@benkstein.net>
