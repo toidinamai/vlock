@@ -1,3 +1,6 @@
+OVERVIEW
+========
+
 vlock is a denial of service tool.  The default installation is insecure in the
 way that it allows any user logged into the machine, even remotely, to lock the
 machine completely.  If you have a notion of trusted users it is possible to
@@ -14,3 +17,27 @@ much advantage over the previous approach.
 
 In the future the offending tools, vlock-new and vlock-grab, may also be
 optionally protected through PAM.
+
+DETAILS
+=======
+
+vlock-new
+---------
+
+This tool allows any user to run an arbitrary program on a new console.  It is
+similar to openvt(1) but much simpler.  The user does not have to be logged in
+locally.  This is a slight security problem on its own but it becomes even
+bigger if the program run on the new console is vlock-grab.
+
+To access the new virtual console vlock-new needs permissions on /dev/ttyXX. It
+is therefore recommended to install vlock-new as a setuid-root program.
+
+vlock-grab
+----------
+
+This tool allows any user to run an arbitrary program while console switching
+is disabled.  This only works when run on a virtual console as is the case when
+run through vlock-new.
+
+To lock console switching vlock-grab needs CAP_SYS_TTY_CONFIG.  It is therefore
+recommended to install vlock-grab as a setuid-root program.
