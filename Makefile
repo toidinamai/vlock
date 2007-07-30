@@ -76,6 +76,8 @@ install-man:
 	$(INSTALL) -D -m 644 -o root -g root man/vlock-grab.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-grab.8
 	$(INSTALL) -D -m 644 -o root -g root man/vlock-new.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-new.8
 	$(INSTALL) -D -m 644 -o root -g root man/vlock-nosysrq.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-nosysrq.8
+	$(INSTALL) -D -m 644 -o root -g root man/vlock-lockswitch.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-lockswitch.8
+	$(INSTALL) -D -m 644 -o root -g root man/vlock-unlockswitch.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-unlockswitch.8
 
 .PHONY: clean
 clean:
