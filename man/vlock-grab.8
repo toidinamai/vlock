@@ -1,0 +1,17 @@
+.TH VLOCK-GRAB 8 "28 July 2007" "Linux" "Linux Programmer's Manual"
+.SH NAME
+vlock-grab \- prevent virtual console switching
+.SH SYNOPSIS
+.B vlock-grab program [arguments...]
+.SH DESCRIPTION
+\fBvlock-grab\fR is part of \fBvlock\fR, the Virtual Console locking program
+for Linux.  It disables console switching and runs \fIprogram\fR.  After the
+\fIprogram\fR exits it reenables console switching.
+\" XXX: document exit codes
+\" .SH "EXIT CODES"
+\" \fBvlock-grab\fR
+.SH "SEE ALSO"
+.BR vlock (1),
+.BR ioctl (2)
+.SH AUTHORS
+Frank Benkstein <frank-vlock@benkstein.net>

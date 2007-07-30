@@ -1,6 +1,7 @@
 *.o
 vlock
 vlock-lock
+vlock-new
 vlock-grab
 vlock-lockswitch
 vlock-unlockswitch

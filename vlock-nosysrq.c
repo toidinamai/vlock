@@ -19,6 +19,12 @@
 #define SYSRQ_PATH "/proc/sys/kernel/sysrq"
 #define SYSRQ_DISABLE_VALUE "0\n"
 
+/* Run the program given by argv+1.  SysRQ keys are disabled while
+ * as the program is running.
+ *
+ * CAP_SYS_TTY_CONFIG is needed for the locking to succeed.
+ */
+/* XXX: clean up exit codes */
 int main(int argc, char **argv) {
   char sysrq[32];
   int pid;

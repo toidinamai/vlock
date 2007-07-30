@@ -2,21 +2,29 @@
 
 include config.mk
 
-VLOCK_VERSION = "vlock version 2.0 alpha2"
+VLOCK_VERSION = "2.0 alpha2"
 
-PROGRAMS = vlock vlock-lock vlock-grab vlock-lockswitch vlock-unlockswitch vlock-nosysrq
+PROGRAMS = \
+					 vlock \
+					 vlock-lock \
+					 vlock-new \
+					 vlock-grab \
+					 vlock-lockswitch \
+					 vlock-unlockswitch \
+					 vlock-nosysrq
 
 .PHONY: all
 all: $(PROGRAMS)
 
 .PHONY: vlock
-vlock: vlock.sh
+vlock: vlock.sh config.mk Makefile
 	$(BOURNE_SHELL) -n $<
 	sed \
 		-e 's,%BOURNE_SHELL%,$(BOURNE_SHELL),' \
 		-e 's,%PREFIX%,$(PREFIX),' \
 		-e 's,%VLOCK_VERSION%,$(VLOCK_VERSION),' \
-		$< > $@
+		$< > $@.tmp
+	mv -f $@.tmp $@
 
 ifneq ($(USE_ROOT_PASS),y)
 vlock-lock : override CFLAGS += -DNO_ROOT_PASS
@@ -37,12 +45,6 @@ vlock-nosysrq vlock-grab : override LDFLAGS += $(PAM_LIBS)
 vlock-nosysrq vlock-grab : override CFLAGS += -DUSE_PAM
 endif
 
-vlock.man: vlock.1
-	groff -man -Tascii $< > $@
-
-vlock.1.html: vlock.1
-	groff -man -Thtml $< > $@
-
 ifndef VLOCK_GROUP
 VLOCK_GROUP = root
 ifndef VLOCK_MODE
@@ -55,14 +57,27 @@ endif
 endif
 
 .PHONY: install
-install: $(PROGRAMS)
+install: install-programs install-man
+
+.PHONY: install-programs
+install-programs: $(PROGRAMS)
 	$(INSTALL) -D -m 755 -o root -g root vlock $(DESTDIR)$(PREFIX)/bin/vlock
 	$(INSTALL) -D -m 4711 -o root -g root vlock-lock $(DESTDIR)$(PREFIX)/sbin/vlock-lock
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-grab $(DESTDIR)$(PREFIX)/sbin/vlock-grab
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-nosysrq $(DESTDIR)$(PREFIX)/sbin/vlock-nosysrq
+	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-new $(DESTDIR)$(PREFIX)/sbin/vlock-new
 	$(INSTALL) -D -m 755 -o root -g root vlock-lockswitch $(DESTDIR)$(PREFIX)/sbin/vlock-lockswitch
 	$(INSTALL) -D -m 755 -o root -g root vlock-unlockswitch $(DESTDIR)$(PREFIX)/sbin/vlock-unlockswitch
-	$(INSTALL) -D -m 644 -o root -g root vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
+
+.PHONY: install-man
+install-man:
+	$(INSTALL) -D -m 644 -o root -g root man/vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
+	$(INSTALL) -D -m 644 -o root -g root man/vlock-lock.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-lock.8
+	$(INSTALL) -D -m 644 -o root -g root man/vlock-grab.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-grab.8
+	$(INSTALL) -D -m 644 -o root -g root man/vlock-new.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-new.8
+	$(INSTALL) -D -m 644 -o root -g root man/vlock-nosysrq.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-nosysrq.8
+	$(INSTALL) -D -m 644 -o root -g root man/vlock-lockswitch.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-lockswitch.8
+	$(INSTALL) -D -m 644 -o root -g root man/vlock-unlockswitch.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-unlockswitch.8
 
 .PHONY: clean
 clean:
