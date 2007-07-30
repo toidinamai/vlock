@@ -2,7 +2,7 @@
 
 include config.mk
 
-VLOCK_VERSION = "2.0 alpha2"
+VLOCK_VERSION = "2.0 beta1"
 
 PROGRAMS = \
 					 vlock \
