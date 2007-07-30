@@ -73,6 +73,7 @@ install-programs: $(PROGRAMS)
 install-man:
 	$(INSTALL) -D -m 644 -o root -g root man/vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
 	$(INSTALL) -D -m 644 -o root -g root man/vlock-lock.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-lock.8
+	$(INSTALL) -D -m 644 -o root -g root man/vlock-grab.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-grab.8
 
 .PHONY: clean
 clean:

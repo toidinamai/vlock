@@ -25,6 +25,7 @@
  *
  * CAP_SYS_TTY_CONFIG is needed for the locking to succeed.
  */
+/* XXX: clean up exit codes */
 int main(int argc, char **argv) {
   struct vt_stat vtstat;
   int pid;
