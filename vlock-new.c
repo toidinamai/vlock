@@ -29,6 +29,7 @@
  *
  * Access to the new tty device is needed to run the new program there.
  */
+/* XXX: clean up exit codes */
 int main(int argc, char **argv) {
   int consfd = -1;
   struct vt_stat vtstate;
