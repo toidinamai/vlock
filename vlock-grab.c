@@ -20,8 +20,8 @@
 #include <sys/wait.h>
 #include <errno.h>
 
-/* Grab a the current and run the program given by argv+1.  Console switching
- * is forbidden as long as the program is running.
+/* Run the program given by argv+1.  Console switching is forbidden
+ * while the program is running.
  *
  * CAP_SYS_TTY_CONFIG is needed for the locking to succeed.
  */
