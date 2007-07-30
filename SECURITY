@@ -1,0 +1,16 @@
+vlock is a denial of service tool.  The default installation is insecure in the
+way that it allows any user logged into the machine, even remotely, to lock the
+machine completely.  If you have a notion of trusted users it is possible to
+set VLOCK_GROUP variable while installing vlock like so:
+
+  make VLOCK_GROUP=vlock install
+
+That way only members of the vlock group will be able to lock the machine
+completely.  Others will still be able to lock their own console.
+
+Another possibility is to install vlock with the VLOCK_GROUP set to root and
+only allow use of vlock through tools like sudo.  This, however, does not bring
+much advantage over the previous approach.
+
+In the future the offending tools, vlock-new and vlock-grab, may also be
+optionally protected through PAM.
