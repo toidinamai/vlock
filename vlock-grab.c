@@ -77,8 +77,7 @@ int main(int argc, char **argv) {
 
   /* globally enable virtual console switching */
   if (ioctl(STDIN_FILENO, VT_UNLOCKSWITCH) < 0) {
-    perror("vlock-grab: could not enable console switching");
-    exit (111);
+    perror("vlock-grab: could not reenable console switching");
   }
 
   /* exit with the exit status of the child or 200+signal if
