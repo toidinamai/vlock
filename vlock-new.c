@@ -93,23 +93,10 @@ int main(int argc, char **argv) {
     exit (111);
   }
 
-  if (fchown(vtfd, getuid(), getgid()) < 0) {
-    perror("vlock-new: cannot fchown new console");
-    exit (111);
-  }
-
-  if (fchmod(vtfd, S_IRUSR | S_IWUSR) < 0) {
-    perror("vlock-new: cannot fchmod new console");
-    (void) fchown(vtfd, vtstat.st_uid, vtstat.st_gid);
-    exit (111);
-  }
-
   /* switch to the virtual terminal */
   if (ioctl(consfd, VT_ACTIVATE, vtno) < 0
       || ioctl(consfd, VT_WAITACTIVE, vtno) < 0) {
     perror("vlock-new: could not activate new terminal");
-    (void) fchmod(vtfd, vtstat.st_mode);
-    (void) fchown(vtfd, vtstat.st_uid, vtstat.st_gid);
     exit (111);
   }
 
@@ -137,14 +124,6 @@ int main(int argc, char **argv) {
   if (pid > 0 && waitpid(pid, &status, 0) < 0) {
     perror("vlock-new: child process missing");
     pid = -1;
-  }
-
-  if (fchmod(vtfd, vtstat.st_mode) < 0) {
-    perror("vlock-new: could not restore new terminal mode");
-  }
-
-  if (fchown(vtfd, vtstat.st_uid, vtstat.st_gid) < 0) {
-    perror("vlock-new: could not restore new terminal owner");
   }
 
   close(vtfd);
