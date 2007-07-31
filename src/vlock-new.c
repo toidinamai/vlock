@@ -29,8 +29,7 @@
  *
  * Access to the new tty device is needed to run the new program there.
  */
-/* XXX: clean up exit codes */
-int main(int argc, char **argv) {
+int main(void) {
   int consfd = -1;
   struct vt_stat vtstate;
   int vtno;
@@ -39,11 +38,6 @@ int main(int argc, char **argv) {
   char vtname[sizeof VTNAME + 2];
   int pid = -1;
   int status;
-
-  if (argc < 2) {
-    fprintf(stderr, "usage: %s child\n", *argv);
-    exit (100);
-  }
 
   /* open the current terminal */
   if ((consfd = open("/dev/tty", O_RDWR)) < 0) {
@@ -116,7 +110,7 @@ int main(int argc, char **argv) {
     close(vtfd);
 
     /* run child */
-    execvp(*(argv+1), argv+1);
+    execl(VLOCK_GRAB, VLOCK_GRAB, (char *) NULL);
     perror("vlock-new: exec failed");
     _exit(127);
   } else if (pid < 0) {
