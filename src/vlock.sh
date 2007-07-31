@@ -28,7 +28,7 @@ print_help() {
 
 
 main() {
-  local opts lock_all disable_sysrq programs switch_new
+  local opts lock_all disable_sysrq switch_new
 
   opts=`getopt -o acnsvh --long current,all,new,disable-sysrq,version,help \
         -n vlock -- "$@"`
@@ -76,30 +76,37 @@ main() {
     esac
   done
 
-  if [ $disable_sysrq -ne 0 ] && [ $lock_all -ne 0 ] ; then
-    programs="$VLOCK_NOSYSRQ"
+  if [ $switch_new -ne 0 ] ; then
+    # work around an annoying X11 bug
+    sleep 1
   fi
 
   if [ $lock_all -ne 0 ] ; then
-    if [ $switch_new -ne 0 ] ; then
-      programs="$programs $VLOCK_NEW"
-      # work around an annoying X11 bug
-      sleep 1
-    else
-      programs="$programs $VLOCK_GRAB"
-    fi
-
     VLOCK_MESSAGE="\
 The entire console display is now completely locked.
 You will not be able to switch to another virtual console.
 "
+    export VLOCK_MESSAGE
+
+    if [ $disable_sysrq -ne 0 ] ; then
+      if [ $switch_new -ne 0 ] ; then
+        export VLOCK_NEW=1
+      else
+        unset VLOCK_NEW
+      fi
+
+      exec "$VLOCK_NOSYSRQ"
+    elif [ $switch_new -ne 0 ] ; then
+      exec "$VLOCK_NEW"
+    else
+      exec "$VLOCK_GRAB"
+    fi
   else
     VLOCK_MESSAGE="This TTY is now locked."
+    export VLOCK_MESSAGE
+
+    exec "$VLOCK_LOCK"
   fi
-
-  export VLOCK_MESSAGE
-
-  exec $programs $VLOCK_LOCK
 }
 
 main "$@"
