@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
     if (WIFEXITED(status)) {
       exit (WEXITSTATUS(status));
     } else if (WIFSIGNALED(status)) {
-      exit (200+WTERMSIG(status));
+      exit (128+WTERMSIG(status));
     }
   }
 
