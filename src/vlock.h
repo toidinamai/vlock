@@ -18,6 +18,10 @@
 /* magic characters to clear the current terminal */
 #define CLEAR_SCREEN "\033[H\033[J"
 
+/* hard coded paths */
+#define VLOCK_GRAB PREFIX "/sbin/vlock-grab"
+#define VLOCK_LOCK PREFIX "/sbin/vlock-lock"
+
 /* Try to authenticate the user.  When the user is successfully authenticated
  * this function returns 1.  When the authentication fails for whatever reason
  * the function returns 0.
