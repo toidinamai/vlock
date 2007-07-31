@@ -80,14 +80,15 @@ main() {
     programs="$VLOCK_NOSYSRQ"
   fi
 
-  if [ $switch_new -ne 0 ] && [ $lock_all -ne 0 ] ; then
-    programs="$programs $VLOCK_NEW"
-    # work around an annoying X11 bug
-    sleep 1
-  fi
-
   if [ $lock_all -ne 0 ] ; then
-    programs="$programs $VLOCK_GRAB"
+    if [ $switch_new -ne 0 ] ; then
+      programs="$programs $VLOCK_NEW"
+      # work around an annoying X11 bug
+      sleep 1
+    else
+      programs="$programs $VLOCK_GRAB"
+    fi
+
     VLOCK_MESSAGE="\
 The entire console display is now completely locked.
 You will not be able to switch to another virtual console.
