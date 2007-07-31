@@ -80,8 +80,7 @@ int main(int argc, char **argv) {
     perror("vlock-grab: could not reenable console switching");
   }
 
-  /* exit with the exit status of the child or 200+signal if
-   * it was killed */
+  /* exit with the exit status of the child or 128+signal if it was killed */
   if (pid > 0) {
     if (WIFEXITED(status)) {
       exit (WEXITSTATUS(status));
