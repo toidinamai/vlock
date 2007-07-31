@@ -42,13 +42,13 @@ int main(int argc, char **argv) {
 
   if (argc < 2) {
     fprintf(stderr, "usage: %s child\n", *argv);
-    exit (111);
+    exit (100);
   }
 
   /* open the current terminal */
   if ((consfd = open("/dev/tty", O_RDWR)) < 0) {
-    perror("vlock-grab: could not open /dev/tty");
-    exit (1);
+    perror("vlock-new: could not open /dev/tty");
+    exit (111);
   }
 
   /* get the virtual console status */
@@ -60,62 +60,63 @@ int main(int argc, char **argv) {
 
     /* open the virtual console directly */
     if ((consfd = open(CONSOLE, O_RDWR)) < 0) {
-      perror("vlock-grab: cannot open virtual console");
-      exit (1);
+      perror("vlock-new: cannot open virtual console");
+      exit (111);
     }
 
     /* get the virtual console status, again */
     if (ioctl(consfd, VT_GETSTATE, &vtstate) < 0) {
-      perror("vlock-grab: virtual console not a virtual console");
-      exit (1);
+      perror("vlock-new: could not get virtual console status");
+      exit (111);
     }
   }
 
   /* get a free virtual terminal number */
   if (ioctl(consfd, VT_OPENQRY, &vtno) < 0)  {
-    perror("vlock-grab: could not find a free virtual terminal");
-    exit (1);
+    perror("vlock-new: could not find a free virtual terminal");
+    exit (111);
   }
 
   /* format the virtual terminal filename from the number */
   if ((size_t)snprintf(vtname, sizeof vtname, VTNAME, vtno) > sizeof vtname) {
-    fprintf(stderr, "vlock-grab: virtual terminal number too large\n");
+    fprintf(stderr, "vlock-new: virtual terminal number too large\n");
   }
 
   /* open the free virtual terminal */
   if ((vtfd = open(vtname, O_RDWR)) < 0) {
-    perror("vlock-grab: cannot open new console");
-    exit (1);
+    perror("vlock-new: cannot open new console");
+    exit (111);
   }
 
   if (fstat(vtfd, &vtstat) < 0) {
-    perror("vlock-grab: cannot stat new console");
-    exit (1);
+    perror("vlock-new: cannot stat new console");
+    exit (111);
   }
 
   if (fchown(vtfd, getuid(), getgid()) < 0) {
-    perror("vlock-grab: cannot fchown new console");
-    exit (1);
+    perror("vlock-new: cannot fchown new console");
+    exit (111);
   }
 
   if (fchmod(vtfd, S_IRUSR | S_IWUSR) < 0) {
     perror("vlock-new: cannot fchmod new console");
-    /* XXX: error handling */
-    exit (1);
+    (void) fchown(vtfd, vtstat.st_uid, vtstat.st_gid);
+    exit (111);
   }
 
   /* switch to the virtual terminal */
   if (ioctl(consfd, VT_ACTIVATE, vtno) < 0
       || ioctl(consfd, VT_WAITACTIVE, vtno) < 0) {
-    perror("vlock-grab: could not activate new terminal");
-    exit (1);
+    perror("vlock-new: could not activate new terminal");
+    (void) fchmod(vtfd, vtstat.st_mode);
+    (void) fchown(vtfd, vtstat.st_uid, vtstat.st_gid);
+    exit (111);
   }
 
   pid = fork();
 
   if (pid == 0) {
     /* child */
-    /* setsid(); */
 
     /* drop privleges */
     setuid(getuid());
@@ -127,14 +128,14 @@ int main(int argc, char **argv) {
 
     /* run child */
     execvp(*(argv+1), argv+1);
-    perror("vlock-grab: exec failed");
+    perror("vlock-new: exec failed");
     _exit(127);
   } else if (pid < 0) {
-    perror("vlock-grab: could not create child process");
+    perror("vlock-new: could not create child process");
   }
 
   if (pid > 0 && waitpid(pid, &status, 0) < 0) {
-    perror("vlock-grab: child process missing");
+    perror("vlock-new: child process missing");
     pid = -1;
   }
 
@@ -151,12 +152,12 @@ int main(int argc, char **argv) {
   /* switch back to former virtual terminal */
   if (ioctl(consfd, VT_ACTIVATE, vtstate.v_active) < 0
       || ioctl(consfd, VT_WAITACTIVE, vtstate.v_active) < 0) {
-    perror("vlock-grab: could not activate previous console");
+    perror("vlock-new: could not activate previous console");
   }
 
   /* deallocate virtual terminal */
   if (ioctl(consfd, VT_DISALLOCATE, vtno) < 0) {
-    perror("vlock-grab: could not disallocate console");
+    perror("vlock-new: could not disallocate console");
   }
 
   close(consfd);
