@@ -9,8 +9,10 @@ for Linux.  It disables console switching and runs \fIprogram\fR.  After the
 \fIprogram\fR exits it reenables console switching.
 .SH "EXIT CODES"
 \fBvlock-grab\fR exits 100 when called without arguments.  It prints an error
-message and exits 111 if it has trouble disabling console switching.  Otherwise
-its exit code is the same as that of \fIprogram\fR.
+message and exits 111 if it has trouble disabling console switching.  It exits
+127 if it has trouble running \fIprogram\fR.  If \fIprogram\fR is killed by a
+signal it exits 128 plus the number of the signal.  Otherwise its exit code is
+the same as that of \fIprogram\fR.
 .SH "SEE ALSO"
 .BR vlock (1),
 .BR ioctl (2)

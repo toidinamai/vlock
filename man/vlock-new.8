@@ -10,8 +10,10 @@ for Linux.  It allocates and switches to a new virtual console and runs
 previously active console.
 .SH "EXIT CODES"
 \fBvlock-new\fR exits 100 when called without arguments.  It prints an error
-message and exits 111 if it has trouble switching to the new console.
-Otherwise its exit code is the same as that of \fIprogram\fR.
+message and exits 111 if it has trouble switching to the new console.  It exits
+127 if it has trouble running \fIprogram\fR.  If \fIprogram\fR is killed by a
+signal it exits 128 plus the number of the signal.  Otherwise its exit code is
+the same as that of \fIprogram\fR.
 .SH "SEE ALSO"
 .BR vlock (1),
 .BR ioctl (2)

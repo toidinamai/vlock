@@ -9,8 +9,10 @@ for Linux.  It disables the magic SysRQ keys and runs \fIprogram\fR.  After the
 \fIprogram\fR exits it reenables the SysRQ keys.
 .SH "EXIT CODES"
 \fBvlock-nosysrq\fR exits 100 when called without arguments.  It prints an
-error message and exits 111 if it has disabling the SysRQ keys.  Otherwise its
-exit code is the same as that of \fIprogram\fR.
+error message and exits 111 if it has disabling the SysRQ keys.  It exits 127
+if it has trouble running \fIprogram\fR.  If \fIprogram\fR is killed by a
+signal it exits 128 plus the number of the signal.  Otherwise its exit code is
+the same as that of \fIprogram\fR.
 .SH "SEE ALSO"
 .BR vlock (1),
 .BR sysctl (8),
