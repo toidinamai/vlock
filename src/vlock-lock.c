@@ -40,9 +40,11 @@ int main(void) {
   signal(SIGQUIT, SIG_IGN);
   signal(SIGTSTP, SIG_IGN);
 
+#ifndef NO_USER_KILL
   /* set effective user id so the user starting vlock-lock as a setuid
    * program can kill(2) it */
   (void) seteuid(uid);
+#endif
 
   if (uid > 0 || envuser == NULL) {
     /* get the password entry */

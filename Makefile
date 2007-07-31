@@ -32,6 +32,10 @@ ifneq ($(USE_ROOT_PASS),y)
 src/vlock-lock : override CFLAGS += -DNO_ROOT_PASS
 endif
 
+ifneq ($(USER_KILL),y)
+src/vlock-lock : override CFLAGS += -DNO_USER_KILL
+endif
+
 ifeq ($(AUTH_METHOD),pam)
 src/vlock-lock : override LDFLAGS += $(PAM_LIBS)
 endif
