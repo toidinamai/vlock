@@ -2,7 +2,8 @@
 
 include config.mk
 
-override CFLAGS += -Isrc
+override CFLAGS += -Isrc -DPREFIX="\"$(PREFIX)"\"
+
 VPATH = src
 
 VLOCK_VERSION = "2.0 beta1"
