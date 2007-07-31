@@ -56,14 +56,11 @@ int main(int argc, char **argv) {
     exit (111);
   }
 
-  /* seek to the start of and truncate the file */
-  if (fseek(f, 0, SEEK_SET) < 0 || ftruncate(fileno(f), 0) < 0) {
-    perror("vlock-nosysrq: could not truncate '" SYSRQ_PATH "'");
-    exit (111);
-  }
-
   /* disable sysrq */
-  if (fputs(SYSRQ_DISABLE_VALUE, f) < 0 || fflush(f) < 0) {
+  if (fseek(f, 0, SEEK_SET) < 0
+      || ftruncate(fileno(f), 0) < 0
+      || fputs(SYSRQ_DISABLE_VALUE, f) < 0
+      || fflush(f) < 0) {
     perror("vlock-nosysrq: could not write disable value to '" SYSRQ_PATH "'");
     exit (111);
   }
@@ -85,31 +82,21 @@ int main(int argc, char **argv) {
     _exit(127);
   } else if (pid < 0)
     perror("vlock-nosysrq: could not create child process");
-  else if (waitpid(pid, &status, 0) < 0) {
+
+  if (pid > 0 && waitpid(pid, &status, 0) < 0) {
     perror("vlock-nosysrq: child process missing");
     pid = -1;
   }
 
-  /* seek to the start of the file */
-  if (fseek(f, 0, SEEK_SET) < 0) {
-    perror("vlock-nosysrq: could not seek to the start of '" SYSRQ_PATH "'");
-    exit (111);
+  if (fseek(f, 0, SEEK_SET) < 0
+      || ftruncate(fileno(f), 0) < 0
+      || fputs(sysrq, f) < 0
+      || fflush(f) < 0
+      ) {
+    perror("vlock-nosysrq: could not restore old value to '" SYSRQ_PATH "'");
   }
 
-  /* truncate the file */
-  if (ftruncate(fileno(f), 0)) {
-    perror("vlock-nosysrq: could not truncate '" SYSRQ_PATH "'");
-    exit (111);
-  }
-
-  /* restore the old value */
-  if (fputs(sysrq, f) < 0) {
-    perror("vlock-nosysrq: could not old value to '" SYSRQ_PATH "'");
-    exit (111);
-  }
-
-  /* exit with the exit status of the child or 200+signal if
-   * it was killed */
+  /* exit with the exit status of the child or 128+signal if it was killed */
   if (pid > 0) {
     if (WIFEXITED(status)) {
       exit (WEXITSTATUS(status));
