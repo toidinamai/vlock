@@ -19,34 +19,59 @@
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <signal.h>
 
 #include "vlock.h"
 
+/* This handler is called by a signal whenever a user tries to
+ * switch away from this virtual console. */
+void release_vt(int __attribute__((__unused__)) signum) {
+  /* kernel is not allowed to switch */
+  ioctl(STDIN_FILENO, VT_RELDISP, 0);
+}
+
+/* This handler is called whenever a user switches to this
+ * virtual console. */
+void acquire_vt(int __attribute__((__unused__)) signum) {
+  /* acknowledge, this is a noop */
+  ioctl(STDIN_FILENO, VT_RELDISP, VT_ACKACQ);
+}
+
 /* Run the program given by argv+1.  Console switching is forbidden
- * while the program is running.
- *
- * CAP_SYS_TTY_CONFIG is needed for the locking to succeed.
- */
+ * while the program is running. */
 int main(void) {
-  struct vt_stat vtstat;
+  struct vt_mode vtmode;
+  struct vt_mode vtmode_bak;
   int pid;
   int status;
 
   /* XXX: add optional PAM check here */
 
-  /* get the virtual console status */
-  if (ioctl(STDIN_FILENO, VT_GETSTATE, &vtstat) < 0) {
+  /* get the virtual console mode */
+  if (ioctl(STDIN_FILENO, VT_GETMODE, &vtmode) < 0) {
     if (errno == ENOTTY || errno == EINVAL)
       fprintf(stderr, "vlock-grab: this terminal is not a virtual console\n");
     else
-      perror("vlock-grab: could not get virtual console status");
+      perror("vlock-grab: could not get virtual console mode");
 
     exit (111);
   }
 
-  /* globally disable virtual console switching */
-  if (ioctl(STDIN_FILENO, VT_LOCKSWITCH) < 0) {
-    perror("vlock-grab: could not disable console switching");
+  vtmode_bak = vtmode;
+  vtmode.mode = VT_PROCESS;
+  vtmode.relsig = SIGUSR1;
+  vtmode.acqsig = SIGUSR2;
+
+  /* set virtual console mode to be process governed
+   * thus disabling console switching */
+  if (ioctl(STDIN_FILENO, VT_SETMODE, &vtmode) < 0) {
+    perror("vlock-grab: could not set virtual console mode");
+    exit (111);
+  }
+
+  if (signal(SIGUSR1, release_vt) == SIG_ERR
+      || signal(SIGUSR2, acquire_vt) == SIG_ERR) {
+    perror("vlock-grab: could not install signal handlers");
     exit (111);
   }
 
@@ -72,8 +97,8 @@ int main(void) {
   }
 
   /* globally enable virtual console switching */
-  if (ioctl(STDIN_FILENO, VT_UNLOCKSWITCH) < 0) {
-    perror("vlock-grab: could not reenable console switching");
+  if (ioctl(STDIN_FILENO, VT_SETMODE, &vtmode_bak) < 0) {
+    perror("vlock-grab: could not restore console mode");
   }
 
   /* exit with the exit status of the child or 128+signal if it was killed */
