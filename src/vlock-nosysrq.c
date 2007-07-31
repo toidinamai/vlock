@@ -16,6 +16,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+#include "vlock.h"
+
 #define SYSRQ_PATH "/proc/sys/kernel/sysrq"
 #define SYSRQ_DISABLE_VALUE "0\n"
 
@@ -24,17 +26,11 @@
  *
  * CAP_SYS_TTY_CONFIG is needed for the locking to succeed.
  */
-/* XXX: clean up exit codes */
-int main(int argc, char **argv) {
+int main(void) {
   char sysrq[32];
   int pid;
   int status;
   FILE *f;
-
-  if (argc < 2) {
-    fprintf(stderr, "usage: %s child\n", *argv);
-    exit (100);
-  }
 
   /* XXX: add optional PAM check here */
 
@@ -77,8 +73,13 @@ int main(int argc, char **argv) {
     setuid(getuid());
 
     /* run child */
-    execvp(*(argv+1), argv+1);
-    perror("vlock-nosysrq: exec failed");
+    if (getenv("VLOCK_NEW") != NULL) {
+      execl(VLOCK_NEW, VLOCK_NEW, (char *) NULL);
+      perror("vlock-nosysrq: exec of vlock-new failed");
+    } else {
+      execl(VLOCK_GRAB, VLOCK_GRAB, (char *) NULL);
+      perror("vlock-nosysrq: exec of vlock-grab failed");
+    }
     _exit(127);
   } else if (pid < 0)
     perror("vlock-nosysrq: could not create child process");
