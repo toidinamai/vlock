@@ -19,7 +19,6 @@
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <errno.h>
-#include <sysexits.h>
 
 /* Run the program given by argv+1.  Console switching is forbidden
  * while the program is running.
@@ -34,28 +33,25 @@ int main(int argc, char **argv) {
 
   if (argc < 2) {
     fprintf(stderr, "usage: %s child\n", *argv);
-    exit (EX_USAGE);
+    exit (111);
   }
 
   /* XXX: add optional PAM check here */
 
   /* get the virtual console status */
   if (ioctl(STDIN_FILENO, VT_GETSTATE, &vtstat) < 0) {
-    if (errno == ENOTTY || errno == EINVAL)
+    if (errno == ENOTTY || errno == EINVAL) {
       fprintf(stderr, "vlock-grab: this terminal is not a virtual console\n");
-    else
+    } else {
       perror("vlock-grab: could not get virtual console status");
-
-    exit (EX_IOERR);
+    }
+    exit (1);
   }
 
   /* globally disable virtual console switching */
   if (ioctl(STDIN_FILENO, VT_LOCKSWITCH) < 0) {
     perror("vlock-grab: could not disable console switching");
-    if (errno == EPERM)
-      exit (EX_NOPERM);
-    else
-      exit (EX_IOERR);
+    exit (1);
   }
 
   pid = fork();
@@ -81,7 +77,8 @@ int main(int argc, char **argv) {
 
   /* globally enable virtual console switching */
   if (ioctl(STDIN_FILENO, VT_UNLOCKSWITCH) < 0) {
-    perror("vlock-grab: could not reenable console switching");
+    perror("vlock-grab: could not enable console switching");
+    exit (1);
   }
 
   /* exit with the exit status of the child or 200+signal if
@@ -94,5 +91,5 @@ int main(int argc, char **argv) {
     }
   }
 
-  return EX_OK;
+  return 0;
 }
