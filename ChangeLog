@@ -1,0 +1,40 @@
+2007-07-30 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.0 beta1
+
+2007-07-28 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.0 alpha2
+
+2007-07-25 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.0 alpha1
+
+2007-05-23 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 1.4
+
+	* No changes since rc2.
+
+2007-05-10 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 1.4 rc2
+
+	* Make install rule made more friendly to packagers.
+	* Updated license declarations: sources now clearly state
+		"GNU General Public License version 2".
+
+2007-05-09
+
+	vlock 1.4 rc1
+
+	* Some compile time warnings fixed..
+	* Support for SysRq disabling added.
+
+1999-01-13 Michael Johnson <johnsonm@redhat.com>
+
+	vlock 1.3
+
+1998-03-12 Michael Johnson <johnsonm@redhat.com>
+
+	vlock 1.2
