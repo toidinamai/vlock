@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 
   if (argc < 2) {
     fprintf(stderr, "usage: %s child\n", *argv);
-    exit (111);
+    exit (100);
   }
 
   /* XXX: add optional PAM check here */
@@ -41,37 +41,40 @@ int main(int argc, char **argv) {
   /* open the sysrq sysctl file for reading and writing */
   if ((f = fopen(SYSRQ_PATH, "r+")) == NULL) {
     perror("vlock-nosysrq: could not open '" SYSRQ_PATH "'");
-    exit (1);
+    exit (111);
   }
 
   /* read the old value */
   if (fgets(sysrq, sizeof sysrq, f) == NULL) {
     perror("vlock-nosysrq: could not read from '" SYSRQ_PATH "'");
-    exit (1);
+    exit (111);
   }
 
   /* check whether all was read */
   if (fgetc(f) != EOF) {
     fprintf(stderr, "vlock-nosysrq: sysrq buffer to small: %d\n", sizeof sysrq);
-    exit (1);
+    exit (111);
   }
 
   /* seek to the start of and truncate the file */
   if (fseek(f, 0, SEEK_SET) < 0 || ftruncate(fileno(f), 0) < 0) {
     perror("vlock-nosysrq: could not truncate '" SYSRQ_PATH "'");
-    exit (1);
+    exit (111);
   }
 
   /* disable sysrq */
   if (fputs(SYSRQ_DISABLE_VALUE, f) < 0 || fflush(f) < 0) {
     perror("vlock-nosysrq: could not write disable value to '" SYSRQ_PATH "'");
-    exit (1);
+    exit (111);
   }
 
   pid = fork();
 
   if (pid == 0) {
     /* child */
+
+    /* close sysrq file */
+    fclose(f);
 
     /* drop privleges */
     setuid(getuid());
@@ -90,19 +93,19 @@ int main(int argc, char **argv) {
   /* seek to the start of the file */
   if (fseek(f, 0, SEEK_SET) < 0) {
     perror("vlock-nosysrq: could not seek to the start of '" SYSRQ_PATH "'");
-    exit (1);
+    exit (111);
   }
 
   /* truncate the file */
   if (ftruncate(fileno(f), 0)) {
     perror("vlock-nosysrq: could not truncate '" SYSRQ_PATH "'");
-    exit (1);
+    exit (111);
   }
 
   /* restore the old value */
   if (fputs(sysrq, f) < 0) {
     perror("vlock-nosysrq: could not old value to '" SYSRQ_PATH "'");
-    exit (1);
+    exit (111);
   }
 
   /* exit with the exit status of the child or 200+signal if
