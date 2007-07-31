@@ -20,21 +20,17 @@
 #include <sys/wait.h>
 #include <errno.h>
 
+#include "vlock.h"
+
 /* Run the program given by argv+1.  Console switching is forbidden
  * while the program is running.
  *
  * CAP_SYS_TTY_CONFIG is needed for the locking to succeed.
  */
-/* XXX: clean up exit codes */
-int main(int argc, char **argv) {
+int main(void) {
   struct vt_stat vtstat;
   int pid;
   int status;
-
-  if (argc < 2) {
-    fprintf(stderr, "usage: %s child\n", *argv);
-    exit (100);
-  }
 
   /* XXX: add optional PAM check here */
 
@@ -63,8 +59,8 @@ int main(int argc, char **argv) {
     setuid(getuid());
 
     /* run child */
-    execvp(*(argv+1), argv+1);
-    perror("vlock-grab: exec failed");
+    execl(VLOCK_LOCK, VLOCK_LOCK, (char *) NULL);
+    perror("vlock-grab: exec of vlock-lock failed");
     _exit(127);
   } else if (pid < 0) {
     perror("vlock-grab: could not create child process");
