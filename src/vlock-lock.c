@@ -29,6 +29,8 @@ int main(void) {
   char *vlock_message;
   struct termios term, term_bak;
   int restore_term = 0;
+  /* get the user id */
+  uid_t uid = getuid();
   /* get the user name from the environment */
   char *envuser = getenv("USER"); 
 
@@ -38,9 +40,13 @@ int main(void) {
   signal(SIGQUIT, SIG_IGN);
   signal(SIGTSTP, SIG_IGN);
 
-  if (getuid() || (envuser == NULL)) {
+  /* set effective user id so the user starting vlock-lock as a setuid
+   * program can kill(2) it */
+  (void) seteuid(uid);
+
+  if (uid > 0 || envuser == NULL) {
     /* get the password entry */
-    struct passwd *pw = getpwuid(getuid());
+    struct passwd *pw = getpwuid(uid);
 
     if (pw == NULL) {
       perror("vlock-lock: getpwuid() failed");
