@@ -33,25 +33,25 @@ int main(int argc, char **argv) {
 
   if (argc < 2) {
     fprintf(stderr, "usage: %s child\n", *argv);
-    exit (111);
+    exit (100);
   }
 
   /* XXX: add optional PAM check here */
 
   /* get the virtual console status */
   if (ioctl(STDIN_FILENO, VT_GETSTATE, &vtstat) < 0) {
-    if (errno == ENOTTY || errno == EINVAL) {
+    if (errno == ENOTTY || errno == EINVAL)
       fprintf(stderr, "vlock-grab: this terminal is not a virtual console\n");
-    } else {
+    else
       perror("vlock-grab: could not get virtual console status");
-    }
-    exit (1);
+
+    exit (111);
   }
 
   /* globally disable virtual console switching */
   if (ioctl(STDIN_FILENO, VT_LOCKSWITCH) < 0) {
     perror("vlock-grab: could not disable console switching");
-    exit (1);
+    exit (111);
   }
 
   pid = fork();
@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
   /* globally enable virtual console switching */
   if (ioctl(STDIN_FILENO, VT_UNLOCKSWITCH) < 0) {
     perror("vlock-grab: could not enable console switching");
-    exit (1);
+    exit (111);
   }
 
   /* exit with the exit status of the child or 200+signal if
