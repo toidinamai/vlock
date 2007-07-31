@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <sysexits.h>
 
 #include <pwd.h>
 
@@ -45,7 +44,7 @@ int main(void) {
 
     if (pw == NULL) {
       perror("vlock-lock: getpwuid() failed");
-      exit (EX_OSERR);
+      exit (111);
     }
 
     /* copy the username */
@@ -96,5 +95,5 @@ int main(void) {
   if (restore_term)
     (void) tcsetattr(STDIN_FILENO, TCSANOW, &term_bak);
 
-  return EX_OK;
+  exit (0);
 }
