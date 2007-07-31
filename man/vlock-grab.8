@@ -7,9 +7,10 @@ vlock-grab \- prevent virtual console switching
 \fBvlock-grab\fR is part of \fBvlock\fR, the Virtual Console locking program
 for Linux.  It disables console switching and runs \fIprogram\fR.  After the
 \fIprogram\fR exits it reenables console switching.
-\" XXX: document exit codes
-\" .SH "EXIT CODES"
-\" \fBvlock-grab\fR
+.SH "EXIT CODES"
+\fBvlock-grab\fR exits 100 when called without arguments.  It prints an error
+message and exits 111 if it has trouble disabling console switching.  Otherwise
+its exit code is the same as that of \fIprogram\fR.
 .SH "SEE ALSO"
 .BR vlock (1),
 .BR ioctl (2)

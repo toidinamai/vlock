@@ -8,9 +8,10 @@ vlock-new \- run a program on a new virtual console
 for Linux.  It allocates and switches to a new virtual console and runs
 \fIprogram\fR there.  After the \fIprogram\fR exits it switches back to the
 previously active console.
-\" XXX: document exit codes
-\" .SH "EXIT CODES"
-\" \fBvlock-new\fR
+.SH "EXIT CODES"
+\fBvlock-new\fR exits 100 when called without arguments.  It prints an error
+message and exits 111 if it has trouble switching to the new console.
+Otherwise its exit code is the same as that of \fIprogram\fR.
 .SH "SEE ALSO"
 .BR vlock (1),
 .BR ioctl (2)
