@@ -21,6 +21,7 @@
 /* hard coded paths */
 #define VLOCK_GRAB PREFIX "/sbin/vlock-grab"
 #define VLOCK_LOCK PREFIX "/sbin/vlock-lock"
+#define VLOCK_NEW PREFIX "/sbin/vlock-new"
 
 /* Try to authenticate the user.  When the user is successfully authenticated
  * this function returns 1.  When the authentication fails for whatever reason
