@@ -2,22 +2,24 @@
 
 include config.mk
 
+override CFLAGS += -Isrc
+
 VLOCK_VERSION = "2.0 beta1"
 
 PROGRAMS = \
-					 vlock \
-					 vlock-lock \
-					 vlock-new \
-					 vlock-grab \
-					 vlock-lockswitch \
-					 vlock-unlockswitch \
-					 vlock-nosysrq
+					src/vlock \
+					src/vlock-lock \
+					src/vlock-new \
+					src/vlock-grab \
+					src/vlock-lockswitch \
+					src/vlock-unlockswitch \
+					src/vlock-nosysrq
 
 .PHONY: all
 all: $(PROGRAMS)
 
 .PHONY: vlock
-vlock: vlock.sh config.mk Makefile
+src/vlock: src/vlock.sh config.mk Makefile
 	$(BOURNE_SHELL) -n $<
 	sed \
 		-e 's,%BOURNE_SHELL%,$(BOURNE_SHELL),' \
@@ -27,22 +29,22 @@ vlock: vlock.sh config.mk Makefile
 	mv -f $@.tmp $@
 
 ifneq ($(USE_ROOT_PASS),y)
-vlock-lock : override CFLAGS += -DNO_ROOT_PASS
+src/vlock-lock : override CFLAGS += -DNO_ROOT_PASS
 endif
 
 ifeq ($(AUTH_METHOD),pam)
-vlock-lock : override LDFLAGS += $(PAM_LIBS)
+src/vlock-lock : override LDFLAGS += $(PAM_LIBS)
 endif
 
 ifeq ($(AUTH_METHOD),shadow)
-vlock-lock : override LDFLAGS += -lcrypt
+src/vlock-lock : override LDFLAGS += -lcrypt
 endif
 
-vlock-lock: vlock-lock.c auth-$(AUTH_METHOD).c
+src/vlock-lock: src/vlock-lock.c src/auth-$(AUTH_METHOD).c
 
 ifeq ($(USE_PAM),y)
-vlock-nosysrq vlock-grab : override LDFLAGS += $(PAM_LIBS)
-vlock-nosysrq vlock-grab : override CFLAGS += -DUSE_PAM
+src/vlock-nosysrq src/vlock-grab : override LDFLAGS += $(PAM_LIBS)
+src/vlock-nosysrq src/vlock-grab : override CFLAGS += -DUSE_PAM
 endif
 
 ifndef VLOCK_GROUP
@@ -61,13 +63,13 @@ install: install-programs install-man
 
 .PHONY: install-programs
 install-programs: $(PROGRAMS)
-	$(INSTALL) -D -m 755 -o root -g root vlock $(DESTDIR)$(PREFIX)/bin/vlock
-	$(INSTALL) -D -m 4711 -o root -g root vlock-lock $(DESTDIR)$(PREFIX)/sbin/vlock-lock
-	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-grab $(DESTDIR)$(PREFIX)/sbin/vlock-grab
-	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-nosysrq $(DESTDIR)$(PREFIX)/sbin/vlock-nosysrq
-	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-new $(DESTDIR)$(PREFIX)/sbin/vlock-new
-	$(INSTALL) -D -m 755 -o root -g root vlock-lockswitch $(DESTDIR)$(PREFIX)/sbin/vlock-lockswitch
-	$(INSTALL) -D -m 755 -o root -g root vlock-unlockswitch $(DESTDIR)$(PREFIX)/sbin/vlock-unlockswitch
+	$(INSTALL) -D -m 755 -o root -g root src/vlock $(DESTDIR)$(PREFIX)/bin/vlock
+	$(INSTALL) -D -m 4711 -o root -g root src/vlock-lock $(DESTDIR)$(PREFIX)/sbin/vlock-lock
+	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) src/vlock-grab $(DESTDIR)$(PREFIX)/sbin/vlock-grab
+	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) src/vlock-nosysrq $(DESTDIR)$(PREFIX)/sbin/vlock-nosysrq
+	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) src/vlock-new $(DESTDIR)$(PREFIX)/sbin/vlock-new
+	$(INSTALL) -D -m 755 -o root -g root src/vlock-lockswitch $(DESTDIR)$(PREFIX)/sbin/vlock-lockswitch
+	$(INSTALL) -D -m 755 -o root -g root src/vlock-unlockswitch $(DESTDIR)$(PREFIX)/sbin/vlock-unlockswitch
 
 .PHONY: install-man
 install-man:
