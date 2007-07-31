@@ -83,4 +83,4 @@ install-man:
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(PROGRAMS) vlock.man vlock.1.html
+	rm -f $(PROGRAMS)
