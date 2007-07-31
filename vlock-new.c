@@ -105,6 +105,8 @@ int main(int argc, char **argv) {
   if (pid == 0) {
     /* child */
 
+    close(consfd);
+
     /* drop privleges */
     setuid(getuid());
     /* redirect stdio */
