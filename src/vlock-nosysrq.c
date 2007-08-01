@@ -22,10 +22,7 @@
 #define SYSRQ_DISABLE_VALUE "0\n"
 
 /* Run the program given by argv+1.  SysRQ keys are disabled while
- * as the program is running.
- *
- * CAP_SYS_TTY_CONFIG is needed for the locking to succeed.
- */
+ * as the program is running. */
 int main(void) {
   char sysrq[32];
   int pid;
