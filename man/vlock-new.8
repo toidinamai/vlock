@@ -1,21 +1,21 @@
 .TH VLOCK-NEW 8 "28 July 2007" "Linux" "Linux Programmer's Manual"
 .SH NAME
-vlock-new \- run a program on a new virtual console
+vlock-new \- switch to a new console and lock the console display
 .SH SYNOPSIS
-.B vlock-new program [arguments...]
+.B vlock-new
 .SH DESCRIPTION
-\fBvlock-all\fR is part of \fBvlock\fR, the Virtual Console locking program
-for Linux.  It allocates and switches to a new virtual console and runs
-\fIprogram\fR there.  After the \fIprogram\fR exits it switches back to the
+\fBvlock-all\fR is part of vlock(1), the Virtual Console locking program for
+Linux.  It allocates and switches to a new virtual console and runs
+vlock-all(8) there.  After the vlock-all(8) exits it switches back to the
 previously active console.
 .SH "EXIT CODES"
-\fBvlock-new\fR exits 100 when called without arguments.  It prints an error
-message and exits 111 if it has trouble switching to the new console.  It exits
-127 if it has trouble running \fIprogram\fR.  If \fIprogram\fR is killed by a
-signal it exits 128 plus the number of the signal.  Otherwise its exit code is
-the same as that of \fIprogram\fR.
+\fBvlock-new\fR exits 111 after printing an error message if it has trouble
+switching to the new console.  It exits 127 if it has trouble running
+vlock-all(8).  If vlock-all(8) is killed by a signal it exits 128 plus the
+number of the signal.  Otherwise its exit code is the that of vlock-all(8).
 .SH "SEE ALSO"
 .BR vlock (1),
+.BR vlock-all (8),
 .BR ioctl (2)
 .SH AUTHORS
 Frank Benkstein <frank-vlock@benkstein.net>
