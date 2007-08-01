@@ -28,7 +28,7 @@ print_help() {
 
 
 main() {
-  local opts lock_all disable_sysrq switch_new
+  local opts lock_all lock_new nosysrq
 
   opts=`getopt -o acnsvh --long current,all,new,disable-sysrq,version,help \
         -n vlock -- "$@"`
@@ -40,8 +40,8 @@ main() {
   eval set -- "$opts"
 
   lock_all=0
-  switch_new=0
-  disable_sysrq=0
+  lock_new=0
+  nosysrq=0
 
   while true ; do
     case "$1" in
@@ -54,11 +54,11 @@ main() {
         shift
         ;;
       -s|--disable-sysrq)
-        disable_sysrq=1
+        nosysrq=1
         shift
         ;;
       -n|--new)
-        switch_new=1
+        lock_new=1
         shift
         ;;
       -h|--help)
@@ -76,7 +76,7 @@ main() {
     esac
   done
 
-  if [ $switch_new -ne 0 ] ; then
+  if [ $lock_new -ne 0 ] ; then
     # work around an annoying X11 bug
     sleep 1
   fi
@@ -88,15 +88,15 @@ You will not be able to switch to another virtual console.
 "
     export VLOCK_MESSAGE
 
-    if [ $disable_sysrq -ne 0 ] ; then
-      if [ $switch_new -ne 0 ] ; then
+    if [ $nosysrq -ne 0 ] ; then
+      if [ $lock_new -ne 0 ] ; then
         export VLOCK_NEW=1
       else
         unset VLOCK_NEW
       fi
 
       exec "$VLOCK_NOSYSRQ"
-    elif [ $switch_new -ne 0 ] ; then
+    elif [ $lock_new -ne 0 ] ; then
       exec "$VLOCK_NEW"
     else
       exec "$VLOCK_ALL"
