@@ -18,7 +18,7 @@ print_help() {
   echo >&2 "-a or --all: lock all virtual consoles by preventing other users"
   echo >&2 "       from switching virtual consoles."
   echo >&2 "-n or --new: allocate a new virtual console before locking,"
-  echo >&2 "       requires --all."
+  echo >&2 "       implies --all."
   echo >&2 "-s or --disable-sysrq: disable sysrq while consoles are locked to"
   echo >&2 "       prevent killing vlock with SAK, requires --all."
   echo >&2 "-v or --version: Print the version number of vlock and exit."
@@ -59,6 +59,7 @@ main() {
         ;;
       -n|--new)
         lock_new=1
+        lock_all=1
         shift
         ;;
       -h|--help)
