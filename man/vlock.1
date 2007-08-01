@@ -16,9 +16,7 @@ entire console may be locked and virtual console switching disabled.
 By default, only the current VC (virtual console) is locked.  With the
 \fB-a,--all\fR option all VCs are locked.  The locked VCs cannot be unlocked
 without the invoker's password or the root password.  The root password will
-always be able to unlock any or all sessions.  And, for the paranoid,
-vlock makes it a trying experience for those attempting to guess the
-password, so unauthorized access to session(s) is highly unlikely.
+always be able to unlock any or all sessions, unless disabled at compile time.
 .PP
 Please note that it is entirely possible to completely lock yourself out of
 the console with the \fB-a,--all\fR option if you cannot remember your
@@ -34,7 +32,8 @@ on exit.  See /usr/src/linux/Documentation/sysrq.txt for more details.
 .PP
 \fBvlock\fR works for console sessions primarily.  To lock the entire console
 display from an X session use the \fB-n,--new\fR option. \fBvlock\fR will then
-switch to an empty virtual console before locking.
+switch to an empty virtual console before locking.  Giving this option implies
+the \fB-a,--all\fR option.
 .SH OPTIONS
 .B -a,--all
 .IP
@@ -46,11 +45,11 @@ Lock the current session (this is the default).
 .PP
 .B -n,--new
 .IP
-Allocate a new virtual console before locking anll console sessions.
+Switch to a new virtual console before locking all console sessions.
 .PP
 .B -s,--disable-sysrq
 .IP
-Disable sysrq while consoles are locked. Does not have effect unless
+Disable sysrq while consoles are locked.  Does not have effect unless
 the \fB-a,--all\fR option is also specified.
 .PP
 .B -h,--help
