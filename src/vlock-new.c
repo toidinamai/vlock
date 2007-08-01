@@ -19,7 +19,6 @@
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 
 #include "vlock.h"
 
@@ -34,7 +33,6 @@ int main(void) {
   struct vt_stat vtstate;
   int vtno;
   int vtfd;
-  struct stat vtstat;
   char vtname[sizeof VTNAME + 2];
   int pid = -1;
   int status;
@@ -79,11 +77,6 @@ int main(void) {
   /* open the free virtual terminal */
   if ((vtfd = open(vtname, O_RDWR)) < 0) {
     perror("vlock-new: cannot open new console");
-    exit (111);
-  }
-
-  if (fstat(vtfd, &vtstat) < 0) {
-    perror("vlock-new: cannot stat new console");
     exit (111);
   }
 
