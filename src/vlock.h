@@ -20,7 +20,7 @@
 
 /* hard coded paths */
 #define VLOCK_ALL PREFIX "/sbin/vlock-all"
-#define VLOCK_LOCK PREFIX "/sbin/vlock-lock"
+#define VLOCK_CURRENT PREFIX "/sbin/vlock-current"
 #define VLOCK_NEW PREFIX "/sbin/vlock-new"
 
 /* Try to authenticate the user.  When the user is successfully authenticated

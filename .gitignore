@@ -1,6 +1,6 @@
 *.o
 vlock
-vlock-lock
+vlock-current
 vlock-new
 vlock-all
 vlock-lockswitch

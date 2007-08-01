@@ -84,8 +84,8 @@ int main(void) {
     setuid(getuid());
 
     /* run child */
-    execl(VLOCK_LOCK, VLOCK_LOCK, (char *) NULL);
-    perror("vlock-all: exec of vlock-lock failed");
+    execl(VLOCK_CURRENT, VLOCK_CURRENT, (char *) NULL);
+    perror("vlock-all: exec of vlock-current failed");
     _exit(127);
   } else if (pid < 0) {
     perror("vlock-all: could not create child process");

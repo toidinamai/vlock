@@ -6,7 +6,7 @@ trap : HUP INT QUIT TSTP
 VLOCK_ALL=%PREFIX%/sbin/vlock-all
 VLOCK_NEW=%PREFIX%/sbin/vlock-new
 VLOCK_NOSYSRQ=%PREFIX%/sbin/vlock-nosysrq
-VLOCK_LOCK=%PREFIX%/sbin/vlock-lock
+VLOCK_CURRENT=%PREFIX%/sbin/vlock-current
 VLOCK_VERSION=%VLOCK_VERSION%
 
 print_help() {
@@ -105,7 +105,7 @@ You will not be able to switch to another virtual console.
     VLOCK_MESSAGE="This TTY is now locked."
     export VLOCK_MESSAGE
 
-    exec "$VLOCK_LOCK"
+    exec "$VLOCK_CURRENT"
   fi
 }
 

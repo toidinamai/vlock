@@ -1,4 +1,4 @@
-/* vlock-lock.c -- locking routine for vlock,
+/* vlock-current.c -- locking routine for vlock,
  *                   the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
@@ -41,7 +41,7 @@ int main(void) {
   signal(SIGTSTP, SIG_IGN);
 
 #ifndef NO_USER_KILL
-  /* set effective user id so the user starting vlock-lock as a setuid
+  /* set effective user id so the user starting vlock-current as a setuid
    * program can kill(2) it */
   (void) seteuid(uid);
 #endif
@@ -51,7 +51,7 @@ int main(void) {
     struct passwd *pw = getpwuid(uid);
 
     if (pw == NULL) {
-      perror("vlock-lock: getpwuid() failed");
+      perror("vlock-current: getpwuid() failed");
       exit (111);
     }
 

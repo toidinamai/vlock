@@ -10,7 +10,7 @@ VLOCK_VERSION = "2.0 beta1"
 
 PROGRAMS = \
 					vlock \
-					vlock-lock \
+					vlock-current \
 					vlock-new \
 					vlock-all \
 					vlock-lockswitch \
@@ -30,22 +30,22 @@ vlock: vlock.sh config.mk Makefile
 	mv -f $@.tmp $@
 
 ifneq ($(USE_ROOT_PASS),y)
-vlock-lock : override CFLAGS += -DNO_ROOT_PASS
+vlock-current : override CFLAGS += -DNO_ROOT_PASS
 endif
 
 ifneq ($(USER_KILL),y)
-vlock-lock : override CFLAGS += -DNO_USER_KILL
+vlock-current : override CFLAGS += -DNO_USER_KILL
 endif
 
 ifeq ($(AUTH_METHOD),pam)
-vlock-lock : override LDFLAGS += $(PAM_LIBS)
+vlock-current : override LDFLAGS += $(PAM_LIBS)
 endif
 
 ifeq ($(AUTH_METHOD),shadow)
-vlock-lock : override LDFLAGS += -lcrypt
+vlock-current : override LDFLAGS += -lcrypt
 endif
 
-vlock-lock: vlock-lock.c auth-$(AUTH_METHOD).c
+vlock-current: vlock-current.c auth-$(AUTH_METHOD).c
 
 ifeq ($(USE_PAM),y)
 vlock-nosysrq vlock-all : override LDFLAGS += $(PAM_LIBS)
@@ -69,7 +69,7 @@ install: install-programs install-man
 .PHONY: install-programs
 install-programs: $(PROGRAMS)
 	$(INSTALL) -D -m 755 -o root -g root vlock $(DESTDIR)$(PREFIX)/bin/vlock
-	$(INSTALL) -D -m 4711 -o root -g root vlock-lock $(DESTDIR)$(PREFIX)/sbin/vlock-lock
+	$(INSTALL) -D -m 4711 -o root -g root vlock-current $(DESTDIR)$(PREFIX)/sbin/vlock-current
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-all $(DESTDIR)$(PREFIX)/sbin/vlock-all
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-nosysrq $(DESTDIR)$(PREFIX)/sbin/vlock-nosysrq
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-new $(DESTDIR)$(PREFIX)/sbin/vlock-new
@@ -79,7 +79,7 @@ install-programs: $(PROGRAMS)
 .PHONY: install-man
 install-man:
 	$(INSTALL) -D -m 644 -o root -g root man/vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
-	$(INSTALL) -D -m 644 -o root -g root man/vlock-lock.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-lock.8
+	$(INSTALL) -D -m 644 -o root -g root man/vlock-current.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-current.8
 	$(INSTALL) -D -m 644 -o root -g root man/vlock-all.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-all.8
 	$(INSTALL) -D -m 644 -o root -g root man/vlock-new.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-new.8
 	$(INSTALL) -D -m 644 -o root -g root man/vlock-nosysrq.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-nosysrq.8
