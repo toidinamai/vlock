@@ -68,7 +68,7 @@ install: install-programs install-man
 install-programs: $(PROGRAMS)
 	$(INSTALL) -D -m 755 -o root -g root vlock $(DESTDIR)$(PREFIX)/bin/vlock
 	$(INSTALL) -D -m 4711 -o root -g root vlock-current $(DESTDIR)$(PREFIX)/sbin/vlock-current
-	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-all $(DESTDIR)$(PREFIX)/sbin/vlock-all
+	$(INSTALL) -D -m 755 -o root -g root vlock-all $(DESTDIR)$(PREFIX)/sbin/vlock-all
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-nosysrq $(DESTDIR)$(PREFIX)/sbin/vlock-nosysrq
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-new $(DESTDIR)$(PREFIX)/sbin/vlock-new
 
