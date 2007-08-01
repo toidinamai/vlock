@@ -3,7 +3,7 @@
 # ignore some signals
 trap : HUP INT QUIT TSTP
 
-VLOCK_GRAB=%PREFIX%/sbin/vlock-grab
+VLOCK_ALL=%PREFIX%/sbin/vlock-all
 VLOCK_NEW=%PREFIX%/sbin/vlock-new
 VLOCK_NOSYSRQ=%PREFIX%/sbin/vlock-nosysrq
 VLOCK_LOCK=%PREFIX%/sbin/vlock-lock
@@ -99,7 +99,7 @@ You will not be able to switch to another virtual console.
     elif [ $switch_new -ne 0 ] ; then
       exec "$VLOCK_NEW"
     else
-      exec "$VLOCK_GRAB"
+      exec "$VLOCK_ALL"
     fi
   else
     VLOCK_MESSAGE="This TTY is now locked."

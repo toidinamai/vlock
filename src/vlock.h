@@ -19,7 +19,7 @@
 #define CLEAR_SCREEN "\033[H\033[J"
 
 /* hard coded paths */
-#define VLOCK_GRAB PREFIX "/sbin/vlock-grab"
+#define VLOCK_ALL PREFIX "/sbin/vlock-all"
 #define VLOCK_LOCK PREFIX "/sbin/vlock-lock"
 #define VLOCK_NEW PREFIX "/sbin/vlock-new"
 

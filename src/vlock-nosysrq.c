@@ -1,4 +1,4 @@
-/* vlock-grab.c -- sysrq protection routine for vlock,
+/* vlock-all.c -- sysrq protection routine for vlock,
  *                   the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
@@ -77,8 +77,8 @@ int main(void) {
       execl(VLOCK_NEW, VLOCK_NEW, (char *) NULL);
       perror("vlock-nosysrq: exec of vlock-new failed");
     } else {
-      execl(VLOCK_GRAB, VLOCK_GRAB, (char *) NULL);
-      perror("vlock-nosysrq: exec of vlock-grab failed");
+      execl(VLOCK_ALL, VLOCK_ALL, (char *) NULL);
+      perror("vlock-nosysrq: exec of vlock-all failed");
     }
     _exit(127);
   } else if (pid < 0)

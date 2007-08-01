@@ -2,7 +2,7 @@
 vlock
 vlock-lock
 vlock-new
-vlock-grab
+vlock-all
 vlock-lockswitch
 vlock-unlockswitch
 vlock-nosysrq

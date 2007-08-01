@@ -110,8 +110,8 @@ int main(void) {
     close(vtfd);
 
     /* run child */
-    execl(VLOCK_GRAB, VLOCK_GRAB, (char *) NULL);
-    perror("vlock-new: exec of vlock-grab failed");
+    execl(VLOCK_ALL, VLOCK_ALL, (char *) NULL);
+    perror("vlock-new: exec of vlock-all failed");
     _exit(127);
   } else if (pid < 0) {
     perror("vlock-new: could not create child process");

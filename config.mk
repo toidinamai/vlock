@@ -9,10 +9,10 @@ BOURNE_SHELL = /bin/sh
 # user with the same uid as the one starting vlock-lock can kill it
 USER_KILL = y
 
-# group to install vlock-grab and vlock-nosysrq as
+# group to install vlock-all and vlock-nosysrq as
 # defaults to 'root')
 VLOCK_GROUP =
-# mode to install vlock-grab and vlock-nosysrq as
+# mode to install vlock-all and vlock-nosysrq as
 # defaults to 4711 if group is unset and 4710 otherwise
 VLOCK_MODE =
 

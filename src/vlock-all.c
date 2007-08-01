@@ -1,4 +1,4 @@
-/* vlock-grab.c -- console grabbing routine for vlock,
+/* vlock-all.c -- console allbing routine for vlock,
  *                 the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
@@ -50,9 +50,9 @@ int main(void) {
   /* get the virtual console mode */
   if (ioctl(STDIN_FILENO, VT_GETMODE, &vtmode) < 0) {
     if (errno == ENOTTY || errno == EINVAL)
-      fprintf(stderr, "vlock-grab: this terminal is not a virtual console\n");
+      fprintf(stderr, "vlock-all: this terminal is not a virtual console\n");
     else
-      perror("vlock-grab: could not get virtual console mode");
+      perror("vlock-all: could not get virtual console mode");
 
     exit (111);
   }
@@ -65,13 +65,13 @@ int main(void) {
   /* set virtual console mode to be process governed
    * thus disabling console switching */
   if (ioctl(STDIN_FILENO, VT_SETMODE, &vtmode) < 0) {
-    perror("vlock-grab: could not set virtual console mode");
+    perror("vlock-all: could not set virtual console mode");
     exit (111);
   }
 
   if (signal(SIGUSR1, release_vt) == SIG_ERR
       || signal(SIGUSR2, acquire_vt) == SIG_ERR) {
-    perror("vlock-grab: could not install signal handlers");
+    perror("vlock-all: could not install signal handlers");
     exit (111);
   }
 
@@ -85,20 +85,20 @@ int main(void) {
 
     /* run child */
     execl(VLOCK_LOCK, VLOCK_LOCK, (char *) NULL);
-    perror("vlock-grab: exec of vlock-lock failed");
+    perror("vlock-all: exec of vlock-lock failed");
     _exit(127);
   } else if (pid < 0) {
-    perror("vlock-grab: could not create child process");
+    perror("vlock-all: could not create child process");
   }
 
   if (pid > 0 && waitpid(pid, &status, 0) < 0) {
-    perror("vlock-grab: child process missing");
+    perror("vlock-all: child process missing");
     pid = -1;
   }
 
   /* globally enable virtual console switching */
   if (ioctl(STDIN_FILENO, VT_SETMODE, &vtmode_bak) < 0) {
-    perror("vlock-grab: could not restore console mode");
+    perror("vlock-all: could not restore console mode");
   }
 
   /* exit with the exit status of the child or 128+signal if it was killed */

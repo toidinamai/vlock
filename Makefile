@@ -12,7 +12,7 @@ PROGRAMS = \
 					vlock \
 					vlock-lock \
 					vlock-new \
-					vlock-grab \
+					vlock-all \
 					vlock-lockswitch \
 					vlock-unlockswitch \
 					vlock-nosysrq
@@ -48,8 +48,8 @@ endif
 vlock-lock: vlock-lock.c auth-$(AUTH_METHOD).c
 
 ifeq ($(USE_PAM),y)
-vlock-nosysrq vlock-grab : override LDFLAGS += $(PAM_LIBS)
-vlock-nosysrq vlock-grab : override CFLAGS += -DUSE_PAM
+vlock-nosysrq vlock-all : override LDFLAGS += $(PAM_LIBS)
+vlock-nosysrq vlock-all : override CFLAGS += -DUSE_PAM
 endif
 
 ifndef VLOCK_GROUP
@@ -70,7 +70,7 @@ install: install-programs install-man
 install-programs: $(PROGRAMS)
 	$(INSTALL) -D -m 755 -o root -g root vlock $(DESTDIR)$(PREFIX)/bin/vlock
 	$(INSTALL) -D -m 4711 -o root -g root vlock-lock $(DESTDIR)$(PREFIX)/sbin/vlock-lock
-	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-grab $(DESTDIR)$(PREFIX)/sbin/vlock-grab
+	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-all $(DESTDIR)$(PREFIX)/sbin/vlock-all
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-nosysrq $(DESTDIR)$(PREFIX)/sbin/vlock-nosysrq
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-new $(DESTDIR)$(PREFIX)/sbin/vlock-new
 	$(INSTALL) -D -m 755 -o root -g root vlock-lockswitch $(DESTDIR)$(PREFIX)/sbin/vlock-lockswitch
@@ -80,7 +80,7 @@ install-programs: $(PROGRAMS)
 install-man:
 	$(INSTALL) -D -m 644 -o root -g root man/vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
 	$(INSTALL) -D -m 644 -o root -g root man/vlock-lock.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-lock.8
-	$(INSTALL) -D -m 644 -o root -g root man/vlock-grab.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-grab.8
+	$(INSTALL) -D -m 644 -o root -g root man/vlock-all.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-all.8
 	$(INSTALL) -D -m 644 -o root -g root man/vlock-new.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-new.8
 	$(INSTALL) -D -m 644 -o root -g root man/vlock-nosysrq.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-nosysrq.8
 	$(INSTALL) -D -m 644 -o root -g root man/vlock-lockswitch.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-lockswitch.8

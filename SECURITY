@@ -15,7 +15,7 @@ Another possibility is to install vlock with the VLOCK_GROUP set to root and
 only allow use of vlock through tools like sudo.  This approach, however, does
 not bring much advantage over the previous group based one.
 
-In the future the offending tools, vlock-new and vlock-grab, may also be
+In the future the offending tools, vlock-new and vlock-all, may also be
 optionally protected through PAM.
 
 vlock-nosysrq is not considered here because enabling it on a machine where
@@ -30,17 +30,17 @@ vlock-new
 This tool allows any user to run an arbitrary program on a new console.  It is
 similar to openvt(1) but much simpler.  The user does not have to be logged in
 locally.  This is a slight security problem on its own but it becomes even
-bigger if the program run on the new console is vlock-grab.
+bigger if the program run on the new console is vlock-all.
 
 To access the new virtual console vlock-new needs permissions on /dev/ttyXX. It
 is therefore recommended to install vlock-new as a setuid-root program.
 
-vlock-grab
+vlock-all
 ----------
 
 This tool allows any user to run an arbitrary program while console switching
 is disabled.  This only works when run on a virtual console as is the case when
 run through vlock-new.
 
-To lock console switching vlock-grab needs CAP_SYS_TTY_CONFIG.  It is therefore
-recommended to install vlock-grab as a setuid-root program.
+To lock console switching vlock-all needs CAP_SYS_TTY_CONFIG.  It is therefore
+recommended to install vlock-all as a setuid-root program.
