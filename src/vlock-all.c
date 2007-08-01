@@ -45,8 +45,6 @@ int main(void) {
   int pid;
   int status;
 
-  /* XXX: add optional PAM check here */
-
   /* get the virtual console mode */
   if (ioctl(STDIN_FILENO, VT_GETMODE, &vtmode) < 0) {
     if (errno == ENOTTY || errno == EINVAL)
