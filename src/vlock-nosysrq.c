@@ -1,4 +1,4 @@
-/* vlock-all.c -- sysrq protection routine for vlock,
+/* vlock-nosysrq.c -- sysrq protection routine for vlock,
  *                   the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
