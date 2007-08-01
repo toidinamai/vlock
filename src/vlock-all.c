@@ -79,7 +79,7 @@ int main(void) {
     /* child */
 
     /* drop privleges */
-    setuid(getuid());
+    (void) setuid(getuid());
 
     /* run child */
     execl(VLOCK_CURRENT, VLOCK_CURRENT, (char *) NULL);
