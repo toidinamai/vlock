@@ -3,8 +3,6 @@ vlock
 vlock-current
 vlock-new
 vlock-all
-vlock-lockswitch
-vlock-unlockswitch
 vlock-nosysrq
 vlock.man
 vlock.1.html
