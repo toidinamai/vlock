@@ -132,25 +132,21 @@ int main(void) {
 
   /* switch back to former virtual terminal */
   if (ioctl(consfd, VT_ACTIVATE, vtstate.v_active) < 0
-      || ioctl(consfd, VT_WAITACTIVE, vtstate.v_active) < 0) {
+      || ioctl(consfd, VT_WAITACTIVE, vtstate.v_active) < 0)
     perror("vlock-new: could not activate previous console");
-  }
 
   /* deallocate virtual terminal */
-  if (ioctl(consfd, VT_DISALLOCATE, vtno) < 0) {
+  if (ioctl(consfd, VT_DISALLOCATE, vtno) < 0)
     perror("vlock-new: could not disallocate console");
-  }
 
   close(consfd);
 
   /* exit with the exit status of the child or 128+signal if it was killed */
-  if (pid > 0) {
-    if (WIFEXITED(status)) {
+  if (pid > 0)
+    if (WIFEXITED(status))
       exit (WEXITSTATUS(status));
-    } else if (WIFSIGNALED(status)) {
+    else if (WIFSIGNALED(status))
       exit (128+WTERMSIG(status));
-    }
-  }
 
   return 0;
 }
