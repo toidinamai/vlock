@@ -72,6 +72,7 @@ int main(void) {
   /* format the virtual terminal filename from the number */
   if ((size_t)snprintf(vtname, sizeof vtname, VTNAME, vtno) > sizeof vtname) {
     fprintf(stderr, "vlock-new: virtual terminal number too large\n");
+    exit (111);
   }
 
   /* open the free virtual terminal */
