@@ -121,12 +121,13 @@ int main(void) {
     perror("vlock-new: could not create child process");
   }
 
+  /* close virtual terminal file descriptor */
+  (void) close(vtfd);
+
   if (pid > 0 && waitpid(pid, &status, 0) < 0) {
     perror("vlock-new: child process missing");
     pid = -1;
   }
-
-  close(vtfd);
 
   /* switch back to former virtual terminal */
   if (ioctl(consfd, VT_ACTIVATE, vtstate.v_active) < 0
