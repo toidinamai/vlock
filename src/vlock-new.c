@@ -92,10 +92,21 @@ int main(void) {
   if (pid == 0) {
     /* child */
 
-    close(consfd);
-
     /* drop privleges */
-    setuid(getuid());
+    (void) setuid(getuid());
+
+    /* close the virtual console file descriptor */
+    (void) close(consfd);
+
+    /* make this process a session leader */
+    (void) setsid();
+
+    /* make new virtual terminal controlling tty of this process */
+    if (ioctl(vtfd, TIOCSCTTY, 1) < 0) {
+      perror("vlock-new: could not set controlling terminal");
+      _exit(111);
+    }
+
     /* redirect stdio */
     dup2(vtfd, STDIN_FILENO);
     dup2(vtfd, STDOUT_FILENO);
