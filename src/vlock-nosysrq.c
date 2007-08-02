@@ -64,10 +64,10 @@ int main(void) {
     /* child */
 
     /* close sysrq file */
-    fclose(f);
+    (void) fclose(f);
 
     /* drop privleges */
-    setuid(getuid());
+    (void) setuid(getuid());
 
     /* run child */
     if (getenv("VLOCK_NEW") != NULL) {
@@ -90,17 +90,15 @@ int main(void) {
       || ftruncate(fileno(f), 0) < 0
       || fputs(sysrq, f) < 0
       || fflush(f) < 0
-      ) {
+      )
     perror("vlock-nosysrq: could not restore old value to '" SYSRQ_PATH "'");
-  }
 
   /* exit with the exit status of the child or 128+signal if it was killed */
   if (pid > 0) {
-    if (WIFEXITED(status)) {
+    if (WIFEXITED(status))
       exit (WEXITSTATUS(status));
-    } else if (WIFSIGNALED(status)) {
+    else if (WIFSIGNALED(status))
       exit (128+WTERMSIG(status));
-    }
   }
 
   return 0;
