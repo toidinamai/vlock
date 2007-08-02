@@ -3,9 +3,12 @@
 	vlock 2.0 beta2
 
 	* Many improvements to security.
-	* Added a SECURITY blurb.
+	* General cleanup to source tree.
+	* ChangeLog added.
+	* Manpages updated.
 	* LICENSE file updated, license terms unchanged.
 	* README updated.
+	* Added a SECURITY blurb.
 	* -n,--new option now implies -a,--all instead of requiring
 		it.
 
