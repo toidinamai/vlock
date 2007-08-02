@@ -99,11 +99,12 @@ int main(void) {
     perror("vlock-all: could not restore console mode");
 
   /* exit with the exit status of the child or 128+signal if it was killed */
-  if (pid > 0)
+  if (pid > 0) {
     if (WIFEXITED(status))
       exit (WEXITSTATUS(status));
     else if (WIFSIGNALED(status))
       exit (128+WTERMSIG(status));
+  }
 
   return 0;
 }
