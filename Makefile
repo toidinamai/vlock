@@ -6,7 +6,7 @@ override CFLAGS += -Isrc -DPREFIX="\"$(PREFIX)"\"
 
 VPATH = src
 
-VLOCK_VERSION = "2.0 beta1"
+VLOCK_VERSION = "2.0 beta2"
 
 PROGRAMS = \
 					vlock \
