@@ -22,14 +22,9 @@
 
 #include "vlock.h"
 
-/* Allocate a new console and run the program given by argv+1 there.
- * When the program is finished, remove locking and switch back to
- * former console.
- *
- * Access to the new tty device is needed to run the new program there.
- */
+/* Run vlock-all on a new console. */
 int main(void) {
-  int consfd = -1;
+  int consfd;
   struct vt_stat vtstate;
   int vtno;
   int vtfd;
@@ -46,7 +41,7 @@ int main(void) {
   /* get the virtual console status */
   if (ioctl(consfd, VT_GETSTATE, &vtstate) < 0) {
     /* the current terminal does not belong to the virtual console */
-    close(consfd);
+    (void) close(consfd);
 
     /* XXX: add optional PAM check here */
 
@@ -139,7 +134,7 @@ int main(void) {
   if (ioctl(consfd, VT_DISALLOCATE, vtno) < 0)
     perror("vlock-new: could not disallocate console");
 
-  close(consfd);
+  (void) close(consfd);
 
   /* exit with the exit status of the child or 128+signal if it was killed */
   if (pid > 0) {
