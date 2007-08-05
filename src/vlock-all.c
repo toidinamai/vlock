@@ -60,16 +60,17 @@ int main(void) {
   vtmode.relsig = SIGUSR1;
   vtmode.acqsig = SIGUSR2;
 
+  /* set console switching signal handlers */
+  if (signal(SIGUSR1, release_vt) == SIG_ERR
+      || signal(SIGUSR2, acquire_vt) == SIG_ERR) {
+    perror("vlock-all: could not install signal handlers");
+    exit (111);
+  }
+
   /* set virtual console mode to be process governed
    * thus disabling console switching */
   if (ioctl(STDIN_FILENO, VT_SETMODE, &vtmode) < 0) {
     perror("vlock-all: could not set virtual console mode");
-    exit (111);
-  }
-
-  if (signal(SIGUSR1, release_vt) == SIG_ERR
-      || signal(SIGUSR2, acquire_vt) == SIG_ERR) {
-    perror("vlock-all: could not install signal handlers");
     exit (111);
   }
 
