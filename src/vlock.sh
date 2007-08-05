@@ -26,6 +26,15 @@ print_help() {
   exit $1
 }
 
+checked_exec() {
+  if [ -f "$1" ] && [ ! -x "$1" ] ; then
+    echo >&2 "vlock: cannot execute \`$1': Permission denied"
+    echo >&2 "Please check the documentation for more information."
+    exit 1
+  else
+    exec "$@"
+  fi
+}
 
 main() {
   local opts lock_all lock_new nosysrq
@@ -96,17 +105,17 @@ You will not be able to switch to another virtual console.
         unset VLOCK_NEW
       fi
 
-      exec "$VLOCK_NOSYSRQ"
+      checked_exec "$VLOCK_NOSYSRQ"
     elif [ $lock_new -ne 0 ] ; then
-      exec "$VLOCK_NEW"
+      checked_exec "$VLOCK_NEW"
     else
-      exec "$VLOCK_ALL"
+      checked_exec "$VLOCK_ALL"
     fi
   else
     VLOCK_MESSAGE="This TTY is now locked."
     export VLOCK_MESSAGE
 
-    exec "$VLOCK_CURRENT"
+    checked_exec "$VLOCK_CURRENT"
   fi
 }
 
