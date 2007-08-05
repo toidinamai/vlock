@@ -1,5 +1,5 @@
 /* vlock-current.c -- locking routine for vlock,
- *                   the VT locking program for linux
+ *                    the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
  * software which is freely distributable under the terms of the
@@ -25,6 +25,7 @@
 
 #include "vlock.h"
 
+/* Lock the current terminal until proper authentication is received. */
 int main(void) {
   char user[40];
   char *vlock_message;
