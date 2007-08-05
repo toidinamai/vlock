@@ -93,11 +93,11 @@ int main(void) {
   if (pid == 0) {
     /* child */
 
-    /* drop privleges */
-    (void) setuid(getuid());
-
     /* close the virtual console file descriptor */
     (void) close(consfd);
+
+    /* drop privleges */
+    (void) setuid(getuid());
 
     /* make this process a session leader */
     (void) setsid();
