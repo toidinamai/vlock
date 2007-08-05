@@ -1,5 +1,5 @@
 /* auth-shadow.c -- shadow authentification routine for vlock,
- *                   the VT locking program for linux
+ *                  the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
  * software which is freely distributable under the terms of the
@@ -11,6 +11,7 @@
  *
  */
 
+/* for crypt() */
 #define _XOPEN_SOURCE
 #include <unistd.h>
 #include <stdio.h>
@@ -35,7 +36,7 @@ int auth(const char *user) {
   /* write out the prompt */
   fprintf(stderr, "%s's Password: ", user); fflush(stderr);
 
-  /* read the password */
+  /* read the password, echo was switched of by vlock-current */
   if (fgets(buffer, sizeof buffer, stdin) == NULL)
     goto out;
 
