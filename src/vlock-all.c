@@ -1,5 +1,5 @@
 /* vlock-all.c -- console grabbing routine for vlock,
- *                 the VT locking program for linux
+ *                the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
  * software which is freely distributable under the terms of the
@@ -37,11 +37,9 @@ void acquire_vt(int __attribute__((__unused__)) signum) {
   ioctl(STDIN_FILENO, VT_RELDISP, VT_ACKACQ);
 }
 
-/* Run the program given by argv+1.  Console switching is forbidden
- * while the program is running. */
+/* Disable console switching while running vlock-current. */
 int main(void) {
-  struct vt_mode vtmode;
-  struct vt_mode vtmode_bak;
+  struct vt_mode vtmode, vtmode_bak;
   int pid;
   int status;
 
