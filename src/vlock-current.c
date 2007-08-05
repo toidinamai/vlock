@@ -51,7 +51,11 @@ int main(void) {
     struct passwd *pw = getpwuid(uid);
 
     if (pw == NULL) {
-      perror("vlock-current: getpwuid() failed");
+      if (errno != 0)
+        perror("vlock-current: getpwuid() failed");
+      else
+        fprintf(stderr, "vlock-current: getpwuid() failed\n");
+
       exit (111);
     }
 
