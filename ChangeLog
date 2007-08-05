@@ -1,3 +1,10 @@
+2007-08-05 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.0 rc1
+
+	* Code cleanups (comments, style).
+	* Fixed two merely theoretical security problems.
+
 2007-08-02 Frank Benkstein <frank-vlock@benkstein.net>
 
 	vlock 2.0 beta2
