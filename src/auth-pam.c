@@ -1,5 +1,5 @@
 /* auth-pam.c -- PAM authentification routine for vlock,
- *                   the VT locking program for linux
+ *               the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
  * software which is freely distributable under the terms of the
@@ -16,10 +16,6 @@
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
 
-/* Try to authenticate the user.  When the user is successfully authenticated
- * this function returns 1.  When the authentication fails for whatever reason
- * the function returns 0.
- */
 int auth(const char *user) {
   pam_handle_t *pamh;
   int pam_status;
