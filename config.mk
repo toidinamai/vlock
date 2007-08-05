@@ -6,8 +6,6 @@ USE_PAM = n
 USE_ROOT_PASS = y
 # shell to run vlock.sh with
 BOURNE_SHELL = /bin/sh
-# user with the same uid as the one starting vlock-current can kill it
-USER_KILL = y
 
 # group to install vlock-all and vlock-nosysrq as
 # defaults to 'root')

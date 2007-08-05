@@ -36,8 +36,7 @@ to switch to any console without typing your password.
   not mine.  I warned you.
 
 The root password will *always* be able to unlock any vlock
-session [1]_.  If anyone else can log in as you, they can send a
-SIGTERM or SIGKILL to vlock, which *will* kill it [2]_.
+session [1]_.
 
 vlock consists of several binaries some of which have to be installed
 as setuid root to function correctly.  Please refer to SECURITY for a
@@ -52,5 +51,3 @@ vlock is maintained by Frank Benkstein <frank-vlock@benkstein.net>.
 
 .. [1] This is a compile time option and can be disabled with the
     USE_ROOT_PASS compile flag.
-.. [2] This, too, is a compile time option (USER_KILL), that can be
-    disabled.

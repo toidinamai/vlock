@@ -31,10 +31,6 @@ ifneq ($(USE_ROOT_PASS),y)
 vlock-current : override CFLAGS += -DNO_ROOT_PASS
 endif
 
-ifneq ($(USER_KILL),y)
-vlock-current : override CFLAGS += -DNO_USER_KILL
-endif
-
 ifeq ($(AUTH_METHOD),pam)
 vlock-current : override LDFLAGS += $(PAM_LIBS)
 endif
