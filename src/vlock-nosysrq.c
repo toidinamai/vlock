@@ -21,8 +21,7 @@
 #define SYSRQ_PATH "/proc/sys/kernel/sysrq"
 #define SYSRQ_DISABLE_VALUE "0\n"
 
-/* Run the program given by argv+1.  SysRQ keys are disabled while
- * as the program is running. */
+/* Run vlock-new or vlock-all while SysRQ keys are disabled. */
 int main(void) {
   char sysrq[32];
   int pid;
@@ -78,8 +77,9 @@ int main(void) {
       perror("vlock-nosysrq: exec of vlock-all failed");
     }
     _exit(127);
-  } else if (pid < 0)
+  } else if (pid < 0) {
     perror("vlock-nosysrq: could not create child process");
+  }
 
   if (pid > 0 && waitpid(pid, &status, 0) < 0) {
     perror("vlock-nosysrq: child process missing");
