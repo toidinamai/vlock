@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <errno.h>
 
 #include "vlock.h"
 
@@ -28,7 +29,6 @@ int main(void) {
   char user[40];
   char *vlock_message;
   struct termios term, term_bak;
-  int restore_term = 0;
   /* get the user id */
   uid_t uid = getuid();
   /* get the user name from the environment */
@@ -75,7 +75,7 @@ int main(void) {
   if (tcgetattr(STDIN_FILENO, &term) == 0) {
     term_bak = term;
     term.c_lflag &= ~(ECHO|ISIG);
-    restore_term = (tcsetattr(STDIN_FILENO, TCSANOW, &term) == 0);
+    (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
   }
 
   for (;;) {
@@ -104,8 +104,7 @@ int main(void) {
   }
 
   /* restore the terminal */
-  if (restore_term)
-    (void) tcsetattr(STDIN_FILENO, TCSANOW, &term_bak);
+  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term_bak);
 
   exit (0);
 }
