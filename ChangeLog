@@ -1,3 +1,12 @@
+2007-08-06 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.0 rc2
+
+	* Improved man page and error messages.
+	* Fixed bug that prevented shadow authentication from working.
+	* vlock can now only be killed by root.  This will probably be
+	  fixed in future releases.
+
 2007-08-05 Frank Benkstein <frank-vlock@benkstein.net>
 
 	vlock 2.0 rc1
