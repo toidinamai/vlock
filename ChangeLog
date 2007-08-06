@@ -24,7 +24,8 @@
 
 	* Added manpages for all tools.
 	* Enter key must be pressed before authentication is started.
-	* When run as root, vlock now locks as the user given by the $USER environment variable.
+	* When run as root, vlock now locks as the user given by the
+	  $USER environment variable.
 	* Add -n,--new option to run vlock on a new virtual console.
 
 2007-07-28 Frank Benkstein <frank-vlock@benkstein.net>
@@ -37,7 +38,8 @@
 
 	vlock 2.0 alpha1
 
-	* Complete rewrite. vlock is now made of several tools called from a shell script.
+	* Complete rewrite. vlock is now made of several tools called
+	  from a shell script.
 
 2007-05-23 Frank Benkstein <frank-vlock@benkstein.net>
 
@@ -50,7 +52,8 @@
 	vlock 1.4 rc2
 
 	* Make install rule made more friendly to packagers.
-	* Updated license declarations: sources now clearly state "GNU General Public License version 2".
+	* Updated license declarations: sources now clearly
+	  state "GNU General Public License version 2".
 
 2007-05-09 Frank Benkstein <frank-vlock@benkstein.net>
 
