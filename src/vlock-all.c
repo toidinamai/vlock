@@ -15,11 +15,16 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/vt.h>
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <errno.h>
 #include <signal.h>
+
+#ifdef __FreeBSD__
+#include <sys/consio.h>
+#else
+#include <sys/vt.h>
+#endif /* __FreeBSD__ */
 
 #include "vlock.h"
 
