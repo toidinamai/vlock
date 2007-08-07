@@ -27,10 +27,22 @@
 
 #include "vlock.h"
 
+/* Get the currently active console from the given
+ * console file descriptor.  Returns console number
+ * (starting from 1) on success, -1 on error. */
+static int get_active_console(int consfd) {
+  struct vt_stat vtstate;
+
+  /* get the virtual console status */
+  if (ioctl(consfd, VT_GETSTATE, &vtstate) == 0)
+    return vtstate.v_active;
+  else
+    return -1;
+}
+
 /* Run vlock-all on a new console. */
 int main(void) {
   int consfd;
-  struct vt_stat vtstate;
   int old_vtno;
   int vtno;
   int vtfd;
@@ -44,8 +56,10 @@ int main(void) {
     exit (111);
   }
 
-  /* get the virtual console status */
-  if (ioctl(consfd, VT_GETSTATE, &vtstate) < 0) {
+  /* get the number of the currently active console */
+  old_vtno = get_active_console(consfd);
+
+  if (old_vtno < 0) {
     /* the current terminal does not belong to the virtual console */
     (void) close(consfd);
 
@@ -57,15 +71,14 @@ int main(void) {
       exit (111);
     }
 
-    /* get the virtual console status, again */
-    if (ioctl(consfd, VT_GETSTATE, &vtstate) < 0) {
-      perror("vlock-new: could not get virtual console status");
+    /* get the number of the currently active console, again */
+    old_vtno = get_active_console(consfd);
+
+    if (old_vtno < 0) {
+      perror("vlock-new: could not find out currently active console");
       exit (111);
     }
   }
-
-  /* remember currently active console number */
-  old_vtno = vtstate.v_active;
 
   /* get a free virtual terminal number */
   if (ioctl(consfd, VT_OPENQRY, &vtno) < 0)  {
