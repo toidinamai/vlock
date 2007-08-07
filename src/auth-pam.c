@@ -14,7 +14,12 @@
 #include <stdio.h>
 
 #include <security/pam_appl.h>
+
+#ifdef __FreeBSD__
+#include <security/openpam.h>
+#else
 #include <security/pam_misc.h>
+#endif
 
 int auth(const char *user) {
   pam_handle_t *pamh;
