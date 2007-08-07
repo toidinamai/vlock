@@ -31,6 +31,7 @@
 int main(void) {
   int consfd;
   struct vt_stat vtstate;
+  int old_vtno;
   int vtno;
   int vtfd;
   char vtname[sizeof VTNAME + 2];
@@ -62,6 +63,9 @@ int main(void) {
       exit (111);
     }
   }
+
+  /* remember currently active console number */
+  old_vtno = vtstate.v_active;
 
   /* get a free virtual terminal number */
   if (ioctl(consfd, VT_OPENQRY, &vtno) < 0)  {
@@ -131,8 +135,8 @@ int main(void) {
   }
 
   /* switch back to former virtual terminal */
-  if (ioctl(consfd, VT_ACTIVATE, vtstate.v_active) < 0
-      || ioctl(consfd, VT_WAITACTIVE, vtstate.v_active) < 0)
+  if (ioctl(consfd, VT_ACTIVATE, old_vtno) < 0
+      || ioctl(consfd, VT_WAITACTIVE, old_vtno) < 0)
     perror("vlock-new: could not activate previous console");
 
   /* deallocate virtual terminal */
