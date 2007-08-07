@@ -30,6 +30,16 @@
 /* Get the currently active console from the given
  * console file descriptor.  Returns console number
  * (starting from 1) on success, -1 on error. */
+#ifdef __FreeBSD__
+static int get_active_console(int consfd) {
+  int n;
+
+  if (ioctl(consfd, VT_GETACTIVE, &n) == 0)
+    return n;
+  else
+    return -1;
+}
+#else
 static int get_active_console(int consfd) {
   struct vt_stat vtstate;
 
@@ -39,6 +49,7 @@ static int get_active_console(int consfd) {
   else
     return -1;
 }
+#endif
 
 /* Run vlock-all on a new console. */
 int main(void) {
