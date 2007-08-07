@@ -26,7 +26,11 @@ int auth(const char *user) {
   int pam_status;
   int pam_end_status;
   struct pam_conv pamc = {
+#ifdef __FreeBSD__
+    openpam_ttyconv,
+#else
     &misc_conv,
+#endif
     NULL
   };
 
