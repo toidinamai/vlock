@@ -24,4 +24,4 @@ LDFLAGS =
 
 PAM_LIBS = -ldl -lpam -lpam_misc
 
-INSTALL = install -D
+INSTALL = install
