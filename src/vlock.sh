@@ -1,5 +1,8 @@
 #!%BOURNE_SHELL%
 
+# exit on error
+set -e
+
 # ignore some signals
 trap : HUP INT QUIT TSTP
 
