@@ -51,13 +51,31 @@ static int get_active_console(int consfd) {
 }
 #endif
 
+/* Get the device name for the given console number.
+ * Returns the device name or NULL on error. */
+static char *get_console_name(int n) {
+  static char name[sizeof VTNAME + 2];
+
+  if (n <= 0)
+    return NULL;
+
+  /* format the virtual terminal filename from the number */
+  if ((size_t)snprintf(name, sizeof name, VTNAME, n) > sizeof name) {
+    fprintf(stderr, "vlock-new: virtual terminal number too large\n");
+    return NULL;
+  }
+  else {
+    return name;
+  }
+}
+
 /* Run vlock-all on a new console. */
 int main(void) {
   int consfd;
   int old_vtno;
   int vtno;
   int vtfd;
-  char vtname[sizeof VTNAME + 2];
+  char *vtname;
   int pid = -1;
   int status;
 
@@ -97,11 +115,8 @@ int main(void) {
     exit (111);
   }
 
-  /* format the virtual terminal filename from the number */
-  if ((size_t)snprintf(vtname, sizeof vtname, VTNAME, vtno) > sizeof vtname) {
-    fprintf(stderr, "vlock-new: virtual terminal number too large\n");
-    exit (111);
-  }
+  /* get the device name for the new virtual console */
+  vtname = get_console_name(vtno);
 
   /* open the free virtual terminal */
   if ((vtfd = open(vtname, O_RDWR)) < 0) {
