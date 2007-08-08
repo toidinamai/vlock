@@ -61,7 +61,11 @@ static char *get_console_name(int n) {
     return NULL;
 
   /* format the virtual terminal filename from the number */
+#ifdef __FreeBSD__
+  namelen = snprintf(name, sizeof name, VTNAME, n-1);
+#else
   namelen = snprintf(name, sizeof name, VTNAME, n);
+#endif
 
   if (namelen > sizeof name) {
     fprintf(stderr, "vlock-new: virtual terminal number too large\n");
