@@ -55,12 +55,15 @@ static int get_active_console(int consfd) {
  * Returns the device name or NULL on error. */
 static char *get_console_name(int n) {
   static char name[sizeof VTNAME + 2];
+  size_t namelen;
 
   if (n <= 0)
     return NULL;
 
   /* format the virtual terminal filename from the number */
-  if ((size_t)snprintf(name, sizeof name, VTNAME, n) > sizeof name) {
+  namelen = snprintf(name, sizeof name, VTNAME, n);
+
+  if (namelen > sizeof name) {
     fprintf(stderr, "vlock-new: virtual terminal number too large\n");
     return NULL;
   }
