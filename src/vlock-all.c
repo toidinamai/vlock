@@ -66,6 +66,9 @@ int main(void) {
   vtmode.relsig = SIGUSR1;
   /* set terminal acquire signal, i.e. sent when switching here */
   vtmode.acqsig = SIGUSR2;
+  /* set terminal free signal, not implemented on either FreeBSD or Linux */
+  /* Linux ignores it but FreeBSD wants a valid signal number here */
+  vtmode.frsig = SIGHUP;
 
   /* set console switching signal handlers */
   if (signal(SIGUSR1, release_vt) == SIG_ERR
