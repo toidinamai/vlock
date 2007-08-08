@@ -62,7 +62,7 @@ main() {
   lock_new=0
   nosysrq=0
 
-  while true ; do
+  while : ; do
     case "$1" in
       -a|--all)
         lock_all=1
