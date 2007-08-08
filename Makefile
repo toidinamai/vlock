@@ -62,19 +62,19 @@ install: install-programs install-man
 
 .PHONY: install-programs
 install-programs: $(PROGRAMS)
-	$(INSTALL) -D -m 755 -o root -g root vlock $(DESTDIR)$(PREFIX)/bin/vlock
-	$(INSTALL) -D -m 4711 -o root -g root vlock-current $(DESTDIR)$(PREFIX)/sbin/vlock-current
-	$(INSTALL) -D -m 755 -o root -g root vlock-all $(DESTDIR)$(PREFIX)/sbin/vlock-all
-	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-nosysrq $(DESTDIR)$(PREFIX)/sbin/vlock-nosysrq
-	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-new $(DESTDIR)$(PREFIX)/sbin/vlock-new
+	$(INSTALL) -m 755 -o root -g root vlock $(DESTDIR)$(PREFIX)/bin/vlock
+	$(INSTALL) -m 4711 -o root -g root vlock-current $(DESTDIR)$(PREFIX)/sbin/vlock-current
+	$(INSTALL) -m 755 -o root -g root vlock-all $(DESTDIR)$(PREFIX)/sbin/vlock-all
+	$(INSTALL) -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-nosysrq $(DESTDIR)$(PREFIX)/sbin/vlock-nosysrq
+	$(INSTALL) -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-new $(DESTDIR)$(PREFIX)/sbin/vlock-new
 
 .PHONY: install-man
 install-man:
-	$(INSTALL) -D -m 644 -o root -g root man/vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
-	$(INSTALL) -D -m 644 -o root -g root man/vlock-current.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-current.8
-	$(INSTALL) -D -m 644 -o root -g root man/vlock-all.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-all.8
-	$(INSTALL) -D -m 644 -o root -g root man/vlock-new.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-new.8
-	$(INSTALL) -D -m 644 -o root -g root man/vlock-nosysrq.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-nosysrq.8
+	$(INSTALL) -m 644 -o root -g root man/vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
+	$(INSTALL) -m 644 -o root -g root man/vlock-current.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-current.8
+	$(INSTALL) -m 644 -o root -g root man/vlock-all.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-all.8
+	$(INSTALL) -m 644 -o root -g root man/vlock-new.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-new.8
+	$(INSTALL) -m 644 -o root -g root man/vlock-nosysrq.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-nosysrq.8
 
 .PHONY: clean
 clean:
