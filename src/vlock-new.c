@@ -163,9 +163,11 @@ int main(void) {
       || ioctl(consfd, VT_WAITACTIVE, old_vtno) < 0)
     perror("vlock-new: could not activate previous console");
 
+#ifndef __FreeBSD__
   /* deallocate virtual terminal */
   if (ioctl(consfd, VT_DISALLOCATE, vtno) < 0)
     perror("vlock-new: could not disallocate console");
+#endif
 
   (void) close(consfd);
 
