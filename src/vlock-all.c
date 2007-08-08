@@ -58,9 +58,13 @@ int main(void) {
     exit (111);
   }
 
+  /* back up current terminal mode */
   vtmode_bak = vtmode;
+  /* set terminal switching to be process governed */
   vtmode.mode = VT_PROCESS;
+  /* set terminal release signal, i.e. sent when switching away */
   vtmode.relsig = SIGUSR1;
+  /* set terminal acquire signal, i.e. sent when switching here */
   vtmode.acqsig = SIGUSR2;
 
   /* set console switching signal handlers */
