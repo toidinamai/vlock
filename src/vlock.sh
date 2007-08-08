@@ -42,7 +42,7 @@ checked_exec() {
 main() {
   local opts lock_all lock_new nosysrq
 
-  ( getopt -T )
+  ( getopt -T >/dev/null )
 
   if [ $? -eq 4 ] ; then
     # gnu getopt
