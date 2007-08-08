@@ -72,11 +72,15 @@ and vlock-nosysrq(8), respectively.  Access to the other programs, vlock-all(8)
 for \fB-a,--all\fR and vlock-current(8), should be unrestricted.  See the
 SECURITY file in the \fBvlock\fR distribution for more information.
 .PP
+.SH NOTES
+Long options depend on the availability of an enhanced getopt(1) command.
+.PP
 .SH "SEE ALSO"
 .BR vlock-all (8),
 .BR vlock-current (8),
 .BR vlock-new (8),
-.BR vlock-nosysrq (8)
+.BR vlock-nosysrq (8),
+.BR getopt (1)
 .SH AUTHORS
 Michael K. Johnson <http://danlj.org/mkj/>
 .PP
