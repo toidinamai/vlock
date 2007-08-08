@@ -14,14 +14,20 @@ VLOCK_GROUP =
 # defaults to 4711 if group is unset and 4710 otherwise
 VLOCK_MODE =
 
-# installation base directory
+# installation prefix
 PREFIX = /usr/local
+# installation root
 DESTDIR =
 
+# c compiler
 CC = gcc
+# c compiler flags
 CFLAGS = -O2 -Wall -W -pedantic -std=gnu99
+# linker flags
 LDFLAGS = 
 
+# linker flags needed for pam
 PAM_LIBS = -ldl -lpam -lpam_misc
 
+# gnu install
 INSTALL = install
