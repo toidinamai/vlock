@@ -30,15 +30,19 @@ int main(void) {
   char user[40];
   char *vlock_message;
   struct termios term, term_bak;
+  struct sigaction sa;
   /* get the user id */
   uid_t uid = getuid();
   /* get the user name from the environment */
   char *envuser = getenv("USER"); 
 
   /* ignore some signals */
-  signal(SIGINT, SIG_IGN);
-  signal(SIGQUIT, SIG_IGN);
-  signal(SIGTSTP, SIG_IGN);
+  (void) sigemptyset(&(sa.sa_mask));
+  sa.sa_flags = SA_RESTART;
+  sa.sa_handler = SIG_IGN;
+  (void) sigaction(SIGINT, &sa, NULL);
+  (void) sigaction(SIGQUIT, &sa, NULL);
+  (void) sigaction(SIGTSTP, &sa, NULL);
 
   if (uid > 0 || envuser == NULL) {
     /* get the password entry */
