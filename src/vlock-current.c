@@ -88,7 +88,7 @@ int main(void) {
 
     /* wait for enter to be pressed */
     fprintf(stderr, "Please press [ENTER] to unlock.\n");
-    while (fgetc(stdin) != '\n');
+    while (isatty(STDIN_FILENO) && fgetc(stdin) != '\n');
 
     if (auth(user))
       break;
