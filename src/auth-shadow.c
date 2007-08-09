@@ -65,7 +65,7 @@ int auth(const char *user) {
 
   /* XXX: sp_lstchg, sp_min, sp_inact, sp_expire should also be checked here */
 
-  result = strcmp(cryptpw, spw->sp_pwdp) == 0;
+  result = (strcmp(cryptpw, spw->sp_pwdp) == 0);
 
 out_shadow:
   /* deallocate shadow resources */
