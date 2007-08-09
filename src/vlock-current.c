@@ -37,6 +37,8 @@ int main(void) {
   char *envuser = getenv("USER"); 
 
   /* ignore some signals */
+  /* these signals shouldn't be delivered anyway, because
+   * terminal signals are disabled below */
   (void) sigemptyset(&(sa.sa_mask));
   sa.sa_flags = SA_RESTART;
   sa.sa_handler = SIG_IGN;
