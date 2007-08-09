@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <termios.h>
 
 #include <sys/mman.h>
 
@@ -35,6 +36,9 @@ int auth(const char *user) {
   
   /* write out the prompt */
   fprintf(stderr, "%s's Password: ", user); fflush(stderr);
+
+  /* discard all previously typed characters */ 
+  (void) tcflush(STDIN_FILENO, TCIFLUSH);
 
   /* read the password, echo was switched of by vlock-current */
   if (fgets(buffer, sizeof buffer, stdin) == NULL)
