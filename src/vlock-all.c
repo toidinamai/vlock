@@ -45,6 +45,7 @@ void acquire_vt(int __attribute__((__unused__)) signum) {
 /* Disable console switching while running vlock-current. */
 int main(void) {
   struct vt_mode vtmode, vtmode_bak;
+  struct sigaction sa;
   int pid;
   int status;
 
@@ -58,6 +59,13 @@ int main(void) {
     exit (111);
   }
 
+  (void) sigemptyset(&(sa.sa_mask));
+  sa.sa_flags = SA_RESTART;
+  sa.sa_handler = release_vt;
+  (void) sigaction(SIGUSR1, &sa, NULL);
+  sa.sa_handler = acquire_vt;
+  (void) sigaction(SIGUSR2, &sa, NULL);
+
   /* back up current terminal mode */
   vtmode_bak = vtmode;
   /* set terminal switching to be process governed */
@@ -69,13 +77,6 @@ int main(void) {
   /* set terminal free signal, not implemented on either FreeBSD or Linux */
   /* Linux ignores it but FreeBSD wants a valid signal number here */
   vtmode.frsig = SIGHUP;
-
-  /* set console switching signal handlers */
-  if (signal(SIGUSR1, release_vt) == SIG_ERR
-      || signal(SIGUSR2, acquire_vt) == SIG_ERR) {
-    perror("vlock-all: could not install signal handlers");
-    exit (111);
-  }
 
   /* set virtual console mode to be process governed
    * thus disabling console switching */
