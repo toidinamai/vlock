@@ -9,29 +9,142 @@
  * expressly forbidden without prior written permission from
  * the author.
  *
+ *
+ * The conversation functions (conversation, prompt, prompt_echo_off)
+ * were inspired by/copied from openpam's openpam_ttyconv.c.
+ *
+ * Copyright (c) 2002-2003 Networks Associates Technology, Inc.
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <termios.h>
+#include <unistd.h>
 
 #include <security/pam_appl.h>
 
-#ifdef __FreeBSD__
-#include <security/openpam.h>
-#else
-#include <security/pam_misc.h>
-#endif
+static char *prompt(const char *msg) {
+  char buffer[PAM_MAX_RESP_SIZE];
+  char *result;
+  int len;
+  struct termios term;
+  tcflag_t lflag;
+
+  (void) fputs(msg, stderr); fflush(stderr);
+
+  (void) tcgetattr(STDIN_FILENO, &term);
+  lflag = term.c_lflag;
+  term.c_lflag |= ICANON;
+  term.c_lflag &= ~ISIG;
+  (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
+
+  (void) tcflush(STDIN_FILENO, TCIFLUSH);
+
+  if (fgets(buffer, sizeof buffer, stdin) == NULL)
+    return NULL;
+
+  term.c_lflag = lflag;
+  (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
+
+  len = strlen(buffer);
+
+  for (len = strlen(buffer); len > 0; len--)
+    if (buffer[len - 1] != '\r' && buffer[len - 1] != '\n')
+      break;
+
+  buffer[len] = '\0';
+
+  result = strdup(buffer);
+
+  memset(buffer, 0, sizeof buffer);
+
+  return result;
+}
+
+static char *prompt_echo_off(const char *msg) {
+  struct termios term;
+  tcflag_t lflag;
+  char *result;
+
+  (void) tcgetattr(STDIN_FILENO, &term);
+  lflag = term.c_lflag;
+  term.c_lflag &= ~ECHO;
+  (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
+
+  result = prompt(msg);
+
+  term.c_lflag = lflag;
+  (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
+
+  if (result != NULL)
+    fputc('\n', stderr);
+
+  return result;
+}
+
+static int conversation(int num_msg, const struct pam_message **msg, struct
+    pam_response **resp, void __attribute__((__unused__)) *appdata_ptr) {
+  int i;
+  struct pam_response *aresp;
+
+  if (num_msg <= 0 || num_msg > PAM_MAX_NUM_MSG)
+    return PAM_CONV_ERR;
+
+  if ((aresp = calloc(num_msg, sizeof *aresp)) == NULL)
+    return PAM_BUF_ERR;
+
+  for (i = 0; i < num_msg; i++) {
+    switch (msg[i]->msg_style) {
+      case PAM_PROMPT_ECHO_OFF:
+        aresp[i].resp = prompt_echo_off(msg[i]->msg);
+        if (aresp[i].resp == NULL)
+          goto fail;
+        break;
+      case PAM_PROMPT_ECHO_ON:
+        aresp[i].resp = prompt(msg[i]->msg);
+        if (aresp[i].resp == NULL)
+          goto fail;
+        break;
+      case PAM_TEXT_INFO:
+      case PAM_ERROR_MSG:
+        {
+          int msg_len = strlen(msg[i]->msg);
+          fputs(msg[i]->msg, stderr);
+          if (msg_len > 0 && msg[i]->msg[msg_len - 1] != '\n')
+            fputc('\n', stderr);
+          break;
+        }
+        break;
+      default:
+        goto fail;
+    }
+  }
+
+  *resp = aresp;
+  return PAM_SUCCESS;
+
+fail:
+ for (i = 0; i < num_msg; ++i)
+    if (aresp[i].resp != NULL) {
+      memset(aresp[i].resp, 0, strlen(aresp[i].resp));
+      free(aresp[i].resp);
+    }
+
+  memset(aresp, 0, num_msg * sizeof *aresp);
+  free(aresp);
+  *resp = NULL;
+
+  return PAM_CONV_ERR;
+}
 
 int auth(const char *user) {
   pam_handle_t *pamh;
   int pam_status;
   int pam_end_status;
   struct pam_conv pamc = {
-#ifdef __FreeBSD__
-    openpam_ttyconv,
-#else
-    &misc_conv,
-#endif
-    NULL
+    conversation,
+    NULL,
   };
 
   /* initialize pam */
