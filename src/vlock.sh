@@ -96,7 +96,7 @@ main() {
     esac
   done
 
-  if [ $lock_new -ne 0 ] ; then
+  if [ $lock_new -ne 0 ] && [ -n "$DISPLAY" ] ; then
     # work around an annoying X11 bug
     sleep 1
   fi
