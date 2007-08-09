@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <termios.h>
 
 #include <sys/mman.h>
@@ -66,6 +67,11 @@ int auth(const char *user) {
   /* XXX: sp_lstchg, sp_min, sp_inact, sp_expire should also be checked here */
 
   result = (strcmp(cryptpw, spw->sp_pwdp) == 0);
+
+  if (!result) {
+    sleep(1);
+    fprintf(stderr, "vlock-auth: Authentication error\n");
+  }
 
 out_shadow:
   /* deallocate shadow resources */
