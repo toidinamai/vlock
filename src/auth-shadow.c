@@ -42,8 +42,12 @@ int auth(const char *user) {
   (void) tcflush(STDIN_FILENO, TCIFLUSH);
 
   /* read the password, echo was switched of by vlock-current */
-  if (fgets(buffer, sizeof buffer, stdin) == NULL)
-    goto out;
+  if (fgets(buffer, sizeof buffer, stdin) == NULL) {
+    if (feof(stdin))
+      buffer[0] = '\0';
+    else
+      goto out;
+  }
 
   /* put newline */
   fputc('\n', stderr);

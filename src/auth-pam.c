@@ -41,8 +41,12 @@ static char *prompt(const char *msg) {
 
   (void) tcflush(STDIN_FILENO, TCIFLUSH);
 
-  if (fgets(buffer, sizeof buffer, stdin) == NULL)
-    return NULL;
+  if (fgets(buffer, sizeof buffer, stdin) == NULL) {
+    if (feof(stdin))
+      buffer[0] = '\0';
+    else
+      return NULL;
+  }
 
   term.c_lflag = lflag;
   (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
