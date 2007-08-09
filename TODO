@@ -1,18 +1,19 @@
 high
 ----
 
-- use sigaction() instead of signal()
+- check account expiry in shadow auth
 
 medium
 ------
 
-- add configurable actions to be executed when terminal
-  is locked
-- add configurable actions to be executed when authentication
-  times out
+- add own conversation function to pam
 
 low
 ---
 
 - add timeout support to password prompts
 - add ability for user to kill vlock
+- add configurable actions to be executed when terminal
+  is locked
+- add configurable actions to be executed when authentication
+  times out
