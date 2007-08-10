@@ -42,6 +42,9 @@ void launch_canary(void) {
     /* don't block any signals */
     (void) sigprocmask(SIG_SETMASK, &signals, NULL);
 
+    /* start own session */
+    (void) setsid();
+
     /* close file descriptors */
     (void) close(STDIN_FILENO);
     (void) close(STDOUT_FILENO);
