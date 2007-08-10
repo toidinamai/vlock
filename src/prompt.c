@@ -47,6 +47,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <sys/select.h>
+#include <errno.h>
 
 #include "vlock.h"
 
@@ -90,8 +91,15 @@ char *prompt(const char *msg, const struct timespec *timeout) {
   FD_ZERO(&readfds);
   FD_SET(STDIN_FILENO, &readfds);
 
+  errno = 0;
+
   /* Wait until a string was entered. */
   if (select(STDIN_FILENO+1, &readfds, NULL, NULL, &timeout_val) != 1) {
+    if (errno)
+      perror("vlock-auth: select() on stdin failed");
+    else
+      fprintf(stderr, " timeout!\n");
+
     result = NULL;
     goto out;
   }
