@@ -33,16 +33,17 @@
 
 /* Try to authenticate the user.  When the user is successfully authenticated
  * this function returns 1.  When the authentication fails for whatever reason
- * the function returns 0.
+ * the function returns 0.  The timeout is passed to the prompt functions below
+ * if they are called.
  */
-int auth(const char *user);
+int auth(const char *user, const struct timespec *timeout);
 
 /* Prompt for a string with the given message.  The string is returned if
  * successfully read, otherwise NULL.  The caller is responsible for freeing
- * the resulting buffer. */
-char *prompt(const char *msg);
+ * the resulting buffer.  If no string is read after the given timeout this
+ * prompt() returns NULL.  A timeout of NULL means no timeout, i.e. wait forever.
+ */
+char *prompt(const char *msg, const struct timespec *timeout);
 
-/* Prompt for a string with the given message without echoing input characters
- * The string is returned if successfully read, NULL otherwise.  The caller is
- * responsible for freeing the resulting buffer. */
-char *prompt_echo_off(const char *msg);
+/* Same as prompt() above, except that characters entered are not echoed. */
+char *prompt_echo_off(const char *msg, const struct timespec *timeout);

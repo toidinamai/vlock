@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <errno.h>
+#include <time.h>
 
 #include "vlock.h"
 
@@ -29,6 +30,9 @@
 int main(void) {
   char user[40];
   char *vlock_message;
+  char *vlock_prompt_timeout;
+  struct timespec timeout;
+  struct timespec *timeout_p = NULL;
   struct termios term, term_bak;
   struct sigaction sa;
   /* get the user id */
@@ -47,6 +51,8 @@ int main(void) {
   (void) sigaction(SIGTSTP, &sa, NULL);
 
   if (uid > 0 || envuser == NULL) {
+    errno = 0;
+
     /* get the password entry */
     struct passwd *pw = getpwuid(uid);
 
@@ -71,6 +77,19 @@ int main(void) {
   /* get the vlock message from the environment */
   vlock_message = getenv("VLOCK_MESSAGE");
 
+  /* get the timeout from the environment */
+  vlock_prompt_timeout = getenv("VLOCK_PROMPT_TIMEOUT");
+
+  if (vlock_prompt_timeout != NULL) {
+    char *n;
+    timeout.tv_sec = strtol(vlock_prompt_timeout, &n, 10);
+    timeout.tv_nsec = 0;
+
+
+    if (*n == '\0' && timeout.tv_sec > 0)
+      timeout_p = &timeout;
+  }
+
   /* disable terminal echoing and signals */
   if (tcgetattr(STDIN_FILENO, &term) == 0) {
     term_bak = term;
@@ -94,13 +113,13 @@ int main(void) {
       if (c == EOF)
         clearerr(stdin);
 
-    if (auth(user))
+    if (auth(user, timeout_p))
       break;
     else
       sleep(1);
 
 #ifndef NO_ROOT_PASS
-    if (auth("root"))
+    if (auth("root", timeout_p))
       break;
     else
       sleep(1);

@@ -32,7 +32,7 @@
 
 #include "vlock.h"
 
-int auth(const char *user) {
+int auth(const char *user, const struct timespec *timeout) {
   char *pwd;
   char *cryptpw;
   char *msg = NULL;
@@ -42,7 +42,7 @@ int auth(const char *user) {
   /* format the prompt */
   (void) asprintf(&msg, "%s's Password: ", user);
 
-  if ((pwd = prompt_echo_off(msg)) == NULL)
+  if ((pwd = prompt_echo_off(msg, timeout)) == NULL)
     goto out;
 
   /* get the shadow password */
