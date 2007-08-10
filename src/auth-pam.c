@@ -50,9 +50,10 @@
 #include "vlock.h"
 
 static int conversation(int num_msg, const struct pam_message **msg, struct
-    pam_response **resp, void __attribute__((__unused__)) *appdata_ptr) {
+    pam_response **resp, void *appdata_ptr) {
   int i;
   struct pam_response *aresp;
+  const struct timespec *timeout = appdata_ptr;
 
   if (num_msg <= 0 || num_msg > PAM_MAX_NUM_MSG)
     return PAM_CONV_ERR;
@@ -63,12 +64,12 @@ static int conversation(int num_msg, const struct pam_message **msg, struct
   for (i = 0; i < num_msg; i++) {
     switch (msg[i]->msg_style) {
       case PAM_PROMPT_ECHO_OFF:
-        aresp[i].resp = prompt_echo_off(msg[i]->msg, NULL);
+        aresp[i].resp = prompt_echo_off(msg[i]->msg, timeout);
         if (aresp[i].resp == NULL)
           goto fail;
         break;
       case PAM_PROMPT_ECHO_ON:
-        aresp[i].resp = prompt(msg[i]->msg, NULL);
+        aresp[i].resp = prompt(msg[i]->msg, timeout);
         if (aresp[i].resp == NULL)
           goto fail;
         break;
@@ -110,7 +111,7 @@ int auth(const char *user, const struct timespec *timeout) {
   int pam_end_status;
   struct pam_conv pamc = {
     conversation,
-    NULL,
+    (void *)timeout,
   };
 
   /* initialize pam */

@@ -42,7 +42,7 @@ int auth(const char *user, const struct timespec *timeout) {
   /* format the prompt */
   (void) asprintf(&msg, "%s's Password: ", user);
 
-  if ((pwd = prompt_echo_off(msg, NULL)) == NULL)
+  if ((pwd = prompt_echo_off(msg, timeout)) == NULL)
     goto out;
 
   /* get the shadow password */
