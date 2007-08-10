@@ -52,13 +52,21 @@
 
 #define PROMPT_BUFFER_SIZE 512
 
-char *prompt(const char *msg) {
+char *prompt(const char *msg, const struct timespec *timeout) {
   char buffer[PROMPT_BUFFER_SIZE];
   char *result;
   int len;
   struct termios term;
+  struct timeval timeout_val;
+  struct timeval *timeout_val_p = NULL;
   tcflag_t lflag;
   fd_set readfds;
+
+  if (timeout != NULL) {
+    timeout_val.tv_sec = timeout->tv_sec;
+    timeout_val.tv_usec = timeout->tv_nsec / 1000;
+    timeout_val_p = &timeout_val;
+  }
 
   if (msg != NULL) {
     /* Write out the prompt. */
@@ -83,7 +91,7 @@ char *prompt(const char *msg) {
   FD_SET(STDIN_FILENO, &readfds);
 
   /* Wait until a string was entered. */
-  if (select(STDIN_FILENO+1, &readfds, NULL, NULL, NULL) != 1) {
+  if (select(STDIN_FILENO+1, &readfds, NULL, NULL, &timeout_val) != 1) {
     result = NULL;
     goto out;
   }
@@ -121,7 +129,7 @@ out:
   return result;
 }
 
-char *prompt_echo_off(const char *msg) {
+char *prompt_echo_off(const char *msg, const struct timespec *timeout) {
   struct termios term;
   tcflag_t lflag;
   char *result;
@@ -131,7 +139,7 @@ char *prompt_echo_off(const char *msg) {
   term.c_lflag &= ~ECHO;
   (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
 
-  result = prompt(msg);
+  result = prompt(msg, timeout);
 
   term.c_lflag = lflag;
   (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);

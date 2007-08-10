@@ -63,12 +63,12 @@ static int conversation(int num_msg, const struct pam_message **msg, struct
   for (i = 0; i < num_msg; i++) {
     switch (msg[i]->msg_style) {
       case PAM_PROMPT_ECHO_OFF:
-        aresp[i].resp = prompt_echo_off(msg[i]->msg);
+        aresp[i].resp = prompt_echo_off(msg[i]->msg, NULL);
         if (aresp[i].resp == NULL)
           goto fail;
         break;
       case PAM_PROMPT_ECHO_ON:
-        aresp[i].resp = prompt(msg[i]->msg);
+        aresp[i].resp = prompt(msg[i]->msg, NULL);
         if (aresp[i].resp == NULL)
           goto fail;
         break;
