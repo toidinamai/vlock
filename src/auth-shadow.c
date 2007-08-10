@@ -55,8 +55,6 @@ int auth(const char *user, const struct timespec *timeout) {
     goto out_shadow;
   }
 
-  /* XXX: sp_lstchg, sp_min, sp_inact, sp_expire should also be checked here */
-
   result = (strcmp(cryptpw, spw->sp_pwdp) == 0);
 
   if (!result) {
