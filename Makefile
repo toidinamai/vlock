@@ -39,6 +39,11 @@ ifeq ($(AUTH_METHOD),shadow)
 vlock-current : override LDFLAGS += -lcrypt
 endif
 
+ifeq ($(USER_KILL),y)
+vlock-current: canary.c
+vlock-current : override CFLAGS += -DUSER_KILL
+endif
+
 vlock-current: vlock-current.c prompt.c auth-$(AUTH_METHOD).c
 
 ifeq ($(USE_PAM),y)
