@@ -60,8 +60,10 @@ char *prompt(const char *msg) {
   tcflag_t lflag;
   fd_set readfds;
 
-  /* Write out the prompt. */
-  (void) fputs(msg, stderr); fflush(stderr);
+  if (msg != NULL) {
+    /* Write out the prompt. */
+    (void) fputs(msg, stderr); fflush(stderr);
+  }
 
   /* Get the current terminal attributes. */
   (void) tcgetattr(STDIN_FILENO, &term);
