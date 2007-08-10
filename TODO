@@ -10,7 +10,6 @@ medium
 low
 ---
 
-- add timeout support to password prompts
 - add ability for user to kill vlock
 - add configurable actions to be executed when terminal
   is locked
