@@ -46,6 +46,7 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <sys/select.h>
 
 #include <security/pam_appl.h>
 
@@ -55,6 +56,7 @@ static char *prompt(const char *msg) {
   int len;
   struct termios term;
   tcflag_t lflag;
+  fd_set readfds;
 
   (void) fputs(msg, stderr); fflush(stderr);
 
@@ -66,15 +68,12 @@ static char *prompt(const char *msg) {
 
   (void) tcflush(STDIN_FILENO, TCIFLUSH);
 
-  if (fgets(buffer, sizeof buffer, stdin) == NULL) {
-    if (feof(stdin)) {
-      clearerr(stdin);
-      buffer[0] = '\0';
-    }
-    else {
-      return NULL;
-    }
-  }
+  FD_ZERO(&readfds);
+  FD_SET(STDIN_FILENO, &readfds);
+
+  if (select(STDIN_FILENO+1, &readfds, NULL, NULL, NULL) != 1
+      || (len = read(STDIN_FILENO, buffer, sizeof buffer - 1)) < 0)
+    return NULL;
 
   term.c_lflag = lflag;
   (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
