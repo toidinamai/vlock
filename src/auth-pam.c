@@ -52,8 +52,10 @@
 
 #include "vlock.h"
 
+#define PROMPT_BUFFER_SIZE 512
+
 char *prompt(const char *msg) {
-  char buffer[PAM_MAX_RESP_SIZE];
+  char buffer[PROMPT_BUFFER_SIZE];
   char *result;
   int len;
   struct termios term;
