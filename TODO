@@ -10,7 +10,6 @@ medium
 low
 ---
 
-- add ability for user to kill vlock
 - add configurable actions to be executed when terminal
   is locked
 - add configurable actions to be executed when authentication
