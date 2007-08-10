@@ -6,8 +6,8 @@ USE_PAM = n
 USE_ROOT_PASS = y
 # shell to run vlock.sh with
 BOURNE_SHELL = /bin/sh
-# user should be able to kill vlock
-USER_KILL = y
+# launch canary that can be killed if vlock-current itself cannot
+LAUNCH_CANARY = n
 
 # group to install vlock-all and vlock-nosysrq as
 # defaults to 'root')

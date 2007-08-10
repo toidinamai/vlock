@@ -26,7 +26,7 @@
 
 #include "vlock.h"
 
-#ifdef USER_KILL
+#ifdef LAUNCH_CANARY
 void launch_canary(void);
 #else
 static inline void launch_canary(void) {}
