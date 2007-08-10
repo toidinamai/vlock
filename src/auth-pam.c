@@ -50,7 +50,9 @@
 
 #include <security/pam_appl.h>
 
-static char *prompt(const char *msg) {
+#include "vlock.h"
+
+char *prompt(const char *msg) {
   char buffer[PAM_MAX_RESP_SIZE];
   char *result;
   int len;
@@ -117,7 +119,7 @@ out:
   return result;
 }
 
-static char *prompt_echo_off(const char *msg) {
+char *prompt_echo_off(const char *msg) {
   struct termios term;
   tcflag_t lflag;
   char *result;
