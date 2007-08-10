@@ -30,7 +30,7 @@ CFLAGS = -O2 -Wall -W -pedantic -std=gnu99
 LDFLAGS = 
 
 # linker flags needed for pam
-PAM_LIBS = -ldl -lpam -lpam_misc
+PAM_LIBS = -ldl -lpam
 
 # gnu install
 INSTALL = install
