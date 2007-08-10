@@ -10,8 +10,8 @@
  * the author.
  *
  *
- * The conversation functions (conversation, prompt, prompt_echo_off)
- * were inspired by/copied from openpam's openpam_ttyconv.c:
+ * The conversation function (conversation) was inspired by/copied from
+ * openpam's openpam_ttyconv.c:
  *
  * Copyright (c) 2002-2003 Networks Associates Technology, Inc.
  *
