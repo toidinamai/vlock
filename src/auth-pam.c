@@ -67,10 +67,13 @@ static char *prompt(const char *msg) {
   (void) tcflush(STDIN_FILENO, TCIFLUSH);
 
   if (fgets(buffer, sizeof buffer, stdin) == NULL) {
-    if (feof(stdin))
+    if (feof(stdin)) {
+      clearerr(stdin);
       buffer[0] = '\0';
-    else
+    }
+    else {
       return NULL;
+    }
   }
 
   term.c_lflag = lflag;

@@ -79,6 +79,8 @@ int main(void) {
   }
 
   for (;;) {
+    int c;
+
     /* clear the screen */
     fprintf(stderr, CLEAR_SCREEN);
 
@@ -88,7 +90,9 @@ int main(void) {
 
     /* wait for enter to be pressed */
     fprintf(stderr, "Please press [ENTER] to unlock.\n");
-    while (isatty(STDIN_FILENO) && fgetc(stdin) != '\n');
+    while ((c = fgetc(stdin)) != '\n')
+      if (c == EOF)
+        clearerr(stdin);
 
     if (auth(user))
       break;

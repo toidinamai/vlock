@@ -43,10 +43,12 @@ int auth(const char *user) {
 
   /* read the password, echo was switched of by vlock-current */
   if (fgets(buffer, sizeof buffer, stdin) == NULL) {
-    if (feof(stdin))
+    if (feof(stdin)) {
       buffer[0] = '\0';
-    else
+      clearerr(stdin);
+    } else {
       goto out;
+    }
   }
 
   /* put newline */
