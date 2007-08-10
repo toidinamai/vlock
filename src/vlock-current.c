@@ -47,6 +47,8 @@ int main(void) {
   (void) sigaction(SIGTSTP, &sa, NULL);
 
   if (uid > 0 || envuser == NULL) {
+    errno = 0;
+
     /* get the password entry */
     struct passwd *pw = getpwuid(uid);
 
