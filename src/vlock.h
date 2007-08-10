@@ -36,3 +36,11 @@
  * the function returns 0.
  */
 int auth(const char *user);
+
+/* Prompt for a string with the given message.  The string is returned if
+ * successfully read, otherwise NULL. */
+char *prompt(const char *msg);
+
+/* Prompt for a string with the given message without echoing input characters
+ * The string is returned if successfully read, NULL otherwise. */
+char *prompt_echo_off(const char *msg);
