@@ -58,37 +58,61 @@ static char *prompt(const char *msg) {
   tcflag_t lflag;
   fd_set readfds;
 
+  /* Write out the prompt. */
   (void) fputs(msg, stderr); fflush(stderr);
 
+  /* Get the current terminal attributes. */
   (void) tcgetattr(STDIN_FILENO, &term);
+  /* Save the lflag value. */
   lflag = term.c_lflag;
+  /* Enable canonical mode.  We're only interested in line buffering. */
   term.c_lflag |= ICANON;
+  /* Disable terminal signals. */
   term.c_lflag &= ~ISIG;
+  /* Set the terminal attributes. */
   (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
-
+  /* Discard all unread input characters. */
   (void) tcflush(STDIN_FILENO, TCIFLUSH);
 
+  /* Initialize file descriptor set. */
   FD_ZERO(&readfds);
   FD_SET(STDIN_FILENO, &readfds);
 
-  if (select(STDIN_FILENO+1, &readfds, NULL, NULL, NULL) != 1
-      || (len = read(STDIN_FILENO, buffer, sizeof buffer - 1)) < 0)
-    return NULL;
+  /* Wait until a string was entered. */
+  if (select(STDIN_FILENO+1, &readfds, NULL, NULL, NULL) != 1) {
+    result = NULL;
+    goto out;
+  }
 
-  term.c_lflag = lflag;
-  (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
+  /* Read the string from stdin.  At most buffer length - 1 bytes, to
+   * leave room for the terminating zero byte. */
+  if ((len = read(STDIN_FILENO, buffer, sizeof buffer - 1)) < 0) {
+    result = NULL;
+    goto out;
+  }
 
-  len = strlen(buffer);
-
-  for (len = strlen(buffer); len > 0; len--)
-    if (buffer[len - 1] != '\r' && buffer[len - 1] != '\n')
-      break;
-
+  /* Terminate the string. */
   buffer[len] = '\0';
 
+  /* Strip trailing newline characters. */
+  for (len = strlen(buffer); len > 0; --len) {
+    if (buffer[len-1] != '\r' && buffer[len-1] != '\n')
+      break;
+  }
+
+  /* Terminate the string, again. */
+  buffer[len] = '\0';
+
+  /* Copy the string. */
   result = strdup(buffer);
 
+  /* Clear our buffer. */
   memset(buffer, 0, sizeof buffer);
+
+out:
+  /* Restore original terminal attributes. */
+  term.c_lflag = lflag;
+  (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
 
   return result;
 }
