@@ -39,11 +39,6 @@ ifeq ($(AUTH_METHOD),shadow)
 vlock-current : override LDFLAGS += -lcrypt
 endif
 
-ifeq ($(LAUNCH_CANARY),y)
-vlock-current: canary.c
-vlock-current : override CFLAGS += -DLAUNCH_CANARY
-endif
-
 vlock-current: vlock-current.c prompt.c auth-$(AUTH_METHOD).c
 
 ifeq ($(USE_PAM),y)

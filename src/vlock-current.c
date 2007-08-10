@@ -26,12 +26,6 @@
 
 #include "vlock.h"
 
-#ifdef LAUNCH_CANARY
-void launch_canary(void);
-#else
-static inline void launch_canary(void) {}
-#endif
-
 /* Lock the current terminal until proper authentication is received. */
 int main(void) {
   char user[40];
@@ -102,9 +96,6 @@ int main(void) {
     term.c_lflag &= ~(ECHO|ISIG);
     (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
   }
-
-  if (geteuid() != getuid())
-    launch_canary();
 
   for (;;) {
     int c;
