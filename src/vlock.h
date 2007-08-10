@@ -31,6 +31,9 @@
 #define VLOCK_CURRENT PREFIX "/sbin/vlock-current"
 #define VLOCK_NEW PREFIX "/sbin/vlock-new"
 
+/* forward declaration */
+struct timespec;
+
 /* Try to authenticate the user.  When the user is successfully authenticated
  * this function returns 1.  When the authentication fails for whatever reason
  * the function returns 0.  The timeout is passed to the prompt functions below
