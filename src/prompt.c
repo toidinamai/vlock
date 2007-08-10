@@ -98,7 +98,7 @@ char *prompt(const char *msg, const struct timespec *timeout) {
     if (errno)
       perror("vlock-auth: select() on stdin failed");
     else
-      fprintf(stderr, " timeout!\n");
+      fprintf(stderr, "timeout!\n");
 
     result = NULL;
     goto out;
