@@ -39,7 +39,7 @@ ifeq ($(AUTH_METHOD),shadow)
 vlock-current : override LDFLAGS += -lcrypt
 endif
 
-vlock-current: vlock-current.c auth-$(AUTH_METHOD).c
+vlock-current: vlock-current.c prompt.c auth-$(AUTH_METHOD).c
 
 ifeq ($(USE_PAM),y)
 vlock-nosysrq vlock-all : override LDFLAGS += $(PAM_LIBS)

@@ -13,8 +13,15 @@
 
 /* for crypt() */
 #define _XOPEN_SOURCE
+
+#ifndef __FreeBSD__
+/* for asprintf() */
+#define _GNU_SOURCE
+#endif
+
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <termios.h>
@@ -23,49 +30,27 @@
 
 #include <shadow.h>
 
-#define PWD_BUFFER_SIZE 256
+#include "vlock.h"
 
 int auth(const char *user) {
-  char buffer[PWD_BUFFER_SIZE];
-  size_t pwlen;
+  char *pwd;
   char *cryptpw;
+  char *msg = NULL;
   struct spwd *spw;
   int result = 0;
 
-  /* lock the password buffer */
-  (void) mlock(buffer, sizeof buffer);
-  
-  /* write out the prompt */
-  fprintf(stderr, "%s's Password: ", user); fflush(stderr);
+  /* format the prompt */
+  (void) asprintf(&msg, "%s's Password: ", user);
 
-  /* discard all previously typed characters */ 
-  (void) tcflush(STDIN_FILENO, TCIFLUSH);
-
-  /* read the password, echo was switched of by vlock-current */
-  if (fgets(buffer, sizeof buffer, stdin) == NULL) {
-    if (feof(stdin)) {
-      buffer[0] = '\0';
-      clearerr(stdin);
-    } else {
-      goto out;
-    }
-  }
-
-  /* put newline */
-  fputc('\n', stderr);
-
-  pwlen = strlen(buffer);
-
-  /* strip the newline */
-  if (buffer[pwlen-1] == '\n')
-    buffer[pwlen-1] = '\0';
+  if ((pwd = prompt_echo_off(msg)) == NULL)
+    goto out;
 
   /* get the shadow password */
   if ((spw = getspnam(user)) == NULL)
     goto out_shadow;
 
   /* hash the password */
-  if ((cryptpw = crypt(buffer, spw->sp_pwdp)) == NULL) {
+  if ((cryptpw = crypt(pwd, spw->sp_pwdp)) == NULL) {
     perror("vlock-auth: crypt()");
     goto out_shadow;
   }
@@ -84,11 +69,11 @@ out_shadow:
   endspent();
 
 out:
-  /* clear the buffer */
-  memset(buffer, 0, sizeof buffer);
+  /* free the prompt */
+  free(msg);
 
-  /* unlock the password buffer */
-  (void) munlock(buffer, sizeof buffer);
+  /* free the password */
+  free(pwd);
 
   return result;
 }
