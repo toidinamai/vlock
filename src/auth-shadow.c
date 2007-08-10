@@ -32,7 +32,7 @@
 
 #include "vlock.h"
 
-int auth(const char *user) {
+int auth(const char *user, const struct timespec *timeout) {
   char *pwd;
   char *cryptpw;
   char *msg = NULL;

@@ -35,7 +35,7 @@
  * this function returns 1.  When the authentication fails for whatever reason
  * the function returns 0.
  */
-int auth(const char *user);
+int auth(const char *user, const struct timespec *timeout);
 
 /* Prompt for a string with the given message.  The string is returned if
  * successfully read, otherwise NULL.  The caller is responsible for freeing

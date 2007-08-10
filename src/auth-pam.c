@@ -104,7 +104,7 @@ fail:
   return PAM_CONV_ERR;
 }
 
-int auth(const char *user) {
+int auth(const char *user, const struct timespec *timeout) {
   pam_handle_t *pamh;
   int pam_status;
   int pam_end_status;

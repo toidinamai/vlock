@@ -94,13 +94,13 @@ int main(void) {
       if (c == EOF)
         clearerr(stdin);
 
-    if (auth(user))
+    if (auth(user, NULL))
       break;
     else
       sleep(1);
 
 #ifndef NO_ROOT_PASS
-    if (auth("root"))
+    if (auth("root", NULL))
       break;
     else
       sleep(1);
