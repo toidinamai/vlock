@@ -94,7 +94,7 @@ char *prompt(const char *msg, const struct timespec *timeout) {
   errno = 0;
 
   /* Wait until a string was entered. */
-  if (select(STDIN_FILENO+1, &readfds, NULL, NULL, &timeout_val) != 1) {
+  if (select(STDIN_FILENO+1, &readfds, NULL, NULL, timeout_val_p) != 1) {
     if (errno)
       perror("vlock-auth: select() on stdin failed");
     else
