@@ -65,6 +65,11 @@ Print the version number of \fBvlock\fR.
 .IP
 When \fBvlock\fR is run as root (uid 0) and the \fBUSER\fR environment variable
 is set, \fBvlock\fR prompts for this user's password.
+.PP
+.B VLOCK_MESSAGE
+.IP
+Set this variable to replace vlock's default locking messages.
+.PP
 .SH SECURITY
 \fBvlock\fR consists of several programs.  To use the \fB-n,--new\fR and
 \fB-s,--disable-sysrq\fR options you need to be able to execute vlock-new(8)
