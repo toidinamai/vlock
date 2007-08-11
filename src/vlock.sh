@@ -42,6 +42,7 @@ checked_exec() {
 main() {
   local opts lock_all lock_new nosysrq
 
+  # test for gnu getopt
   ( getopt -T >/dev/null )
 
   if [ $? -eq 4 ] ; then
@@ -49,6 +50,7 @@ main() {
     opts=`getopt -o acnsvh --long current,all,new,disable-sysrq,version,help \
           -n vlock -- "$@"`
   else
+    # other getopt, e.g. BSD
     opts=`getopt acnsvh "$@"`
   fi
 
