@@ -103,9 +103,11 @@ int main(void) {
     /* clear the screen */
     fprintf(stderr, CLEAR_SCREEN);
 
-    if (vlock_message)
+    if (vlock_message) {
       /* print vlock message */
-      fprintf(stderr, "%s\n", vlock_message);
+      fputs(vlock_message, stderr);
+      fputc('\n', stderr);
+    }
 
     /* wait for enter to be pressed */
     while (read(STDIN_FILENO, &c, 1) >= 0)
