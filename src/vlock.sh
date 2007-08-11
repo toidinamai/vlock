@@ -105,7 +105,8 @@ main() {
     : ${VLOCK_MESSAGE:="\
 The entire console display is now completely locked.
 You will not be able to switch to another virtual console.
-"}
+
+Please press [ENTER] to unlock."}
     export VLOCK_MESSAGE
 
     if [ $nosysrq -ne 0 ] ; then
@@ -122,7 +123,10 @@ You will not be able to switch to another virtual console.
       checked_exec "$VLOCK_ALL"
     fi
   else
-    : ${VLOCK_MESSAGE:="This TTY is now locked."}
+    : ${VLOCK_MESSAGE:="\
+This TTY is now locked.
+
+Please press [ENTER] to unlock."}
     export VLOCK_MESSAGE
 
     checked_exec "$VLOCK_CURRENT"

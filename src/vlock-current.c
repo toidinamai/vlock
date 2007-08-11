@@ -108,7 +108,6 @@ int main(void) {
       fprintf(stderr, "%s\n", vlock_message);
 
     /* wait for enter to be pressed */
-    fprintf(stderr, "Please press [ENTER] to unlock.\n");
     while (read(STDIN_FILENO, &c, 1) >= 0)
       if (c == '\n')
         break;
