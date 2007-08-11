@@ -78,7 +78,7 @@ static char *get_console_name(int n) {
 
 /* Run vlock-all on a new console. */
 int main(void) {
-  int consfd;
+  int consfd = STDIN_FILENO;
   int old_vtno;
   int vtno;
   int vtfd;
@@ -86,17 +86,11 @@ int main(void) {
   int pid = -1;
   int status;
 
-  /* open the current terminal */
-  if ((consfd = open("/dev/tty", O_RDWR)) < 0) {
-    perror("vlock-new: could not open /dev/tty");
-    exit (111);
-  }
-
   /* get the number of the currently active console */
   old_vtno = get_active_console(consfd);
 
   if (old_vtno < 0) {
-    /* the current terminal does not belong to the virtual console */
+    /* stdin is does not a virtual console */
     (void) close(consfd);
 
     /* XXX: add optional PAM check here */
