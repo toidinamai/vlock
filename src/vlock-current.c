@@ -100,9 +100,6 @@ int main(void) {
   for (;;) {
     char c = 0;
 
-    /* clear the screen */
-    fprintf(stderr, CLEAR_SCREEN);
-
     if (vlock_message) {
       /* print vlock message */
       fputs(vlock_message, stderr);

@@ -23,9 +23,6 @@
 #define VTNAME "/dev/tty%d"
 #endif
 
-/* magic characters to clear the current terminal */
-#define CLEAR_SCREEN "\033[H\033[J"
-
 /* hard coded paths */
 #define VLOCK_ALL PREFIX "/sbin/vlock-all"
 #define VLOCK_CURRENT PREFIX "/sbin/vlock-current"

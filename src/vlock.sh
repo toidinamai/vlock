@@ -12,6 +12,9 @@ VLOCK_NOSYSRQ=%PREFIX%/sbin/vlock-nosysrq
 VLOCK_CURRENT=%PREFIX%/sbin/vlock-current
 VLOCK_VERSION=%VLOCK_VERSION%
 
+# magic characters to clear the terminal
+CLEAR_SCREEN="`echo -e '\033[H\033[J'`"
+
 print_help() {
   echo >&2 "vlock: locks virtual consoles, saving your current session."
   echo >&2 "Usage: vlock [options]"
@@ -104,7 +107,7 @@ main() {
   fi
 
   if [ $lock_all -ne 0 ] ; then
-    : ${VLOCK_MESSAGE:="\
+    : ${VLOCK_MESSAGE:="${CLEAR_SCREEN}\
 The entire console display is now completely locked.
 You will not be able to switch to another virtual console.
 
@@ -125,7 +128,7 @@ Please press [ENTER] to unlock."}
       checked_exec "$VLOCK_ALL"
     fi
   else
-    : ${VLOCK_MESSAGE:="\
+    : ${VLOCK_MESSAGE:="${CLEAR_SCREEN}\
 This TTY is now locked.
 
 Please press [ENTER] to unlock."}
