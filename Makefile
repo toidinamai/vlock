@@ -2,8 +2,6 @@
 
 include config.mk
 
-override CFLAGS += -Isrc -DPREFIX="\"$(PREFIX)"\"
-
 VPATH = src
 
 VLOCK_VERSION = "2.1 alpha1"
@@ -18,33 +16,7 @@ PROGRAMS = \
 .PHONY: all
 all: $(PROGRAMS)
 
-vlock: vlock.sh config.mk Makefile
-	$(BOURNE_SHELL) -n $<
-	sed \
-		-e 's,%BOURNE_SHELL%,$(BOURNE_SHELL),' \
-		-e 's,%PREFIX%,$(PREFIX),' \
-		-e 's,%VLOCK_VERSION%,$(VLOCK_VERSION),' \
-		$< > $@.tmp
-	mv -f $@.tmp $@
-
-ifneq ($(USE_ROOT_PASS),y)
-vlock-current : override CFLAGS += -DNO_ROOT_PASS
-endif
-
-ifeq ($(AUTH_METHOD),pam)
-vlock-current : override LDFLAGS += $(PAM_LIBS)
-endif
-
-ifeq ($(AUTH_METHOD),shadow)
-vlock-current : override LDFLAGS += -lcrypt
-endif
-
-vlock-current: vlock-current.c prompt.c auth-$(AUTH_METHOD).c
-
-ifeq ($(USE_PAM),y)
-vlock-nosysrq vlock-all : override LDFLAGS += $(PAM_LIBS)
-vlock-nosysrq vlock-all : override CFLAGS += -DUSE_PAM
-endif
+### installation rules ###
 
 ifndef VLOCK_GROUP
 VLOCK_GROUP = root
@@ -76,6 +48,50 @@ install-man:
 	$(INSTALL) -D -m 644 -o root -g $(ROOT_GROUP) man/vlock-new.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-new.8
 	$(INSTALL) -D -m 644 -o root -g $(ROOT_GROUP) man/vlock-nosysrq.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-nosysrq.8
 
+
+### build rules ###
+
+vlock: vlock.sh config.mk Makefile
+	$(BOURNE_SHELL) -n $<
+	sed \
+		-e 's,%BOURNE_SHELL%,$(BOURNE_SHELL),' \
+		-e 's,%PREFIX%,$(PREFIX),' \
+		-e 's,%VLOCK_VERSION%,$(VLOCK_VERSION),' \
+		$< > $@.tmp
+	mv -f $@.tmp $@
+
+override CFLAGS += -Isrc -DPREFIX="\"$(PREFIX)"\"
+
+vlock-all: vlock-all.o
+vlock-current: vlock-current.o prompt.o auth-$(AUTH_METHOD).o
+vlock-new: vlock-new.o
+vlock-nosysrq: vlock-nosysrq.o
+
+auth-pam.o: auth-pam.c vlock.h
+auth-shadow.o: auth-shadow.c vlock.h
+prompt.o: prompt.c vlock.h
+vlock-all.o: vlock-all.c vlock.h
+vlock-current.o: vlock-current.c vlock.h
+vlock-new.o: vlock-new.c vlock.h
+vlock-nosysrq.o: vlock-nosysrq.c vlock.h
+
+ifneq ($(USE_ROOT_PASS),y)
+vlock-current.o : override CFLAGS += -DNO_ROOT_PASS
+endif
+
+ifeq ($(AUTH_METHOD),pam)
+vlock-current : override LDFLAGS += $(PAM_LIBS)
+endif
+
+ifeq ($(AUTH_METHOD),shadow)
+vlock-current : override LDFLAGS += -lcrypt
+endif
+
+ifeq ($(USE_PAM),y)
+vlock-nosysrq vlock-all : override LDFLAGS += $(PAM_LIBS)
+vlock-nosysrq vlock-all : override CFLAGS += -DUSE_PAM
+endif
+
 .PHONY: clean
 clean:
-	rm -f $(PROGRAMS)
+	$(RM) $(PROGRAMS) $(wildcard *.o)
