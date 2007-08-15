@@ -74,6 +74,7 @@ vlock-all.o: vlock-all.c vlock.h
 vlock-current.o: vlock-current.c vlock.h
 vlock-new.o: vlock-new.c vlock.h
 vlock-nosysrq.o: vlock-nosysrq.c vlock.h
+plugins.o: plugins.c vlock.h
 
 ifneq ($(USE_ROOT_PASS),y)
 vlock-current.o : override CFLAGS += -DNO_ROOT_PASS
@@ -84,7 +85,13 @@ vlock-current : override LDFLAGS += $(PAM_LIBS)
 endif
 
 ifeq ($(AUTH_METHOD),shadow)
-vlock-current : override LDFLAGS += -lcrypt
+vlock-current : override LDFLAGS += $(CRYPT_LIB)
+endif
+
+ifeq ($(USE_PLUGINS),y)
+vlock-current: plugins.o
+vlock-current : override LDFLAGS += $(DL_LIB)
+vlock-current.o : override CFLAGS += -DUSE_PLUGINS
 endif
 
 ifeq ($(USE_PAM),y)
