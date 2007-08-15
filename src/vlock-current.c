@@ -33,7 +33,8 @@ int main(void) {
   char *vlock_prompt_timeout;
   struct timespec timeout;
   struct timespec *timeout_p = NULL;
-  struct termios term, term_bak;
+  struct termios term;
+  int lflag;
   struct sigaction sa;
   /* get the user id */
   uid_t uid = getuid();
@@ -92,13 +93,14 @@ int main(void) {
 
   /* disable terminal echoing and signals */
   if (tcgetattr(STDIN_FILENO, &term) == 0) {
-    term_bak = term;
+    lflag = term.c_lflag;
     term.c_lflag &= ~(ECHO|ISIG);
     (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
   }
 
   for (;;) {
     char c = 0;
+    int lflag_bak;
 
     if (vlock_message) {
       /* print vlock message */
@@ -125,7 +127,8 @@ int main(void) {
   }
 
   /* restore the terminal */
-  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term_bak);
+  term.c_lflag = lflag;
+  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
   exit (0);
 }
