@@ -39,7 +39,7 @@ char read_character(struct timespec *timeout) {
 
     if (timeout_val != NULL) {
       timeout_val->tv_sec = timeout->tv_sec;
-      timeout_val->tv_usec = 1000 * timeout->tv_nsec;
+      timeout_val->tv_usec = timeout->tv_nsec / 1000;
     }
   }
 
