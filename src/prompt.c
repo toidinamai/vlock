@@ -58,15 +58,14 @@ char *prompt(const char *msg, const struct timespec *timeout) {
   char *result;
   int len;
   struct termios term;
-  struct timeval timeout_val;
-  struct timeval *timeout_val_p = NULL;
+  struct timeval *timeout_val = NULL;
   tcflag_t lflag;
   fd_set readfds;
 
-  if (timeout != NULL) {
-    timeout_val.tv_sec = timeout->tv_sec;
-    timeout_val.tv_usec = timeout->tv_nsec / 1000;
-    timeout_val_p = &timeout_val;
+  if (timeout != NULL
+      && (timeout_val = malloc(sizeof *timeout_val)) != NULL) {
+    timeout_val->tv_sec = timeout->tv_sec;
+    timeout_val->tv_usec = timeout->tv_nsec / 1000;
   }
 
   if (msg != NULL) {
@@ -94,7 +93,7 @@ char *prompt(const char *msg, const struct timespec *timeout) {
   errno = 0;
 
   /* Wait until a string was entered. */
-  if (select(STDIN_FILENO+1, &readfds, NULL, NULL, timeout_val_p) != 1) {
+  if (select(STDIN_FILENO+1, &readfds, NULL, NULL, timeout_val) != 1) {
     if (errno)
       perror("vlock-auth: select() on stdin failed");
     else
@@ -130,6 +129,8 @@ char *prompt(const char *msg, const struct timespec *timeout) {
   memset(buffer, 0, sizeof buffer);
 
 out:
+  free(timeout_val);
+
   /* Restore original terminal attributes. */
   term.c_lflag = lflag;
   (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
