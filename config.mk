@@ -7,7 +7,7 @@ USE_PAM = n
 # also prompt for the root password in adition to the user's
 USE_ROOT_PASS = y
 # enable plugins for vlock-current
-USE_PLUGINS = n
+USE_PLUGINS = y
 
 # group to install vlock-all and vlock-nosysrq as
 # defaults to 'root')
