@@ -27,6 +27,7 @@
 #define VLOCK_ALL PREFIX "/sbin/vlock-all"
 #define VLOCK_CURRENT PREFIX "/sbin/vlock-current"
 #define VLOCK_NEW PREFIX "/sbin/vlock-new"
+#define VLOCK_PLUGIN_DIR PREFIX "/lib/vlock/plugins"
 
 /* forward declaration */
 struct timespec;
