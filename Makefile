@@ -14,7 +14,11 @@ PROGRAMS = \
 					vlock-nosysrq
 
 .PHONY: all
-all: $(PROGRAMS) plugins
+all: $(PROGRAMS)
+
+ifeq ($(USE_PLUGINS),y)
+all: plugins
+endif
 
 .PHONY: plugins
 plugins:
@@ -34,7 +38,11 @@ endif
 endif
 
 .PHONY: install
-install: install-programs install-plugins install-man
+install: install-programs install-man
+
+ifeq ($(USE_PLUGINS),y)
+install: install-plugins
+endif
 
 .PHONY: install-programs
 install-programs: $(PROGRAMS)
