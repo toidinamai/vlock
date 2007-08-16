@@ -3,6 +3,11 @@
 # exit on error
 set -e
 
+# read a user settings
+if [ -r "$HOME/.vlockrc" ] ; then
+  . "$HOME/.vlockrc"
+fi
+
 # ignore some signals
 trap : HUP INT QUIT TSTP
 
