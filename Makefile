@@ -18,7 +18,7 @@ all: $(PROGRAMS) plugins
 
 .PHONY: plugins
 plugins:
-	@$(MAKE) -C plugins $(PLUGINS)
+	@$(MAKE) -C plugins
 
 ### installation rules ###
 
@@ -46,7 +46,7 @@ install-programs: $(PROGRAMS)
 
 .PHONY: install-plugins
 install-plugins:
-	@$(MAKE) -C plugins $(addprefix install-, $(PLUGINS))
+	@$(MAKE) -C plugins install
 
 .PHONY: install-man
 install-man:
