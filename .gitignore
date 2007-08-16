@@ -1,6 +1,6 @@
 *.o
 vlock
-vlock-current
+vlock-main
 vlock-new
 vlock-all
 vlock-nosysrq

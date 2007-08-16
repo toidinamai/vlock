@@ -9,7 +9,7 @@ trap : HUP INT QUIT TSTP
 VLOCK_ALL=%PREFIX%/sbin/vlock-all
 VLOCK_NEW=%PREFIX%/sbin/vlock-new
 VLOCK_NOSYSRQ=%PREFIX%/sbin/vlock-nosysrq
-VLOCK_CURRENT=%PREFIX%/sbin/vlock-current
+VLOCK_MAIN=%PREFIX%/sbin/vlock-main
 VLOCK_VERSION=%VLOCK_VERSION%
 
 # magic characters to clear the terminal
@@ -142,7 +142,7 @@ This TTY is now locked.
 Please press [ENTER] to unlock."}
     export VLOCK_MESSAGE
 
-    checked_exec "$VLOCK_CURRENT"
+    checked_exec "$VLOCK_MAIN"
   fi
 }
 

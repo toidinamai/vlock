@@ -8,7 +8,7 @@ VLOCK_VERSION = "2.1 alpha1"
 
 PROGRAMS = \
 					vlock \
-					vlock-current \
+					vlock-main \
 					vlock-new \
 					vlock-all \
 					vlock-nosysrq
@@ -35,7 +35,7 @@ install: install-programs install-man
 .PHONY: install-programs
 install-programs: $(PROGRAMS)
 	$(INSTALL) -D -m 755 -o root -g $(ROOT_GROUP) vlock $(DESTDIR)$(PREFIX)/bin/vlock
-	$(INSTALL) -D -m 4711 -o root -g $(ROOT_GROUP) vlock-current $(DESTDIR)$(PREFIX)/sbin/vlock-current
+	$(INSTALL) -D -m 4711 -o root -g $(ROOT_GROUP) vlock-main $(DESTDIR)$(PREFIX)/sbin/vlock-main
 	$(INSTALL) -D -m 755 -o root -g $(ROOT_GROUP) vlock-all $(DESTDIR)$(PREFIX)/sbin/vlock-all
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-nosysrq $(DESTDIR)$(PREFIX)/sbin/vlock-nosysrq
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-new $(DESTDIR)$(PREFIX)/sbin/vlock-new
@@ -43,7 +43,7 @@ install-programs: $(PROGRAMS)
 .PHONY: install-man
 install-man:
 	$(INSTALL) -D -m 644 -o root -g $(ROOT_GROUP) man/vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
-	$(INSTALL) -D -m 644 -o root -g $(ROOT_GROUP) man/vlock-current.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-current.8
+	$(INSTALL) -D -m 644 -o root -g $(ROOT_GROUP) man/vlock-main.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-main.8
 	$(INSTALL) -D -m 644 -o root -g $(ROOT_GROUP) man/vlock-all.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-all.8
 	$(INSTALL) -D -m 644 -o root -g $(ROOT_GROUP) man/vlock-new.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-new.8
 	$(INSTALL) -D -m 644 -o root -g $(ROOT_GROUP) man/vlock-nosysrq.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-nosysrq.8
@@ -63,7 +63,7 @@ vlock: vlock.sh config.mk Makefile
 override CFLAGS += -Isrc -DPREFIX="\"$(PREFIX)"\"
 
 vlock-all: vlock-all.o
-vlock-current: vlock-current.o prompt.o auth-$(AUTH_METHOD).o
+vlock-main: vlock-main.o prompt.o auth-$(AUTH_METHOD).o
 vlock-new: vlock-new.o
 vlock-nosysrq: vlock-nosysrq.o
 
@@ -71,27 +71,27 @@ auth-pam.o: auth-pam.c vlock.h
 auth-shadow.o: auth-shadow.c vlock.h
 prompt.o: prompt.c vlock.h
 vlock-all.o: vlock-all.c vlock.h
-vlock-current.o: vlock-current.c vlock.h
+vlock-main.o: vlock-main.c vlock.h
 vlock-new.o: vlock-new.c vlock.h
 vlock-nosysrq.o: vlock-nosysrq.c vlock.h
 plugins.o: plugins.c vlock.h
 
 ifneq ($(USE_ROOT_PASS),y)
-vlock-current.o : override CFLAGS += -DNO_ROOT_PASS
+vlock-main.o : override CFLAGS += -DNO_ROOT_PASS
 endif
 
 ifeq ($(AUTH_METHOD),pam)
-vlock-current : override LDFLAGS += $(PAM_LIBS)
+vlock-main : override LDFLAGS += $(PAM_LIBS)
 endif
 
 ifeq ($(AUTH_METHOD),shadow)
-vlock-current : override LDFLAGS += $(CRYPT_LIB)
+vlock-main : override LDFLAGS += $(CRYPT_LIB)
 endif
 
 ifeq ($(USE_PLUGINS),y)
-vlock-current: plugins.o
-vlock-current : override LDFLAGS += $(DL_LIB)
-vlock-current.o : override CFLAGS += -DUSE_PLUGINS
+vlock-main: plugins.o
+vlock-main : override LDFLAGS += $(DL_LIB)
+vlock-main.o : override CFLAGS += -DUSE_PLUGINS
 endif
 
 ifeq ($(USE_PAM),y)
