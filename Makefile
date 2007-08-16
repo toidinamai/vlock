@@ -14,7 +14,11 @@ PROGRAMS = \
 					vlock-nosysrq
 
 .PHONY: all
-all: $(PROGRAMS)
+all: $(PROGRAMS) plugins
+
+.PHONY: plugins
+plugins:
+	$(MAKE) -C plugins $(addprefix build-, $(PLUGINS))
 
 ### installation rules ###
 
@@ -30,7 +34,7 @@ endif
 endif
 
 .PHONY: install
-install: install-programs install-man
+install: install-programs install-plugins install-man
 
 .PHONY: install-programs
 install-programs: $(PROGRAMS)
@@ -39,6 +43,10 @@ install-programs: $(PROGRAMS)
 	$(INSTALL) -D -m 755 -o root -g $(ROOT_GROUP) vlock-all $(DESTDIR)$(PREFIX)/sbin/vlock-all
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-nosysrq $(DESTDIR)$(PREFIX)/sbin/vlock-nosysrq
 	$(INSTALL) -D -m $(VLOCK_MODE) -o root -g $(VLOCK_GROUP) vlock-new $(DESTDIR)$(PREFIX)/sbin/vlock-new
+
+.PHONY: install-plugins
+install-plugins:
+	$(MAKE) -C plugins $(addprefix install-, $(PLUGINS))
 
 .PHONY: install-man
 install-man:
@@ -102,3 +110,4 @@ endif
 .PHONY: clean
 clean:
 	$(RM) $(PROGRAMS) $(wildcard *.o)
+	$(MAKE) -C plugins clean

@@ -6,8 +6,10 @@ AUTH_METHOD = pam
 USE_PAM = n
 # also prompt for the root password in adition to the user's
 USE_ROOT_PASS = y
-# enable plugins for vlock-current
+# enable plugins for vlock-main
 USE_PLUGINS = y
+# which plugins should be build
+PLUGINS = vlock-all
 
 # group to install vlock-all and vlock-nosysrq as
 # defaults to 'root')
@@ -34,6 +36,8 @@ BOURNE_SHELL = /bin/sh
 CC = gcc
 # gnu install
 INSTALL = install
+# linker
+LD = ld
 
 ### compiler and linker settings ###
 
