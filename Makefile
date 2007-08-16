@@ -18,7 +18,7 @@ all: $(PROGRAMS) plugins
 
 .PHONY: plugins
 plugins:
-	@$(MAKE) -C plugins $(addprefix build-, $(PLUGINS))
+	@$(MAKE) -C plugins $(PLUGINS)
 
 ### installation rules ###
 

@@ -3,13 +3,6 @@ include ../config.mk
 .PHONY: all
 all: $(addprefix build-, $(PLUGINS))
 
-.PHONY: build-%
-.PHONY: install-%
-
-build-vlock-all: vlock-all.so
-build-vlock-blank: vlock-blank.so
-build-vlock-nosysrq: vlock-nosysrq.so
-
 install-vlock-all: build-vlock-all
 	$(INSTALL) -D -m 4755 -o root -g $(ROOT_GROUP) vlock-all.so $(DESTDIR)$(PREFIX)/lib/vlock/modules/vlock-all.so
 
