@@ -27,6 +27,8 @@ print_help() {
   echo >&2 "       implies --all."
   echo >&2 "-s or --disable-sysrq: disable sysrq while consoles are locked to"
   echo >&2 "       prevent killing vlock with SAK, requires --all."
+  echo >&2 "-t <seconds> or --timeout <seconds>: run screen locking plugins"
+  echo >&2 "       after the given amount of time."
   echo >&2 "-v or --version: Print the version number of vlock and exit."
   echo >&2 "-h or --help: Print this help message and exit."
   exit $1
@@ -50,7 +52,7 @@ main() {
 
   if [ $? -eq 4 ] ; then
     # gnu getopt
-    opts=`getopt -o acnsvh --long current,all,new,disable-sysrq,version,help \
+    opts=`getopt -o acnst:vh --long current,all,new,disable-sysrq,timeout:,version,help \
           -n vlock -- "$@"`
   else
     # other getopt, e.g. BSD
@@ -79,6 +81,12 @@ main() {
         ;;
       -s|--disable-sysrq)
         nosysrq=1
+        shift
+        ;;
+      -t|--timeout)
+        shift
+        VLOCK_TIMEOUT="$1"
+        export VLOCK_TIMEOUT
         shift
         ;;
       -n|--new)
