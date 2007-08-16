@@ -22,7 +22,7 @@ This TTY is now locked.
 
 Please press [ENTER] to unlock."
 
-# read a user settings
+# read user settings
 if [ -r "$HOME/.vlockrc" ] ; then
   . "$HOME/.vlockrc"
 fi
@@ -61,7 +61,7 @@ checked_exec() {
 }
 
 main() {
-  local opts lock_all lock_new nosysrq
+  local opts lock_all=0 lock_new=0 nosysrq=0
 
   # test for gnu getopt
   ( getopt -T >/dev/null )
@@ -80,10 +80,6 @@ main() {
   fi
 
   eval set -- "$opts"
-
-  lock_all=0
-  lock_new=0
-  nosysrq=0
 
   while : ; do
     case "$1" in
