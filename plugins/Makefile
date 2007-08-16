@@ -7,6 +7,7 @@ all: $(addprefix build-, $(PLUGINS))
 .PHONY: install-%
 
 build-vlock-all: vlock-all.so
+build-vlock-blank: vlock-blank.so
 
 install-vlock-all: build-vlock-all
 	$(INSTALL) -D -m 4755 -o root -g $(ROOT_GROUP) vlock-all.so $(DESTDIR)$(PREFIX)/lib/vlock/modules/vlock-all.so
@@ -14,8 +15,6 @@ install-vlock-all: build-vlock-all
 %.so : LDFLAGS += -shared
 %.so: %.o
 	$(LD) $(LDFLAGS) -o $@ $^
-
-vlock-all.o: vlock-all.c
 
 .PHONY: clean
 clean:
