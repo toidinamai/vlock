@@ -72,6 +72,11 @@ Set this variable to replace vlock's default locking messages. Example use:
 .IP
 $ alias vlock=\(aqenv VLOCK_MESSAGE="$(fortune)" vlock\(aq
 .PP
+.B VLOCK_PROMPT_TIMEOUT
+.IP
+Set this variable to specify the amount of time (in seconds) you will have to
+enter your password at the password prompt.  \fBWarning\fR: If this value is too
+low, you will not be able to unlock your machine.
 .SH SECURITY
 \fBvlock\fR consists of several programs.  To use the \fB-n,--new\fR and
 \fB-s,--disable-sysrq\fR options you need to be able to execute vlock-new(8)
