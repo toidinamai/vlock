@@ -68,10 +68,20 @@ is set, \fBvlock\fR prompts for this user's password.
 .PP
 .B VLOCK_MESSAGE
 .IP
-Set this variable to replace vlock's default locking messages. Example use:
+Set this variable to replace vlock's default locking messages.  Example use:
 .IP
 $ alias vlock=\(aqenv VLOCK_MESSAGE="$(fortune)" vlock\(aq
 .PP
+.B VLOCK_PROMPT_TIMEOUT
+.IP
+Set this variable to specify the amount of time (in seconds) you will have to
+enter your password at the password prompt.  \fBWarning\fR: If this value is too
+low, you will not be able to unlock your machine.
+.SH FILES
+.B ~/.vlockrc
+.IP
+If existent, this file is read by \fBvlock\fR on startup.  All the above
+mentioned variables can be set here.
 .SH SECURITY
 \fBvlock\fR consists of several programs.  To use the \fB-n,--new\fR and
 \fB-s,--disable-sysrq\fR options you need to be able to execute vlock-new(8)
@@ -80,7 +90,9 @@ for \fB-a,--all\fR and vlock-current(8), should be unrestricted.  See the
 SECURITY file in the \fBvlock\fR distribution for more information.
 .PP
 .SH NOTES
-Long options depend on the availability of an enhanced getopt(1) command.
+Long options depend on the availability of an enhanced getopt(1) command.  On
+system without it only the short options will work and long options will cause
+errors.
 .PP
 .SH "SEE ALSO"
 .BR vlock-all (8),

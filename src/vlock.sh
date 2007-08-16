@@ -1,19 +1,37 @@
 #!%BOURNE_SHELL%
 
+# ignore some signals
+trap : HUP INT QUIT TSTP
+
 # exit on error
 set -e
 
-# ignore some signals
-trap : HUP INT QUIT TSTP
+# magic characters to clear the terminal
+CLEAR_SCREEN="`echo -e '\033[H\033[J'`"
+
+# message that is displayed when console switching is disabled
+VLOCK_ALL_MESSAGE="${CLEAR_SCREEN}\
+The entire console display is now completely locked.
+You will not be able to switch to another virtual console.
+
+Please press [ENTER] to unlock."
+
+# message that is displayed when only the current terminal is locked
+VLOCK_CURRENT_MESSAGE="${CLEAR_SCREEN}\
+This TTY is now locked.
+
+Please press [ENTER] to unlock."
+
+# read user settings
+if [ -r "$HOME/.vlockrc" ] ; then
+  . "$HOME/.vlockrc"
+fi
 
 VLOCK_ALL=%PREFIX%/sbin/vlock-all
 VLOCK_NEW=%PREFIX%/sbin/vlock-new
 VLOCK_NOSYSRQ=%PREFIX%/sbin/vlock-nosysrq
 VLOCK_MAIN=%PREFIX%/sbin/vlock-main
 VLOCK_VERSION=%VLOCK_VERSION%
-
-# magic characters to clear the terminal
-CLEAR_SCREEN="`echo -e '\033[H\033[J'`"
 
 print_help() {
   echo >&2 "vlock: locks virtual consoles, saving your current session."
@@ -45,7 +63,7 @@ checked_exec() {
 }
 
 main() {
-  local opts lock_all lock_new nosysrq
+  local opts lock_all=0 lock_new=0 nosysrq=0
 
   # test for gnu getopt
   ( getopt -T >/dev/null )
@@ -64,10 +82,6 @@ main() {
   fi
 
   eval set -- "$opts"
-
-  lock_all=0
-  lock_new=0
-  nosysrq=0
 
   while : ; do
     case "$1" in
@@ -114,13 +128,11 @@ main() {
     sleep 1
   fi
 
-  if [ $lock_all -ne 0 ] ; then
-    : ${VLOCK_MESSAGE:="${CLEAR_SCREEN}\
-The entire console display is now completely locked.
-You will not be able to switch to another virtual console.
+  # export variables for vlock-current
+  export VLOCK_MESSAGE VLOCK_PROMPT_TIMEOUT
 
-Please press [ENTER] to unlock."}
-    export VLOCK_MESSAGE
+  if [ $lock_all -ne 0 ] ; then
+    : ${VLOCK_MESSAGE:="$VLOCK_ALL_MESSAGE"}
 
     if [ $nosysrq -ne 0 ] ; then
       if [ $lock_new -ne 0 ] ; then
@@ -136,11 +148,7 @@ Please press [ENTER] to unlock."}
       checked_exec "$VLOCK_ALL"
     fi
   else
-    : ${VLOCK_MESSAGE:="${CLEAR_SCREEN}\
-This TTY is now locked.
-
-Please press [ENTER] to unlock."}
-    export VLOCK_MESSAGE
+    : ${VLOCK_MESSAGE:="$VLOCK_CURRENT_MESSAGE"}
 
     checked_exec "$VLOCK_MAIN"
   fi
