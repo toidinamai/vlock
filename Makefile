@@ -18,7 +18,7 @@ all: $(PROGRAMS) plugins
 
 .PHONY: plugins
 plugins:
-	$(MAKE) -C plugins $(addprefix build-, $(PLUGINS))
+	@$(MAKE) -C plugins $(addprefix build-, $(PLUGINS))
 
 ### installation rules ###
 
@@ -46,7 +46,7 @@ install-programs: $(PROGRAMS)
 
 .PHONY: install-plugins
 install-plugins:
-	$(MAKE) -C plugins $(addprefix install-, $(PLUGINS))
+	@$(MAKE) -C plugins $(addprefix install-, $(PLUGINS))
 
 .PHONY: install-man
 install-man:
@@ -110,4 +110,4 @@ endif
 .PHONY: clean
 clean:
 	$(RM) $(PROGRAMS) $(wildcard *.o)
-	$(MAKE) -C plugins clean
+	@$(MAKE) -C plugins clean
