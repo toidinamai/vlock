@@ -1,5 +1,8 @@
 #!%BOURNE_SHELL%
 
+# ignore some signals
+trap : HUP INT QUIT TSTP
+
 # exit on error
 set -e
 
@@ -23,9 +26,6 @@ Please press [ENTER] to unlock."
 if [ -r "$HOME/.vlockrc" ] ; then
   . "$HOME/.vlockrc"
 fi
-
-# ignore some signals
-trap : HUP INT QUIT TSTP
 
 VLOCK_ALL=%PREFIX%/sbin/vlock-all
 VLOCK_NEW=%PREFIX%/sbin/vlock-new
