@@ -94,7 +94,7 @@ int main(void) {
     (void) setuid(getuid());
 
     /* run child */
-    execl(VLOCK_CURRENT, VLOCK_CURRENT, (char *) NULL);
+    execl(VLOCK_MAIN, VLOCK_MAIN, (char *) NULL);
     perror("vlock-all: exec of vlock-current failed");
     _exit(127);
   } else if (pid < 0) {
