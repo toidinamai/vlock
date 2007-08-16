@@ -29,7 +29,7 @@
 
 /* Read a single character from the stdin.  If the timeout is reached
  * 0 is returned. */
-char read_character(struct timespec *timeout) {
+static char read_character(struct timespec *timeout) {
   char c = 0;
   struct timeval *timeout_val = NULL;
   fd_set readfds;
@@ -63,7 +63,7 @@ out:
  * timespec.  On error NULL is returned.  The caller is responsible
  * to free the result.   The string may be NULL, in which case NULL
  * is returned, too. */
-struct timespec *parse_seconds(const char *s) {
+static struct timespec *parse_seconds(const char *s) {
   if (s == NULL)
     return NULL;
   else {
