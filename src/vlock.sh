@@ -3,6 +3,22 @@
 # exit on error
 set -e
 
+# magic characters to clear the terminal
+CLEAR_SCREEN="`echo -e '\033[H\033[J'`"
+
+# message that is displayed when console switching is disabled
+VLOCK_ALL_MESSAGE="${CLEAR_SCREEN}\
+The entire console display is now completely locked.
+You will not be able to switch to another virtual console.
+
+Please press [ENTER] to unlock."
+
+# message that is displayed when only the current terminal is locked
+VLOCK_CURRENT_MESSAGE="${CLEAR_SCREEN}\
+This TTY is now locked.
+
+Please press [ENTER] to unlock."
+
 # read a user settings
 if [ -r "$HOME/.vlockrc" ] ; then
   . "$HOME/.vlockrc"
@@ -16,9 +32,6 @@ VLOCK_NEW=%PREFIX%/sbin/vlock-new
 VLOCK_NOSYSRQ=%PREFIX%/sbin/vlock-nosysrq
 VLOCK_CURRENT=%PREFIX%/sbin/vlock-current
 VLOCK_VERSION=%VLOCK_VERSION%
-
-# magic characters to clear the terminal
-CLEAR_SCREEN="`echo -e '\033[H\033[J'`"
 
 print_help() {
   echo >&2 "vlock: locks virtual consoles, saving your current session."
@@ -111,13 +124,11 @@ main() {
     sleep 1
   fi
 
-  if [ $lock_all -ne 0 ] ; then
-    : ${VLOCK_MESSAGE:="${CLEAR_SCREEN}\
-The entire console display is now completely locked.
-You will not be able to switch to another virtual console.
+  # export variables for vlock-current
+  export VLOCK_MESSAGE VLOCK_PROMPT_TIMEOUT
 
-Please press [ENTER] to unlock."}
-    export VLOCK_MESSAGE
+  if [ $lock_all -ne 0 ] ; then
+    : ${VLOCK_MESSAGE:="$VLOCK_ALL_MESSAGE"}
 
     if [ $nosysrq -ne 0 ] ; then
       if [ $lock_new -ne 0 ] ; then
@@ -133,11 +144,7 @@ Please press [ENTER] to unlock."}
       checked_exec "$VLOCK_ALL"
     fi
   else
-    : ${VLOCK_MESSAGE:="${CLEAR_SCREEN}\
-This TTY is now locked.
-
-Please press [ENTER] to unlock."}
-    export VLOCK_MESSAGE
+    : ${VLOCK_MESSAGE:="$VLOCK_CURRENT_MESSAGE"}
 
     checked_exec "$VLOCK_CURRENT"
   fi
