@@ -46,8 +46,8 @@ CFLAGS = -O2 -Wall -W -pedantic -std=gnu99
 # linker flags
 LDFLAGS = 
 # linker flags needed for dlopen and friends
-DL_LIB = -dl
+DL_LIB = -ldl
 # linker flags needed for crypt
 CRYPT_LIB = -lcrypt
 # linker flags needed for pam
-PAM_LIBS = $(DL_LIBS) -lpam
+PAM_LIBS = $(DL_LIB) -lpam
