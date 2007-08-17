@@ -172,7 +172,10 @@ int main(int argc, char *const argv[]) {
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
 #ifdef USE_PLUGINS
-  plugin_hook("vlock_start");
+  if (plugin_hook("vlock_start") < 0)
+    exit (111);
+#else
+  // call vlock-new and vlock-all statically
 #endif
 
   for (;;) {
