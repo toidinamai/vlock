@@ -30,7 +30,7 @@ fi
 VLOCK_ALL="%PREFIX%/sbin/vlock-all"
 VLOCK_NEW="%PREFIX%/sbin/vlock-new"
 VLOCK_MAIN="%PREFIX%/sbin/vlock-main"
-VLOCK_PLUGIN_DIR="%PREFIX/lib/vlock/plugins"
+VLOCK_PLUGIN_DIR="%PREFIX%/lib/vlock/plugins"
 VLOCK_VERSION="%VLOCK_VERSION%"
 
 print_help() {
