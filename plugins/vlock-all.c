@@ -41,17 +41,21 @@ static void acquire_vt(int __attribute__((__unused__)) signum) {
 }
 
 void vlock_start(void **ctx_ptr) {
-  struct vt_mode vtmode, *ctx;
+  struct vt_mode *ctx;
   struct sigaction sa;
 
+  /* allocate the context */
+  if ((ctx = malloc(sizeof *ctx)) == NULL)
+    return;
+
   /* get the virtual console mode */
-  if (ioctl(STDIN_FILENO, VT_GETMODE, &vtmode) < 0) {
+  if (ioctl(STDIN_FILENO, VT_GETMODE, ctx) < 0) {
     if (errno == ENOTTY || errno == EINVAL)
       fprintf(stderr, "vlock-all: this terminal is not a virtual console\n");
     else
       perror("vlock-all: could not get virtual console mode");
 
-    return;
+    goto err;
   }
 
   (void) sigemptyset(&(sa.sa_mask));
@@ -61,38 +65,35 @@ void vlock_start(void **ctx_ptr) {
   sa.sa_handler = acquire_vt;
   (void) sigaction(SIGUSR2, &sa, NULL);
 
-  if ((ctx = malloc(sizeof *ctx)) == NULL)
-      return;
-
   /* back up current terminal mode */
   (void) memcpy(ctx, &vtmode, sizeof *ctx);
   /* set terminal switching to be process governed */
-  vtmode.mode = VT_PROCESS;
+  ctx->mode = VT_PROCESS;
   /* set terminal release signal, i.e. sent when switching away */
-  vtmode.relsig = SIGUSR1;
+  ctx->relsig = SIGUSR1;
   /* set terminal acquire signal, i.e. sent when switching here */
-  vtmode.acqsig = SIGUSR2;
+  ctx->acqsig = SIGUSR2;
   /* set terminal free signal, not implemented on either FreeBSD or Linux */
   /* Linux ignores it but FreeBSD wants a valid signal number here */
-  vtmode.frsig = SIGHUP;
+  ctx->frsig = SIGHUP;
 
   /* set virtual console mode to be process governed
    * thus disabling console switching */
-  if (ioctl(STDIN_FILENO, VT_SETMODE, &vtmode) < 0) {
+  if (ioctl(STDIN_FILENO, VT_SETMODE, ctx) < 0) {
     perror("vlock-all: could not set virtual console mode");
-    free(ctx);
-  } else {
-    *ctx_ptr = ctx;
-  }
+    goto err;
+
+  *ctx_ptr = ctx;
+
+err:
+  free(ctx);
 }
 
-void vlock_end(void *ctx) {
-  struct vt_mode *vtmode = ctx;
-
-  if (vtmode == NULL)
+void vlock_end(struct vtmode *ctx) {
+  if (ctx == NULL)
     return;
 
   /* globally enable virtual console switching */
-  if (ioctl(STDIN_FILENO, VT_SETMODE, vtmode) < 0)
+  if (ioctl(STDIN_FILENO, VT_SETMODE, ctx) < 0)
     perror("vlock-all: could not restore console mode");
 }
