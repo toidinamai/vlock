@@ -65,8 +65,6 @@ void vlock_start(void **ctx_ptr) {
   sa.sa_handler = acquire_vt;
   (void) sigaction(SIGUSR2, &sa, NULL);
 
-  /* back up current terminal mode */
-  (void) memcpy(ctx, &vtmode, sizeof *ctx);
   /* set terminal switching to be process governed */
   ctx->mode = VT_PROCESS;
   /* set terminal release signal, i.e. sent when switching away */
@@ -82,6 +80,7 @@ void vlock_start(void **ctx_ptr) {
   if (ioctl(STDIN_FILENO, VT_SETMODE, ctx) < 0) {
     perror("vlock-all: could not set virtual console mode");
     goto err;
+  }
 
   *ctx_ptr = ctx;
 
@@ -89,7 +88,7 @@ err:
   free(ctx);
 }
 
-void vlock_end(struct vtmode *ctx) {
+void vlock_end(struct vt_mode *ctx) {
   if (ctx == NULL)
     return;
 
