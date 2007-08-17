@@ -92,7 +92,7 @@ endif
 ifeq ($(USE_PLUGINS),y)
 vlock-main: plugins.o
 vlock-main : override LDFLAGS += $(DL_LIB)
-vlock-main.o prompt.o : override CFLAGS += -DUSE_PLUGINS
+vlock-main.o : override CFLAGS += -DUSE_PLUGINS
 endif
 
 .PHONY: clean
