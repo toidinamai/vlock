@@ -29,7 +29,6 @@ fi
 
 VLOCK_ALL=%PREFIX%/sbin/vlock-all
 VLOCK_NEW=%PREFIX%/sbin/vlock-new
-VLOCK_NOSYSRQ=%PREFIX%/sbin/vlock-nosysrq
 VLOCK_MAIN=%PREFIX%/sbin/vlock-main
 VLOCK_VERSION=%VLOCK_VERSION%
 
@@ -43,8 +42,6 @@ print_help() {
   echo >&2 "       from switching virtual consoles."
   echo >&2 "-n or --new: allocate a new virtual console before locking,"
   echo >&2 "       implies --all."
-  echo >&2 "-s or --disable-sysrq: disable sysrq while consoles are locked to"
-  echo >&2 "       prevent killing vlock with SAK, requires --all."
   echo >&2 "-t <seconds> or --timeout <seconds>: run screen locking plugins"
   echo >&2 "       after the given amount of time."
   echo >&2 "-v or --version: Print the version number of vlock and exit."
@@ -63,14 +60,14 @@ checked_exec() {
 }
 
 main() {
-  local opts lock_all=0 lock_new=0 nosysrq=0
+  local opts lock_all=0 lock_new=0
 
   # test for gnu getopt
   ( getopt -T >/dev/null )
 
   if [ $? -eq 4 ] ; then
     # gnu getopt
-    opts=`getopt -o acnst:vh --long current,all,new,disable-sysrq,timeout:,version,help \
+    opts=`getopt -o acnt:vh --long current,all,new,timeout:,version,help \
           -n vlock -- "$@"`
   else
     # other getopt, e.g. BSD
@@ -134,15 +131,7 @@ main() {
   if [ $lock_all -ne 0 ] ; then
     : ${VLOCK_MESSAGE:="$VLOCK_ALL_MESSAGE"}
 
-    if [ $nosysrq -ne 0 ] ; then
-      if [ $lock_new -ne 0 ] ; then
-        export VLOCK_NEW=1
-      else
-        unset VLOCK_NEW
-      fi
-
-      checked_exec "$VLOCK_NOSYSRQ" "$@"
-    elif [ $lock_new -ne 0 ] ; then
+    if [ $lock_new -ne 0 ] ; then
       checked_exec "$VLOCK_NEW" "$@"
     else
       checked_exec "$VLOCK_ALL" "$@"
