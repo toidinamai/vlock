@@ -35,9 +35,3 @@ char *prompt(const char *msg, const struct timespec *timeout);
 
 /* Same as prompt() above, except that characters entered are not echoed. */
 char *prompt_echo_off(const char *msg, const struct timespec *timeout);
-
-#ifdef USE_PLUGINS
-void load_plugins(void);
-
-void plugin_hook(const char *name);
-#endif
