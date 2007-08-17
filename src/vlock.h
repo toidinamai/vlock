@@ -10,19 +10,6 @@
  *
  */
 
-/* name of the virtual console device */
-#ifdef __FreeBSD__
-#define CONSOLE "/dev/ttyv0"
-#else
-#define CONSOLE "/dev/tty0"
-#endif
-/* template for the device of a given virtual console */
-#ifdef __FreeBSD__
-#define VTNAME "/dev/ttyv%x"
-#else
-#define VTNAME "/dev/tty%d"
-#endif
-
 /* hard coded paths */
 #define VLOCK_ALL PREFIX "/sbin/vlock-all"
 #define VLOCK_MAIN PREFIX "/sbin/vlock-main"
