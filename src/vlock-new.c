@@ -77,7 +77,7 @@ static char *get_console_name(int n) {
 }
 
 /* Run vlock-all on a new console. */
-int main(void) {
+int main(int __attribute__((__unused__)) argc, char *argv[]) {
   int consfd = STDIN_FILENO;
   int old_vtno;
   int vtno;
@@ -159,7 +159,8 @@ int main(void) {
     close(vtfd);
 
     /* run child */
-    execl(VLOCK_ALL, VLOCK_ALL, (char *) NULL);
+    argv[0] = VLOCK_ALL;
+    execv(VLOCK_ALL, argv);
     perror("vlock-new: exec of vlock-all failed");
     _exit(127);
   } else if (pid < 0) {

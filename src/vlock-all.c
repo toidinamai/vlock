@@ -43,7 +43,7 @@ void acquire_vt(int __attribute__((__unused__)) signum) {
 }
 
 /* Disable console switching while running vlock-current. */
-int main(void) {
+int main(int __attribute__((__unused__)) argc, char *argv[]) {
   struct vt_mode vtmode, vtmode_bak;
   struct sigaction sa;
   int pid;
@@ -94,7 +94,8 @@ int main(void) {
     (void) setuid(getuid());
 
     /* run child */
-    execl(VLOCK_MAIN, VLOCK_MAIN, (char *) NULL);
+    argv[0] = VLOCK_MAIN;
+    execv(VLOCK_MAIN, argv);
     perror("vlock-all: exec of vlock-current failed");
     _exit(127);
   } else if (pid < 0) {
