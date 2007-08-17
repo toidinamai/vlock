@@ -4,10 +4,10 @@
 
 /* vlock plugin */
 struct plugin {
-  void (*vlock_start)(void **ctx_ptr);
-  void (*vlock_end)(void *ctx);
-  void (*vlock_save)(void **ctx_ptr);
-  void (*vlock_save_abort)(void *ctx);
+  vlock_start_t vlock_start;
+  vlock_end_t vlock_end;
+  vlock_save_t vlock_save;
+  vlock_save_abort_t vlock_save_abort;
   void *dl_handle;
   struct plugin *next;
 };
