@@ -89,7 +89,7 @@ static struct timespec *parse_seconds(const char *s) {
 }
 
 /* Lock the current terminal until proper authentication is received. */
-int main(void) {
+int main(int argc, char *const argv[]) {
   char user[40];
   char *vlock_message;
   struct timespec *prompt_timeout;
@@ -140,7 +140,18 @@ int main(void) {
   }
 
 #ifdef USE_PLUGINS
-  load_plugins();
+  for (int i = 1; i < argc; i++) {
+    errno = 0;
+
+    if (load_plugin(argv[i]) < 0) {
+      if (errno)
+        fprintf(stderr, "vlock-main: error loading plugin '%s': %s\n", argv[i], strerror(errno));
+      else
+        fprintf(stderr, "vlock-main: error loading plugin '%s'\n", argv[i]);
+
+      exit (111);
+    }
+  }
 #endif
 
   /* get the vlock message from the environment */
