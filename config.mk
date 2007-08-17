@@ -30,8 +30,8 @@ DESTDIR =
 
 ### programs ###
 
-# shell to run vlock.sh with
-BOURNE_SHELL = /bin/sh
+# shell to run vlock.sh with (only bash is known to work)
+BOURNE_SHELL = /usr/bin/env bash
 # c compiler
 CC = gcc
 # gnu install
