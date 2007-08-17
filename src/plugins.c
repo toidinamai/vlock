@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "vlock.h"
+#include "plugins.h"
 
 /* vlock plugin */
 struct plugin {
@@ -12,10 +12,12 @@ struct plugin {
   struct plugin *next;
 };
 
-void load_plugins(void) {
-  fprintf(stderr, "loading plugins\n");
+int load_plugin(const char *name) {
+  fprintf(stderr, "loading plugin '%s'\n", name);
+  return 0;
 }
 
-void plugin_hook(const char *name) {
+int plugin_hook(const char *name) {
   fprintf(stderr, "executing plugin hook '%s'\n", name);
+  return 0;
 }
