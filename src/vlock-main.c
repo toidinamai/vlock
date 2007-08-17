@@ -113,10 +113,13 @@ int main(void) {
   (void) sigaction(SIGTSTP, &sa, NULL);
 
   if (uid > 0 || envuser == NULL) {
+    struct passwd *pw;
+
+    /* clear errno */
     errno = 0;
 
     /* get the password entry */
-    struct passwd *pw = getpwuid(uid);
+    pw = getpwuid(uid);
 
     if (pw == NULL) {
       if (errno != 0)
