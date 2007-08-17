@@ -141,16 +141,16 @@ main() {
         unset VLOCK_NEW
       fi
 
-      checked_exec "$VLOCK_NOSYSRQ"
+      checked_exec "$VLOCK_NOSYSRQ" "$@"
     elif [ $lock_new -ne 0 ] ; then
-      checked_exec "$VLOCK_NEW"
+      checked_exec "$VLOCK_NEW" "$@"
     else
-      checked_exec "$VLOCK_ALL"
+      checked_exec "$VLOCK_ALL" "$@"
     fi
   else
     : ${VLOCK_MESSAGE:="$VLOCK_CURRENT_MESSAGE"}
 
-    checked_exec "$VLOCK_MAIN"
+    checked_exec "$VLOCK_MAIN" "$@"
   fi
 }
 
