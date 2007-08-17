@@ -27,6 +27,10 @@
 
 #include "vlock.h"
 
+#ifdef USE_PLUGINS
+#include "plugins.h"
+#endif
+
 /* Read a single character from the stdin.  If the timeout is reached
  * 0 is returned. */
 static char read_character(struct timespec *timeout) {
