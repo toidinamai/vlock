@@ -26,6 +26,8 @@
 #include <sys/vt.h>
 #endif /* __FreeBSD__ */
 
+#include "plugins.h"
+
 /* This handler is called by a signal whenever a user tries to
  * switch away from this virtual console. */
 static void release_vt(int __attribute__((__unused__)) signum) {
@@ -40,13 +42,13 @@ static void acquire_vt(int __attribute__((__unused__)) signum) {
   (void) ioctl(STDIN_FILENO, VT_RELDISP, VT_ACKACQ);
 }
 
-void vlock_start(void **ctx_ptr) {
+int vlock_start(void **ctx_ptr) {
   struct vt_mode *ctx;
   struct sigaction sa;
 
   /* allocate the context */
   if ((ctx = malloc(sizeof *ctx)) == NULL)
-    return;
+    return -1;
 
   /* get the virtual console mode */
   if (ioctl(STDIN_FILENO, VT_GETMODE, ctx) < 0) {
@@ -83,16 +85,22 @@ void vlock_start(void **ctx_ptr) {
   }
 
   *ctx_ptr = ctx;
+  return 0;
 
 err:
   free(ctx);
+  return -1;
 }
 
-void vlock_end(struct vt_mode *ctx) {
-  if (ctx == NULL)
-    return;
+int vlock_end(void **ctx_ptr) {
+  struct vt_mode *ctx = *ctx_ptr;
 
-  /* globally enable virtual console switching */
-  if (ioctl(STDIN_FILENO, VT_SETMODE, ctx) < 0)
-    perror("vlock-all: could not restore console mode");
+  if (ctx != NULL)
+    /* globally enable virtual console switching */
+    if (ioctl(STDIN_FILENO, VT_SETMODE, ctx) < 0) {
+      perror("vlock-all: could not restore console mode");
+      return -1;
+    }
+
+  return 0;
 }
