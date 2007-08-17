@@ -191,7 +191,7 @@ main() {
     done
   fi
 
-  exec "$VLOCK_MAIN" "${plugins[$@]}" "$@"
+  exec "$VLOCK_MAIN" "${plugins[@]}" "$@"
 }
 
 main "$@"
