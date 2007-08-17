@@ -9,7 +9,7 @@ USE_ROOT_PASS = y
 # enable plugins for vlock-main
 USE_PLUGINS = y
 # which plugins should be build
-PLUGINS = vlock-nosysrq.so vlock-blank.so
+PLUGINS = vlock-all.so vlock-new.so vlock-nosysrq.so vlock-blank.so
 
 # group to install vlock-all and vlock-nosysrq as
 # defaults to 'root')
