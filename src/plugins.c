@@ -14,10 +14,13 @@ struct plugin {
 
 int load_plugin(const char *name) {
   fprintf(stderr, "loading plugin '%s'\n", name);
-  return 0;
+  return -1;
+}
+
+void unload_plugins(void) {
 }
 
 int plugin_hook(const char *name) {
   fprintf(stderr, "executing plugin hook '%s'\n", name);
-  return 0;
+  return -1;
 }

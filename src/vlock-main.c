@@ -226,6 +226,7 @@ int main(int argc, char *const argv[]) {
 
 #ifdef USE_PLUGINS
   plugin_hook("vlock_end");
+  unload_plugins();
 #endif
 
   /* restore the terminal */

@@ -1,4 +1,5 @@
 int load_plugin(const char *name);
+void unload_plugins(void);
 
 int plugin_hook(const char *name);
 
