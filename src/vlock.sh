@@ -27,8 +27,6 @@ if [ -r "$HOME/.vlockrc" ] ; then
   . "$HOME/.vlockrc"
 fi
 
-VLOCK_ALL="%PREFIX%/sbin/vlock-all"
-VLOCK_NEW="%PREFIX%/sbin/vlock-new"
 VLOCK_MAIN="%PREFIX%/sbin/vlock-main"
 VLOCK_PLUGIN_DIR="%PREFIX%/lib/vlock/modules"
 VLOCK_VERSION="%VLOCK_VERSION%"
@@ -73,35 +71,20 @@ print_help() {
   echo >&2 "       Where [options] are any of:"
   echo >&2 "-c or --current: lock only this virtual console, allowing user to"
   echo >&2 "       switch to other virtual consoles."
-  echo >&2 "-a or --all: lock all virtual consoles by preventing other users"
-  echo >&2 "       from switching virtual consoles."
-  echo >&2 "-n or --new: allocate a new virtual console before locking,"
-  echo >&2 "       implies --all."
+  print_plugin_help
   echo >&2 "-t <seconds> or --timeout <seconds>: run screen locking plugins"
   echo >&2 "       after the given amount of time."
-  print_plugin_help
   echo >&2 "-v or --version: Print the version number of vlock and exit."
   echo >&2 "-h or --help: Print this help message and exit."
-  exit $1
-}
-
-checked_exec() {
-  if [ -f "$1" ] && [ ! -x "$1" ] ; then
-    echo >&2 "vlock: cannot execute \`$1': Permission denied"
-    echo >&2 "Please check the documentation for more information."
-    exit 1
-  else
-    exec "$@"
-  fi
 }
 
 main() {
   local options long_options short_options
   local opt
-  local lock_all=0 lock_new=0
+  declare -a plugins
 
-  short_options="acnt:vh"
-  long_options="current,all,new,timeout:,version,help"
+  short_options="ct:vh"
+  long_options="current,timeout:,version,help"
 
   load_plugins
 
@@ -122,14 +105,15 @@ main() {
 
   if [ $? -eq 4 ] ; then
     # gnu getopt
-    options=`getopt -o "$short_options" --long "$long_options" -n vlock -- "$@"`
+    options=`getopt -o "$short_options" --long "$long_options" -n vlock -- "$@"` || getopt_error=1
   else
     # other getopt, e.g. BSD
-    options=`getopt "$short_options" "$@"`
+    options=`getopt "$short_options" "$@"` || getopt_error=1
   fi
 
-  if [ $? -ne 0 ] ; then
-    print_help 1
+  if [ -n "$getopt_error" ] ; then
+    print_help
+    exit 1
   fi
 
   eval set -- "$options"
@@ -141,27 +125,18 @@ main() {
         shift
         break
         ;;
-      -a|--all)
-        lock_all=1
-        shift
-        ;;
       -c|--current)
-        lock_all=0
+        unset plugins
         shift
         ;;
       -t|--timeout)
         shift
         VLOCK_TIMEOUT="$1"
-        export VLOCK_TIMEOUT
-        shift
-        ;;
-      -n|--new)
-        lock_new=1
-        lock_all=1
         shift
         ;;
       -h|--help)
-       print_help 0
+       print_help
+       exit
        ;;
       -v|--version)
         echo "vlock version $VLOCK_VERSION" >&2
@@ -200,27 +175,23 @@ main() {
     esac
   done
 
-  if [ $lock_new -ne 0 ] && [ -n "$DISPLAY" ] ; then
-    # work around an annoying X11 bug
-    sleep 1
-  fi
-
   # export variables for vlock-current
-  export VLOCK_MESSAGE VLOCK_PROMPT_TIMEOUT
+  export VLOCK_MESSAGE VLOCK_TIMEOUT VLOCK_PROMPT_TIMEOUT
 
-  if [ $lock_all -ne 0 ] ; then
-    : ${VLOCK_MESSAGE:="$VLOCK_ALL_MESSAGE"}
+  if [ -n "$VLOCK_MESSAGE" ] ; then
+    local plugin
+    VLOCK_MESSAGE="$VLOCK_CURRENT_MESSAGE"
 
-    if [ $lock_new -ne 0 ] ; then
-      checked_exec "$VLOCK_NEW" "${plugins[$@]}" "$@"
-    else
-      checked_exec "$VLOCK_ALL" "${plugins[$@]}" "$@"
-    fi
-  else
-    : ${VLOCK_MESSAGE:="$VLOCK_CURRENT_MESSAGE"}
-
-    checked_exec "$VLOCK_MAIN" "${plugins[$@]}" "$@"
+    for plugin in "${plugin_name[@]}" ; do
+      if [ "$plugin" = "vlock-all" ] \
+        || [ "$plugin" = "vlock-new" ] \
+        || [ "$plugin" = "vlock-nosysrq" ] ; then
+        VLOCK_MESSAGE="$VLOCK_ALL_MESSAGE"
+      fi
+    done
   fi
+
+  echo exec "$VLOCK_MAIN" "${plugins[$@]}" "$@"
 }
 
 main "$@"
