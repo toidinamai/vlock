@@ -178,7 +178,7 @@ main() {
   # export variables for vlock-current
   export VLOCK_MESSAGE VLOCK_TIMEOUT VLOCK_PROMPT_TIMEOUT
 
-  if [ -n "$VLOCK_MESSAGE" ] ; then
+  if [ -z "$VLOCK_MESSAGE" ] ; then
     local plugin
     VLOCK_MESSAGE="$VLOCK_CURRENT_MESSAGE"
 
@@ -191,7 +191,7 @@ main() {
     done
   fi
 
-  echo exec "$VLOCK_MAIN" "${plugins[$@]}" "$@"
+  exec "$VLOCK_MAIN" "${plugins[$@]}" "$@"
 }
 
 main "$@"
