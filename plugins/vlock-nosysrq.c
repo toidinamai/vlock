@@ -24,7 +24,7 @@ struct sysrq_context {
 };
 
 void vlock_start(void **ctx_ptr) {
-  struct sysrq_context *ctx = NULL;
+  struct sysrq_context *ctx;
 
   /* allocate the context */
   if ((ctx = malloc(sizeof *ctx)) == NULL)
