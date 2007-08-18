@@ -25,6 +25,8 @@
 #include <sys/vt.h>
 #endif /* __FreeBSD__ */
 
+#include "vlock_plugin.h"
+
 /* name of the virtual console device */
 #ifdef __FreeBSD__
 #define CONSOLE "/dev/ttyv0"
@@ -37,8 +39,6 @@
 #else
 #define VTNAME "/dev/tty%d"
 #endif
-
-#define VLOCK_ALL ""
 
 /* Get the currently active console from the given
  * console file descriptor.  Returns console number
@@ -110,14 +110,14 @@ struct new_console_context {
 };
 
 /* Run vlock-all on a new console. */
-void vlock_start(void **ctx_ptr) {
+int vlock_start(void **ctx_ptr) {
   struct new_console_context *ctx;
   int vtfd;
   char *vtname;
 
   /* allocate the context */
   if ((ctx = malloc(sizeof *ctx)) == NULL)
-    return;
+    return -1;
 
   /* try stdin first */
   ctx->consfd = dup(STDIN_FILENO);
@@ -158,7 +158,7 @@ void vlock_start(void **ctx_ptr) {
   /* open the free virtual terminal */
   if ((vtfd = open(vtname, O_RDWR)) < 0) {
     perror("vlock-new: cannot open new console");
-    exit (111);
+    goto err;
   }
 
   // XXX: redirect stdio
@@ -181,12 +181,15 @@ void vlock_start(void **ctx_ptr) {
 #endif
 
   *ctx_ptr = ctx;
+  return 0;
 
 err:
   free(ctx);
+  return -1;
 }
 
-void vlock_end(struct new_console_context *ctx) {
+int vlock_end(void **ctx_ptr) {
+  struct new_console_context *ctx = *ctx_ptr;
   // XXX: redirect stdio back
 
   /* switch back to former virtual terminal */
@@ -200,4 +203,6 @@ void vlock_end(struct new_console_context *ctx) {
 #endif
 
   (void) close(ctx->consfd);
+
+  return 0;
 }
