@@ -161,24 +161,32 @@ int vlock_start(void **ctx_ptr) {
     goto err;
   }
 
-  // XXX: redirect stdio
-
-  /* close virtual terminal file descriptor */
-  (void) close(vtfd);
-
   /* switch to the virtual terminal */
   if (activate_console(ctx->consfd, ctx->new_vtno) < 0) {
     perror("vlock-new: could not activate new terminal");
     goto err;
   }
 
+  /* save the stdio file descriptors */
+  ctx->saved_stdin = dup(STDIN_FILENO);
+  ctx->saved_stdout = dup(STDOUT_FILENO);
+  ctx->saved_stderr = dup(STDERR_FILENO);
+
+  /* redirect stdio to virtual terminal */
+  (void) dup2(vtfd, STDIN_FILENO);
+  (void) dup2(vtfd, STDOUT_FILENO);
+  (void) dup2(vtfd, STDERR_FILENO);
+
 #if 0
-  /* make new virtual terminal controlling tty of this process */
+  /* make virtual terminal controlling tty of this process */
   if (ioctl(vtfd, TIOCSCTTY, 1) < 0) {
     perror("vlock-new: could not set controlling terminal");
     _exit(111);
   }
 #endif
+
+  /* close virtual terminal file descriptor */
+  (void) close(vtfd);
 
   *ctx_ptr = ctx;
   return 0;
@@ -190,7 +198,11 @@ err:
 
 int vlock_end(void **ctx_ptr) {
   struct new_console_context *ctx = *ctx_ptr;
-  // XXX: redirect stdio back
+
+  /* restore saved stdio filedescriptors */
+  (void) dup2(ctx->saved_stdin, STDIN_FILENO);
+  (void) dup2(ctx->saved_stdout, STDOUT_FILENO);
+  (void) dup2(ctx->saved_stderr, STDERR_FILENO);
 
   /* switch back to former virtual terminal */
   if (activate_console(ctx->consfd, ctx->old_vtno) < 0)
