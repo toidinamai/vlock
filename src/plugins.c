@@ -85,61 +85,38 @@ void unload_plugins(void) {
   }
 }
 
-int hook_vlock_start(void) {
-  int result = 0;
+int plugin_hook(enum plugin_hook_t hook) {
   struct plugin *current;
 
   for (current = first; current != NULL; current = current->previous) {
-    vlock_hook_fn hook = current->hooks[HOOK_VLOCK_START];    
+    int result;
 
-    if (hook == NULL)
+    if (hook > MAX_HOOK) {
+      fprintf(stderr, "vlock-plugins: unknown hook '%d'\n", hook);
+      return -1;
+    }
+
+    if (current->hooks[hook] == NULL)
       continue;
 
-    result = hook(&current->ctx);
+    result = current->hooks[hook](&current->ctx);
 
-    if (result != 0)
-      break;
-  }
-
-  return result;
-}
-
-int hook_vlock_end(void) {
-  struct plugin *current;
-
-  for (current = first; current != NULL; current = current->previous) {
-    vlock_hook_fn hook = current->hooks[HOOK_VLOCK_START];    
-
-    if (hook == NULL)
-      continue;
-
-    (void) hook(&current->ctx);
+    if (result != 0) {
+      switch (hook) {
+        case HOOK_VLOCK_START:
+          return result;
+        case HOOK_VLOCK_SAVE_ABORT:
+          current->hooks[HOOK_VLOCK_SAVE] = NULL;
+        case HOOK_VLOCK_SAVE:
+          /* don't call again */
+          current->hooks[hook] = NULL;
+          break;
+        default:
+          /* ignore */
+          break;
+      }
+    }
   }
 
   return 0;
 }
-
-int hook_vlock_save(void) {
-  return -1;
-}
-
-int hook_vlock_save_abort(void) {
-  return -1;
-}
-
-int plugin_hook(enum plugin_hook_t hook) {
-  switch (hook) {
-    case HOOK_VLOCK_START:
-      return hook_vlock_start();
-    case HOOK_VLOCK_END:
-      return hook_vlock_end();
-    case HOOK_VLOCK_SAVE:
-      return hook_vlock_save();
-    case HOOK_VLOCK_SAVE_ABORT:
-      return hook_vlock_save_abort();
-    default:
-      fprintf(stderr, "vlock-plugins: unknown hook '%d'\n", hook);
-      return -1;
-  }
-}
-
