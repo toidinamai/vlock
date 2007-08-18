@@ -26,7 +26,7 @@
 #include <sys/vt.h>
 #endif /* __FreeBSD__ */
 
-#include "plugins.h"
+#include "vlock_plugin.h"
 
 /* This handler is called by a signal whenever a user tries to
  * switch away from this virtual console. */
