@@ -143,7 +143,7 @@ int main(int argc, char *const argv[]) {
   for (int i = 1; i < argc; i++) {
     errno = 0;
 
-    if (load_plugin(argv[i]) < 0) {
+    if (load_plugin(argv[i], VLOCK_PLUGIN_DIR) < 0) {
       if (errno)
         fprintf(stderr, "vlock-main: error loading plugin '%s': %s\n", argv[i], strerror(errno));
       else

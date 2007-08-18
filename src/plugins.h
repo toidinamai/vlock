@@ -1,4 +1,4 @@
-int load_plugin(const char *name);
+int load_plugin(const char *name, const char *plugin_dir);
 void unload_plugins(void);
 
 int plugin_hook(const char *name);
