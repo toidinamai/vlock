@@ -19,18 +19,18 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #include <sys/consio.h>
 #else
 #include <sys/vt.h>
-#endif /* __FreeBSD__ */
+#endif /* __FreeBSD__, __FreeBSD_kernel__ */
 
 #include "vlock.h"
 
 /* Get the currently active console from the given
  * console file descriptor.  Returns console number
  * (starting from 1) on success, -1 on error. */
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 static int get_active_console(int consfd) {
   int n;
 
@@ -61,7 +61,7 @@ static char *get_console_name(int n) {
     return NULL;
 
   /* format the virtual terminal filename from the number */
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
   namelen = snprintf(name, sizeof name, VTNAME, n-1);
 #else
   namelen = snprintf(name, sizeof name, VTNAME, n);
@@ -179,7 +179,7 @@ int main(void) {
       || ioctl(consfd, VT_WAITACTIVE, old_vtno) < 0)
     perror("vlock-new: could not activate previous console");
 
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__)
   /* deallocate virtual terminal */
   if (ioctl(consfd, VT_DISALLOCATE, vtno) < 0)
     perror("vlock-new: could not disallocate console");
