@@ -26,31 +26,33 @@ struct plugin {
   vlock_hook_fn hooks[NR_HOOKS];
   void *dl_handle;
   void *ctx;
+  struct plugin *next;
   struct plugin *previous;
 };
 
 static struct plugin *first = NULL;
+static struct plugin *last = NULL;
 
 int load_plugin(const char *name, const char *plugin_dir) {
   char *plugin_path;
-  struct plugin *next;
+  struct plugin *new;
 
   /* allocate a new plugin object */
-  if ((next = malloc(sizeof *first)) == NULL)
+  if ((new = malloc(sizeof *new)) == NULL)
     return -1;
 
-  next->ctx = NULL;
+  new->ctx = NULL;
 
   /* format the plugin path */
   if (asprintf(&plugin_path, "%s/%s.so", plugin_dir, name) < 0)
     goto err;
 
   /* load the plugin */
-  next->dl_handle = dlopen(plugin_path, RTLD_NOW | RTLD_LOCAL);
+  new->dl_handle = dlopen(plugin_path, RTLD_NOW | RTLD_LOCAL);
 
   free(plugin_path);
 
-  if (next->dl_handle == NULL) {
+  if (new->dl_handle == NULL) {
     fprintf(stderr, "%s\n", dlerror());
     goto err;
   }
@@ -60,25 +62,33 @@ int load_plugin(const char *name, const char *plugin_dir) {
     int i;
 
     for (i = 0; i < NR_HOOKS; i++) {
-      *(void **) (&next->hooks[i]) = dlsym(next->dl_handle, hook_names[i]);
+      *(void **) (&new->hooks[i]) = dlsym(new->dl_handle, hook_names[i]);
     }
   }
 
-  /* make this plugin first in the list */
-  next->previous = first;
-  first = next;
+  /* add this plugin to the list */
+  if (first == NULL) {
+    first = last = new;
+    new->previous = NULL;
+    new->next = NULL;
+  } else {
+    last->next = new;
+    new->previous = last;
+    new->next = NULL;
+    last = new;
+  }
 
   return 0;
 
 err:
-  free(next);
+  free(new);
 
   return -1;
 }
 
 void unload_plugins(void) {
   while (first != NULL) {
-    void *tmp = first->previous;
+    void *tmp = first->next;
     (void) dlclose(first->dl_handle);
     free(first);
     first = tmp;
@@ -87,35 +97,41 @@ void unload_plugins(void) {
 
 int plugin_hook(unsigned int hook) {
   struct plugin *current;
+  int result;
 
-  for (current = first; current != NULL; current = current->previous) {
-    int result;
+  if (hook == HOOK_VLOCK_START || hook == HOOK_VLOCK_SAVE) {
+    for (current = first; current != NULL; current = current->next) {
+      if (current->hooks[hook] == NULL)
+        continue;
 
-    if (hook > MAX_HOOK) {
-      fprintf(stderr, "vlock-plugins: unknown hook '%d'\n", hook);
-      return -1;
-    }
+      result = current->hooks[hook](&current->ctx);
 
-    if (current->hooks[hook] == NULL)
-      continue;
-
-    result = current->hooks[hook](&current->ctx);
-
-    if (result != 0) {
-      switch (hook) {
-        case HOOK_VLOCK_START:
+      if (result != 0) {
+        if (hook == HOOK_VLOCK_START)
           return result;
-        case HOOK_VLOCK_SAVE_ABORT:
-          current->hooks[HOOK_VLOCK_SAVE] = NULL;
-        case HOOK_VLOCK_SAVE:
+        else if (hook == HOOK_VLOCK_SAVE)
           /* don't call again */
           current->hooks[hook] = NULL;
-          break;
-        default:
-          /* ignore */
-          break;
       }
     }
+  }
+  else if (hook == HOOK_VLOCK_END || hook == HOOK_VLOCK_SAVE_ABORT) {
+    for (current = last; current != NULL; current = current->previous) {
+      if (current->hooks[hook] == NULL)
+        continue;
+
+      result = current->hooks[hook](&current->ctx);
+
+      if (result != 0 && hook == HOOK_VLOCK_SAVE_ABORT) {
+        /* don't call again */
+        current->hooks[hook] = NULL;
+        current->hooks[HOOK_VLOCK_SAVE] = NULL;
+      }
+    }
+  }
+  else {
+    fprintf(stderr, "vlock-plugins: unknown hook '%d'\n", hook);
+    return -1;
   }
 
   return 0;
