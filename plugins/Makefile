@@ -15,8 +15,6 @@ install-%: %
 	[ ! -e $(PLUGIN_SCRIPT) ] || \
 	  $(INSTALL) -D -m 0644 -o root -g $(ROOT_GROUP) $(PLUGIN_SCRIPT) $(DESTDIR)$(PREFIX)/lib/vlock/modules/$(PLUGIN_SCRIPT)
 
-override CFLAGS += -I../src
-
 %.so : LDFLAGS += -shared
 %.so: %.o
 	$(LD) $(LDFLAGS) -o $@ $^
