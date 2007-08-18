@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "vlock_plugin.h"
+
 #define SYSRQ_PATH "/proc/sys/kernel/sysrq"
 #define SYSRQ_DISABLE_VALUE "0\n"
 
@@ -23,12 +25,12 @@ struct sysrq_context {
   char value[32];
 };
 
-void vlock_start(void **ctx_ptr) {
+int vlock_start(void **ctx_ptr) {
   struct sysrq_context *ctx;
 
   /* allocate the context */
   if ((ctx = malloc(sizeof *ctx)) == NULL)
-    return;
+    return -1;
 
   /* XXX: add optional PAM check here */
 
@@ -60,15 +62,19 @@ void vlock_start(void **ctx_ptr) {
   }
 
   *ctx_ptr = ctx;
+  return 0;
 
 err:
   free(ctx);
+  return -1;
 }
 
 
-void vlock_end(struct sysrq_context *ctx) {
+int vlock_end(void **ctx_ptr) {
+  struct sysrq_context *ctx = *ctx_ptr;
+
   if (ctx == NULL)
-    return;
+    return 0;
 
   if (fseek(ctx->file, 0, SEEK_SET) < 0
       || ftruncate(fileno(ctx->file), 0) < 0
@@ -77,4 +83,5 @@ void vlock_end(struct sysrq_context *ctx) {
     perror("vlock-nosysrq: could not restore old value to '" SYSRQ_PATH "'");
 
   free(ctx);
+  return 0;
 }
