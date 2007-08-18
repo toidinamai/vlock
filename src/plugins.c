@@ -23,6 +23,7 @@ typedef int (*vlock_hook_fn)(void **);
 
 /* vlock plugin */
 struct plugin {
+  char *path;
   vlock_hook_fn hooks[NR_HOOKS];
   void *dl_handle;
   void *ctx;
@@ -34,7 +35,6 @@ static struct plugin *first = NULL;
 static struct plugin *last = NULL;
 
 int load_plugin(const char *name, const char *plugin_dir) {
-  char *plugin_path;
   struct plugin *new;
 
   /* allocate a new plugin object */
@@ -42,15 +42,14 @@ int load_plugin(const char *name, const char *plugin_dir) {
     return -1;
 
   new->ctx = NULL;
+  new->path = NULL;
 
   /* format the plugin path */
-  if (asprintf(&plugin_path, "%s/%s.so", plugin_dir, name) < 0)
+  if (asprintf(&new->path, "%s/%s.so", plugin_dir, name) < 0)
     goto err;
 
   /* load the plugin */
-  new->dl_handle = dlopen(plugin_path, RTLD_NOW | RTLD_LOCAL);
-
-  free(plugin_path);
+  new->dl_handle = dlopen(new->path, RTLD_NOW | RTLD_LOCAL);
 
   if (new->dl_handle == NULL) {
     fprintf(stderr, "%s\n", dlerror());
@@ -81,6 +80,7 @@ int load_plugin(const char *name, const char *plugin_dir) {
   return 0;
 
 err:
+  free(new->path);
   free(new);
 
   return -1;
@@ -90,6 +90,7 @@ void unload_plugins(void) {
   while (first != NULL) {
     void *tmp = first->next;
     (void) dlclose(first->dl_handle);
+    free(first->path);
     free(first);
     first = tmp;
   }
