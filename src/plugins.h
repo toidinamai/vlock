@@ -9,6 +9,7 @@ enum plugin_hook_t {
 };
 
 #define NR_HOOKS 4
+#define MAX_HOOK HOOK_VLOCK_SAVE_ABORT
 
 extern const char const *hook_names[NR_HOOKS];
 
