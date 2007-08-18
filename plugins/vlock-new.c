@@ -161,6 +161,10 @@ int vlock_start(void **ctx_ptr) {
     goto err;
   }
 
+  /* work around stupid X11 bug */
+  if (getenv("DISPLAY") != NULL)
+    sleep(1);
+
   /* switch to the virtual terminal */
   if (activate_console(ctx->consfd, ctx->new_vtno) < 0) {
     perror("vlock-new: could not activate new terminal");
