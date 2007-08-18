@@ -10,6 +10,6 @@ enum plugin_hook_t {
 
 #define NR_HOOKS 4
 
-extern char const *hook_names[NR_HOOKS];
+extern const char const *hook_names[NR_HOOKS];
 
 int plugin_hook(enum plugin_hook_t hook);

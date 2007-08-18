@@ -90,6 +90,7 @@ static struct timespec *parse_seconds(const char *s) {
 
 /* Lock the current terminal until proper authentication is received. */
 int main(int argc, char *const argv[]) {
+  int exit_status = 0;
   char user[40];
   char *vlock_message;
   struct timespec *prompt_timeout;
@@ -172,8 +173,10 @@ int main(int argc, char *const argv[]) {
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
 #ifdef USE_PLUGINS
-  if (plugin_hook("vlock_start") < 0)
-    exit (111);
+  if (plugin_hook(HOOK_VLOCK_START) < 0) {
+    exit_status = 111;
+    goto out;
+  }
 #else
   // call vlock-new and vlock-all statically
 #endif
@@ -200,9 +203,9 @@ int main(int argc, char *const argv[]) {
       }
 #ifdef USE_PLUGINS
       else if (c == '\033' || c == 0) {
-        plugin_hook("vlock_save");
+        plugin_hook(HOOK_VLOCK_SAVE);
         (void) read_character(NULL);
-        plugin_hook("vlock_save_abort");
+        plugin_hook(HOOK_VLOCK_SAVE_ABORT);
       }
 #endif
     }
@@ -225,7 +228,12 @@ int main(int argc, char *const argv[]) {
   }
 
 #ifdef USE_PLUGINS
-  plugin_hook("vlock_end");
+  plugin_hook(HOOK_VLOCK_END);
+#endif
+
+out:
+
+#ifdef USE_PLUGINS
   unload_plugins();
 #endif
 
@@ -237,5 +245,5 @@ int main(int argc, char *const argv[]) {
   free(timeout);
   free(prompt_timeout);
 
-  exit (0);
+  exit (exit_status);
 }
