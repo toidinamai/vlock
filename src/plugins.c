@@ -56,8 +56,12 @@ int load_plugin(const char *name, const char *plugin_dir) {
   }
 
   /* load the hooks, unimplemented hooks are NULL */
-  for (int i = 0; i < NR_HOOKS; i++) {
-    *(void **) (&next->hooks[i]) = dlsym(next->dl_handle, hook_names[i]);
+  {
+    int i;
+
+    for (i = 0; i < NR_HOOKS; i++) {
+      *(void **) (&next->hooks[i]) = dlsym(next->dl_handle, hook_names[i]);
+    }
   }
 
   /* make this plugin first in the list */
