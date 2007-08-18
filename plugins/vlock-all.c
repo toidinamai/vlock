@@ -43,7 +43,7 @@ static void acquire_vt(int __attribute__((__unused__)) signum) {
 }
 
 int vlock_start(void **ctx_ptr) {
-  struct vt_mode *ctx;
+  struct vt_mode vtm, *ctx;
   struct sigaction sa;
 
   /* allocate the context */
@@ -51,7 +51,7 @@ int vlock_start(void **ctx_ptr) {
     return -1;
 
   /* get the virtual console mode */
-  if (ioctl(STDIN_FILENO, VT_GETMODE, ctx) < 0) {
+  if (ioctl(STDIN_FILENO, VT_GETMODE, &vtm) < 0) {
     if (errno == ENOTTY || errno == EINVAL)
       fprintf(stderr, "vlock-all: this terminal is not a virtual console\n");
     else
@@ -59,6 +59,9 @@ int vlock_start(void **ctx_ptr) {
 
     goto err;
   }
+
+  /* save the virtual console mode */
+  (void) memcpy(ctx, &vtm, sizeof vtm);
 
   (void) sigemptyset(&(sa.sa_mask));
   sa.sa_flags = SA_RESTART;
@@ -68,18 +71,18 @@ int vlock_start(void **ctx_ptr) {
   (void) sigaction(SIGUSR2, &sa, NULL);
 
   /* set terminal switching to be process governed */
-  ctx->mode = VT_PROCESS;
+  vtm.mode = VT_PROCESS;
   /* set terminal release signal, i.e. sent when switching away */
-  ctx->relsig = SIGUSR1;
+  vtm.relsig = SIGUSR1;
   /* set terminal acquire signal, i.e. sent when switching here */
-  ctx->acqsig = SIGUSR2;
+  vtm.acqsig = SIGUSR2;
   /* set terminal free signal, not implemented on either FreeBSD or Linux */
   /* Linux ignores it but FreeBSD wants a valid signal number here */
-  ctx->frsig = SIGHUP;
+  vtm.frsig = SIGHUP;
 
   /* set virtual console mode to be process governed
    * thus disabling console switching */
-  if (ioctl(STDIN_FILENO, VT_SETMODE, ctx) < 0) {
+  if (ioctl(STDIN_FILENO, VT_SETMODE, &vtm) < 0) {
     perror("vlock-all: could not set virtual console mode");
     goto err;
   }
