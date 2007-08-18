@@ -3,12 +3,14 @@
 #include <sys/ioctl.h>
 #include <linux/tiocl.h>
 
-void vlock_save(void __attribute__((__unused__)) **ctx) {
+#include "vlock_plugin.h"
+
+int vlock_save(void __attribute__((__unused__)) **ctx) {
   char arg[] = {TIOCL_BLANKSCREEN, 0};
-  (void) ioctl(STDIN_FILENO, TIOCLINUX, arg);
+  return ioctl(STDIN_FILENO, TIOCLINUX, arg);
 }
 
-void vlock_save_abort(void __attribute__((__unused__)) *ctx) {
+int vlock_save_abort(void __attribute__((__unused__)) **ctx) {
   char arg[] = {TIOCL_UNBLANKSCREEN, 0};
-  (void) ioctl(STDIN_FILENO, TIOCLINUX, arg);
+  return ioctl(STDIN_FILENO, TIOCLINUX, arg);
 }
