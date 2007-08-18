@@ -85,7 +85,7 @@ void unload_plugins(void) {
   }
 }
 
-int plugin_hook(enum plugin_hook_t hook) {
+int plugin_hook(unsigned int hook) {
   struct plugin *current;
 
   for (current = first; current != NULL; current = current->previous) {

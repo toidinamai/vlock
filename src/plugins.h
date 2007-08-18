@@ -1,16 +1,14 @@
 int load_plugin(const char *name, const char *plugin_dir);
 void unload_plugins(void);
 
-enum plugin_hook_t {
-  HOOK_VLOCK_START = 0,
-  HOOK_VLOCK_END,
-  HOOK_VLOCK_SAVE,
-  HOOK_VLOCK_SAVE_ABORT,
-};
+#define HOOK_VLOCK_START 0
+#define HOOK_VLOCK_END 1
+#define HOOK_VLOCK_SAVE 2
+#define HOOK_VLOCK_SAVE_ABORT 3
 
 #define NR_HOOKS 4
 #define MAX_HOOK HOOK_VLOCK_SAVE_ABORT
 
 extern const char const *hook_names[NR_HOOKS];
 
-int plugin_hook(enum plugin_hook_t hook);
+int plugin_hook(unsigned int hook);
