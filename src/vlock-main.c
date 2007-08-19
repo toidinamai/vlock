@@ -157,6 +157,9 @@ int main(int argc, char *const argv[]) {
       }
     }
   }
+
+  if (resolve_dependencies() < 0)
+    exit (111);
 #endif
 
   /* get the vlock message from the environment */

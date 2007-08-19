@@ -86,6 +86,10 @@ err:
   return -1;
 }
 
+int resolve_dependencies(void) {
+  return 0;
+}
+
 void unload_plugins(void) {
   while (first != NULL) {
     void *tmp = first->next;

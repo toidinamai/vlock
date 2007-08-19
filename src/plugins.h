@@ -1,5 +1,6 @@
 int load_plugin(const char *name, const char *plugin_dir);
 void unload_plugins(void);
+int resolve_dependencies(void);
 
 #define HOOK_VLOCK_START 0
 #define HOOK_VLOCK_END 1
