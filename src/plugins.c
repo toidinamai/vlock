@@ -25,8 +25,8 @@ typedef int (*vlock_hook_fn)(void **);
 struct plugin {
   char *path;
   char *name;
-  char **before;
-  char **after;
+  char *(*before)[];
+  char *(*after)[];
   vlock_hook_fn hooks[NR_HOOKS];
   void *dl_handle;
   void *ctx;
