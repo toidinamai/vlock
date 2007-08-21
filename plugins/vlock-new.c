@@ -27,6 +27,8 @@
 
 #include "vlock_plugin.h"
 
+const char *before[] = { "vlock-new", NULL };
+
 /* name of the virtual console device */
 #ifdef __FreeBSD__
 #define CONSOLE "/dev/ttyv0"

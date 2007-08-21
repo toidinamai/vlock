@@ -17,6 +17,8 @@
 
 #include "vlock_plugin.h"
 
+const char *after[] = { "vlock-all", NULL };
+
 #define SYSRQ_PATH "/proc/sys/kernel/sysrq"
 #define SYSRQ_DISABLE_VALUE "0\n"
 
