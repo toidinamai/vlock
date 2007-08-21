@@ -24,6 +24,9 @@ typedef int (*vlock_hook_fn)(void **);
 /* vlock plugin */
 struct plugin {
   char *path;
+  char *name;
+  char **before;
+  char **after;
   vlock_hook_fn hooks[NR_HOOKS];
   void *dl_handle;
   void *ctx;
@@ -43,9 +46,14 @@ int load_plugin(const char *name, const char *plugin_dir) {
 
   new->ctx = NULL;
   new->path = NULL;
+  new->name = NULL;
 
   /* format the plugin path */
   if (asprintf(&new->path, "%s/%s.so", plugin_dir, name) < 0)
+    goto err;
+
+  /* remember the name */
+  if (asprintf(&new->name, "%s", name) < 0)
     goto err;
 
   /* load the plugin */
@@ -65,6 +73,10 @@ int load_plugin(const char *name, const char *plugin_dir) {
     }
   }
 
+  /* load dependencies */
+  new->before = dlsym(new->dl_handle, "before");
+  new->after = dlsym(new->dl_handle, "after");
+
   /* add this plugin to the list */
   if (first == NULL) {
     first = last = new;
@@ -81,13 +93,15 @@ int load_plugin(const char *name, const char *plugin_dir) {
 
 err:
   free(new->path);
+  free(new->name);
   free(new);
 
   return -1;
 }
 
 int resolve_dependencies(void) {
-  return 0;
+  fprintf(stderr, "vlock-plugins: resolving dependencies is not implemented\n");
+  return -1;
 }
 
 void unload_plugins(void) {
@@ -95,6 +109,7 @@ void unload_plugins(void) {
     void *tmp = first->next;
     (void) dlclose(first->dl_handle);
     free(first->path);
+    free(first->name);
     free(first);
     first = tmp;
   }
