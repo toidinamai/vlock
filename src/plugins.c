@@ -162,36 +162,36 @@ void unload_plugins(void) {
 }
 
 int plugin_hook(unsigned int hook) {
-  struct plugin *current;
+  struct plugin *p;
   int result;
 
   if (hook == HOOK_VLOCK_START || hook == HOOK_VLOCK_SAVE) {
-    for (current = first; current != NULL; current = current->next) {
-      if (current->hooks[hook] == NULL)
+    for (p = first; p != NULL; p = p->next) {
+      if (p->hooks[hook] == NULL)
         continue;
 
-      result = current->hooks[hook](&current->ctx);
+      result = p->hooks[hook](&p->ctx);
 
       if (result != 0) {
         if (hook == HOOK_VLOCK_START)
           return result;
         else if (hook == HOOK_VLOCK_SAVE)
           /* don't call again */
-          current->hooks[hook] = NULL;
+          p->hooks[hook] = NULL;
       }
     }
   }
   else if (hook == HOOK_VLOCK_END || hook == HOOK_VLOCK_SAVE_ABORT) {
-    for (current = last; current != NULL; current = current->previous) {
-      if (current->hooks[hook] == NULL)
+    for (p = last; p != NULL; p = p->previous) {
+      if (p->hooks[hook] == NULL)
         continue;
 
-      result = current->hooks[hook](&current->ctx);
+      result = p->hooks[hook](&p->ctx);
 
       if (result != 0 && hook == HOOK_VLOCK_SAVE_ABORT) {
         /* don't call again */
-        current->hooks[hook] = NULL;
-        current->hooks[HOOK_VLOCK_SAVE] = NULL;
+        p->hooks[hook] = NULL;
+        p->hooks[HOOK_VLOCK_SAVE] = NULL;
       }
     }
   }
