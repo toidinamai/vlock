@@ -8,6 +8,7 @@
 #include <dlfcn.h>
 #include <string.h>
 
+#include "vlock.h"
 #include "plugins.h"
 
 /* hook names */
@@ -50,6 +51,9 @@ struct plugin {
   /* dependencies */
   const char *(*deps[NR_DEPENDENCIES])[];
 
+  /* is this plugin required by an other plugin? */
+  int required;
+
   /* plugin hook functions */
   vlock_hook_fn hooks[NR_HOOKS];
 
@@ -67,17 +71,61 @@ struct plugin {
 static struct plugin *first = NULL;
 static struct plugin *last = NULL;
 
-int load_plugin(const char *name, const char *plugin_dir) {
+static void add_plugin(struct plugin *p) {
+  if (first == NULL) {
+    first = last = p;
+    p->previous = NULL;
+    p->next = NULL;
+  } else {
+    last->next = p;
+    p->previous = last;
+    p->next = NULL;
+    last = p;
+  }
+}
+
+static void remove_plugin(struct plugin *p) {
+  if (p->previous != NULL && p->next != NULL) {
+    /* p is somewhere in the middle */
+    p->previous->next = p->next;
+    p->next->previous = p->previous;
+  } else if (p->next != NULL) {
+    /* p is first */
+    first = p->next;
+    p->next->previous = NULL;
+  } else if (p->previous != NULL) {
+    /* p is last */
+    last = p->previous;
+    p->previous->next = NULL;
+  } else {
+    /* p is last and first */
+    first = last = NULL;
+  }
+}
+
+static struct plugin *get_plugin(const char *name) {
+  struct plugin *p;
+
+  for (p = first; p != NULL; p = p->next) {
+    if (strcmp(name, p->name) == 0)
+      return p;
+  }
+
+  return NULL;
+}
+
+static struct plugin *open_plugin(const char *name, const char *plugin_dir) {
   struct plugin *new;
   int i;
 
   /* allocate a new plugin object */
   if ((new = malloc(sizeof *new)) == NULL)
-    return -1;
+    return NULL;
 
   new->ctx = NULL;
   new->path = NULL;
   new->name = NULL;
+  new->required = 0;
 
   /* format the plugin path */
   if (asprintf(&new->path, "%s/%s.so", plugin_dir, name) < 0)
@@ -105,62 +153,34 @@ int load_plugin(const char *name, const char *plugin_dir) {
     new->deps[i] = dlsym(new->dl_handle, dependency_names[i]);
   }
 
-  /* add this plugin to the list */
-  if (first == NULL) {
-    first = last = new;
-    new->previous = NULL;
-    new->next = NULL;
-  } else {
-    last->next = new;
-    new->previous = last;
-    new->next = NULL;
-    last = new;
-  }
-
-  return 0;
+  return new;
 
 err:
   free(new->path);
   free(new->name);
   free(new);
 
-  return -1;
+  return NULL;
 }
 
-static int is_loaded(const char *name) {
-  struct *plugin *p;
+int load_plugin(const char *name, const char *plugin_dir) {
+  struct plugin *p;
 
-  for (p = first; p != NULL; p = p->next) {
-    if (strcmp(name, p->name) == 0)
-      return 1;
-  }
-
-  return 0;
-}
-
-int resolve_dependencies(void) {
-  fprintf(stderr, "vlock-plugins: resolving dependencies is not implemented\n");
-  return -1;
-}
-
-void unload_plugin(struct plugin *p) {
-  if (p->previous != NULL && p->next != NULL) {
-    /* p is somewhere in the middle */
-    p->previous->next = p->next;
-    p->next->previous = p->previous;
-  } else if (p->next != NULL) {
-    /* p is first */
-    first = p->next;
-    p->next->previous = NULL;
-  } else if (p->previous != NULL) {
-    /* p is last */
-    last = p->previous;
-    p->previous->next = NULL;
+  if ((p = get_plugin(name)) != NULL) {
+    return 0;
   } else {
-    /* p is last and first */
-    first = last = NULL;
-  }
+    p = open_plugin(name, plugin_dir);
 
+    if (p == NULL)
+      return -1;
+
+    add_plugin(p);
+    return 0;
+  }
+}
+
+static void unload_plugin(struct plugin *p) {
+  remove_plugin(p);
   (void) dlclose(p->dl_handle);
   free(p->path);
   free(p->name);
@@ -170,6 +190,60 @@ void unload_plugin(struct plugin *p) {
 void unload_plugins(void) {
   while (first != NULL)
     unload_plugin(first);
+}
+
+static int sort_plugins(void);
+
+int resolve_dependencies(void) {
+  struct plugin *p;
+  int i;
+
+  for (p = first; p != NULL; p = p->next) {
+    /* load plugins that are required */
+    for (i = 0; p->deps[REQUIRES] != NULL && (*p->deps[REQUIRES])[i] != NULL; i++) {
+      struct plugin *d = open_plugin((*p->deps[REQUIRES])[i], VLOCK_PLUGIN_DIR);
+
+      if (d == NULL)
+        return -1;
+
+      d->required = 1;
+      add_plugin(d);
+    }
+
+    /* fail if a plugins that is needed is not loaded */
+    for (i = 0; p->deps[NEEDS] != NULL && (*p->deps[NEEDS])[i] != NULL; i++) {
+      if (get_plugin((*p->deps[NEEDS])[i]) == NULL) {
+        fprintf(stderr, "vlock-plugins: %s does not work without %s", p->name, (*p->deps[NEEDS])[i]);
+        return -1;
+      }
+    }
+
+    /* unload plugins whose dependencies are not loaded */
+    for (i = 0; p->deps[DEPENDS] != NULL && (*p->deps[DEPENDS])[i] != NULL; i++) {
+      if (get_plugin((*p->deps[DEPENDS])[i]) == NULL) {
+        if (p->required) {
+          fprintf(stderr, "vlock-plugins: %s does not work without %s", p->name, (*p->deps[DEPENDS])[i]);
+          return -1;
+        }
+
+        unload_plugin(p);
+      }
+    }
+
+    for (i = 0; p->deps[CONFLICTS] != NULL && (*p->deps[CONFLICTS])[i] != NULL; i++) {
+      if (get_plugin((*p->deps[CONFLICTS])[i]) != NULL) {
+        fprintf(stderr, "vlock-plugins: %s and %s cannot be loaded at the same time\n", p->name, (*p->deps[CONFLICTS])[i]);
+        return -1;
+      }
+    }
+  }
+
+  return sort_plugins();
+}
+
+static int sort_plugins(void) {
+  fprintf(stderr, "vlock-plugins: resolving dependencies is not fully implemented\n");
+  return -1;
 }
 
 int plugin_hook(unsigned int hook) {
