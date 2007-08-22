@@ -23,8 +23,9 @@ const char const *hook_names[] = {
 #define REQUIRES 2
 #define NEEDS 3
 #define DEPENDS 4
+#define CONFLICTS 5
 
-#define NR_DEPENDENCIES 5
+#define NR_DEPENDENCIES 6
 
 /* dependency names */
 const char const *dependency_names[] = {
@@ -33,6 +34,7 @@ const char const *dependency_names[] = {
   "requires",
   "needs",
   "depends",
+  "conflicts",
 };
 
 /* function type for hooks */
