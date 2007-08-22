@@ -127,6 +127,17 @@ err:
   return -1;
 }
 
+static int is_loaded(const char *name) {
+  struct *plugin *p;
+
+  for (p = first; p != NULL; p = p->next) {
+    if (strcmp(name, p->name) == 0)
+      return 1;
+  }
+
+  return 0;
+}
+
 int resolve_dependencies(void) {
   fprintf(stderr, "vlock-plugins: resolving dependencies is not implemented\n");
   return -1;
