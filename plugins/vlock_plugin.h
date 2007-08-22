@@ -24,6 +24,12 @@ extern const char *needs[];
  */
 extern const char *depends[];
 
+/* A plugin might define thes array to indicate
+ * that it is not possible to have it loaded at
+ * the same time as any of the other plugins
+ * listed. */
+extern const char *conflicts[];
+
 /* This hook is invoked at the start of vlock.
  * It is provided with a reference to a pointer
  * to NULL that may be changed to point to an
