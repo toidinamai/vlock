@@ -1,3 +1,29 @@
+/* A plugin might define these arrays to indicate
+ * that its must always be called before or after
+ * the ones listed in the respective arrays.  If
+ * set, the arrays must be terminated by NULL.
+ */
+extern const char *before[];
+extern const char *after[];
+
+/* A plugin might define this array to indicate
+ * that the listed plugins should also be loaded
+ * when this plugin is invoked.
+ */
+extern const char *requires[];
+
+/* A plugin might define this array to indicate
+ * that it will fail if the named plugins are not
+ * also loaded.
+ */
+extern const char *needs[];
+
+/* A plugin might define this array to indicate
+ * that it should be (silently) unloaded if the
+ * named plugins are not also loaded.
+ */
+extern const char *depends[];
+
 /* This hook is invoked at the start of vlock.
  * It is provided with a reference to a pointer
  * to NULL that may be changed to point to an
