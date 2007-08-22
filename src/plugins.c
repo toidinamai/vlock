@@ -11,11 +11,28 @@
 #include "plugins.h"
 
 /* hook names */
-const char const *hook_names[NR_HOOKS] = {
+const char const *hook_names[] = {
   "vlock_start",
   "vlock_end",
   "vlock_save",
   "vlock_save_abort",
+};
+
+#define BEFORE 0
+#define AFTER 1
+#define REQUIRES 2
+#define NEEDS 3
+#define DEPENDS 4
+
+#define NR_DEPENDENCIES 5
+
+/* dependency names */
+const char const *dependency_names[] = {
+  "before",
+  "after",
+  "requires",
+  "needs",
+  "depends",
 };
 
 /* function type for hooks */
@@ -23,13 +40,24 @@ typedef int (*vlock_hook_fn)(void **);
 
 /* vlock plugin */
 struct plugin {
-  char *path;
+  /* name of the plugin */
   char *name;
-  char *(*before)[];
-  char *(*after)[];
+  /* path to the shared object file */
+  char *path;
+
+  /* dependencies */
+  const char *(*dependencies[NR_DEPENDENCIES])[];
+
+  /* plugin hook functions */
   vlock_hook_fn hooks[NR_HOOKS];
-  void *dl_handle;
+
+  /* plugin hook context */
   void *ctx;
+
+  /* dl handle */
+  void *dl_handle;
+
+  /* linked list pointers */
   struct plugin *next;
   struct plugin *previous;
 };
@@ -39,6 +67,7 @@ static struct plugin *last = NULL;
 
 int load_plugin(const char *name, const char *plugin_dir) {
   struct plugin *new;
+  int i;
 
   /* allocate a new plugin object */
   if ((new = malloc(sizeof *new)) == NULL)
@@ -65,17 +94,14 @@ int load_plugin(const char *name, const char *plugin_dir) {
   }
 
   /* load the hooks, unimplemented hooks are NULL */
-  {
-    int i;
-
-    for (i = 0; i < NR_HOOKS; i++) {
-      *(void **) (&new->hooks[i]) = dlsym(new->dl_handle, hook_names[i]);
-    }
+  for (i = 0; i < NR_HOOKS; i++) {
+    *(void **) (&new->hooks[i]) = dlsym(new->dl_handle, hook_names[i]);
   }
 
   /* load dependencies */
-  new->before = dlsym(new->dl_handle, "before");
-  new->after = dlsym(new->dl_handle, "after");
+  for (i = 0; i < NR_DEPENDENCIES; i++) {
+    new->dependencies[i] = dlsym(new->dl_handle, dependency_names[i]);
+  }
 
   /* add this plugin to the list */
   if (first == NULL) {
