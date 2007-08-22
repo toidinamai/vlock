@@ -132,15 +132,33 @@ int resolve_dependencies(void) {
   return -1;
 }
 
-void unload_plugins(void) {
-  while (first != NULL) {
-    void *tmp = first->next;
-    (void) dlclose(first->dl_handle);
-    free(first->path);
-    free(first->name);
-    free(first);
-    first = tmp;
+void unload_plugin(struct plugin *p) {
+  if (p->previous != NULL && p->next != NULL) {
+    /* p is somewhere in the middle */
+    p->previous->next = p->next;
+    p->next->previous = p->previous;
+  } else if (p->next != NULL) {
+    /* p is first */
+    first = p->next;
+    p->next->previous = NULL;
+  } else if (p->previous != NULL) {
+    /* p is last */
+    last = p->previous;
+    p->previous->next = NULL;
+  } else {
+    /* p is last and first */
+    first = last = NULL;
   }
+
+  (void) dlclose(p->dl_handle);
+  free(p->path);
+  free(p->name);
+  free(p);
+}
+
+void unload_plugins(void) {
+  while (first != NULL)
+    unload_plugin(first);
 }
 
 int plugin_hook(unsigned int hook) {
