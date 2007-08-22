@@ -28,6 +28,7 @@
 #include "vlock_plugin.h"
 
 const char *before[] = { "vlock-all", NULL };
+const char *requires[] = { "vlock-all", NULL };
 
 /* name of the virtual console device */
 #ifdef __FreeBSD__
