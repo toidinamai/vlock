@@ -48,7 +48,7 @@ struct plugin {
   char *path;
 
   /* dependencies */
-  const char *(*dependencies[NR_DEPENDENCIES])[];
+  const char *(*deps[NR_DEPENDENCIES])[];
 
   /* plugin hook functions */
   vlock_hook_fn hooks[NR_HOOKS];
@@ -102,7 +102,7 @@ int load_plugin(const char *name, const char *plugin_dir) {
 
   /* load dependencies */
   for (i = 0; i < NR_DEPENDENCIES; i++) {
-    new->dependencies[i] = dlsym(new->dl_handle, dependency_names[i]);
+    new->deps[i] = dlsym(new->dl_handle, dependency_names[i]);
   }
 
   /* add this plugin to the list */
