@@ -187,6 +187,14 @@ static void unload_plugin(struct plugin *p) {
   free(p);
 }
 
+void disable_plugin(struct plugin *p) {
+  int i;
+
+  for (i = 0; i < NR_HOOKS; i++) {
+    p->hooks[i] = NULL;
+  }
+}
+
 void unload_plugins(void) {
   while (first != NULL)
     unload_plugin(first);
@@ -226,7 +234,7 @@ int resolve_dependencies(void) {
           return -1;
         }
 
-        unload_plugin(p);
+        disable_plugin(p);
       }
     }
 
