@@ -99,18 +99,20 @@ err:
   return NULL;
 }
 
-int load_plugin(const char *name, const char *plugin_dir) {
-  if (get_plugin(name) != NULL) {
-    return 0;
-  } else {
-    struct plugin *p = open_plugin(name, plugin_dir);
+static struct plugin *__load_plugin(const char *name, const char *plugin_dir) {
+  struct plugin *p = get_plugin(name);
 
-    if (p == NULL)
-      return -1;
+  if (p != NULL)
+    return p;
 
+  p = open_plugin(name, plugin_dir);
     plugins = g_list_append(plugins, p);
-    return 0;
-  }
+
+  return p;
+}
+
+int load_plugin(const char *name, const char *plugin_dir) {
+  return - (__load_plugin(name, plugin_dir) == NULL);
 }
 
 static void unload_plugin(struct plugin *p) {
@@ -129,7 +131,77 @@ void unload_plugins(void) {
 static int sort_plugins(void);
 
 int resolve_dependencies(void) {
+  GList *required_plugins = NULL;
+
+  /* load plugins that are required */
+  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+    struct plugin *p = item->data;
+    const char *(*requires)[] = dlsym(p->dl_handle, "requires");
+
+    for (int i = 0; requires != NULL && (*requires)[i] != NULL; i++) {
+      struct plugin *d = __load_plugin((*requires)[i], VLOCK_PLUGIN_DIR);
+
+      if (d == NULL)
+        goto err;
+
+      required_plugins = g_list_append(required_plugins, d);
+    }
+  }
+
+  /* fail if a plugins that is needed is not loaded */
+  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+    struct plugin *p = item->data;
+    const char *(*needs)[] = dlsym(p->dl_handle, "needs");
+
+    for (int i = 0; needs != NULL && (*needs)[i] != NULL; i++) {
+      if (get_plugin((*needs)[i]) == NULL) {
+        fprintf(stderr, "vlock-plugins: %s does not work without %s\n", p->name, (*needs)[i]);
+        goto err;
+      }
+    }
+  }
+
+  /* unload plugins whose prerequisites are not present */
+  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+    struct plugin *p = item->data;
+    const char *(*depends)[] = dlsym(p->dl_handle, "depends");
+
+    for (int i = 0; depends != NULL && (*depends)[i] != NULL; i++) {
+      struct plugin *d = get_plugin((*depends)[i]);
+
+      if (d != NULL)
+        continue;
+
+      if (g_list_find(required_plugins, p) != NULL) {
+        fprintf(stderr, "vlock-plugins: %s does not work without %s\n", p->name, (*depends)[i]);
+        goto err;
+      }
+      else {
+        unload_plugin(p); 
+        break;
+      }
+    }
+  }
+
+  g_list_free(required_plugins);
+
+  /* fail if conflicting plugins are loaded */
+  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+    struct plugin *p = item->data;
+    const char *(*conflicts)[] = dlsym(p->dl_handle, "conflicts");
+
+    for (int i = 0; conflicts != NULL && (*conflicts)[i] != NULL; i++) {
+      if (get_plugin((*conflicts)[i]) != NULL) {
+        fprintf(stderr, "vlock-plugins: %s and %s cannot be loaded at the same time\n", p->name, (*conflicts)[i]);
+      }
+    }
+  }
+
   return sort_plugins();
+
+err:
+  g_list_free(required_plugins);
+  return -1;
 }
 
 static int sort_plugins(void) {
