@@ -43,15 +43,17 @@ struct plugin {
 
 GList *plugins = NULL;
 
+static gint compare_name(gconstpointer p, gconstpointer n) {
+  return strcmp(((struct plugin *)p)->name, (const char *)n);
+}
+
 static struct plugin *get_plugin(const char *name) {
-  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
-    struct plugin *p = item->data;
+  GList *item = g_list_find_custom(plugins, name, &compare_name);
 
-    if (strcmp(name, p->name) == 0)
-      return p;
-  }
-
-  return NULL;
+  if (item != NULL)
+    return item->data;
+  else
+    return NULL;
 }
 
 static struct plugin *open_plugin(const char *name, const char *plugin_dir) {
