@@ -1,4 +1,4 @@
-/* vlock-current.c -- locking routine for vlock,
+/* vlock-main.c -- main routine for vlock,
  *                    the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
@@ -185,7 +185,8 @@ int main(int argc, char *const argv[]) {
     goto out;
   }
 #else
-  // call vlock-new and vlock-all statically
+  /* call vlock-new and vlock-all statically */
+#error "Not implemented."
 #endif
 
   for (;;) {
@@ -236,11 +237,14 @@ int main(int argc, char *const argv[]) {
 
 #ifdef USE_PLUGINS
   plugin_hook(HOOK_VLOCK_END);
+#else
+  /* call vlock-new and vlock-all statically */
+#error "Not implemented."
 #endif
 
+#ifdef USE_PLUGINS
 out:
 
-#ifdef USE_PLUGINS
   unload_plugins();
 #endif
 
