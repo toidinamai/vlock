@@ -204,6 +204,45 @@ err:
   return -1;
 }
 
+struct edge {
+  struct plugin *predecessor;
+  struct plugin *successor;
+};
+
+static GList *get_edges(void) {
+  GList *edges = NULL;
+
+  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+    struct plugin *p = item->data;
+    const char *(*successors)[] = dlsym(p->dl_handle, "after");
+    const char *(*predecessors)[] = dlsym(p->dl_handle, "before");
+
+    for (int i = 0; successors != NULL && (*successors)[i] != NULL; i++) {
+      struct plugin *successor = get_plugin((*successors)[i]);
+
+      if (successor != NULL) {
+        struct edge *edge = malloc(sizeof (struct edge));
+        edge->predecessor = p;
+        edge->successor = successor;
+        edges = g_list_append(edges, edge);
+      }
+    }
+
+    for (int i = 0; predecessors != NULL && (*predecessors)[i] != NULL; i++) {
+      struct plugin *predecessor = get_plugin((*predecessors)[i]);
+
+      if (predecessor != NULL) {
+        struct edge *edge = malloc(sizeof (struct edge));
+        edge->predecessor = predecessor;
+        edge->successor = p;
+        edges = g_list_append(edges, edge);
+      }
+    }
+  }
+
+  return edges;
+}
+
 static int sort_plugins(void) {
   fprintf(stderr, "vlock-plugins: resolving dependencies is not fully implemented\n");
   return -1;
