@@ -20,11 +20,11 @@
 #include <errno.h>
 #include <signal.h>
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #include <sys/consio.h>
 #else
 #include <sys/vt.h>
-#endif /* __FreeBSD__ */
+#endif
 
 #include "vlock_plugin.h"
 

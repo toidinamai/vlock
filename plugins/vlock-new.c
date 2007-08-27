@@ -19,11 +19,11 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #include <sys/consio.h>
 #else
 #include <sys/vt.h>
-#endif /* __FreeBSD__ */
+#endif
 
 #include "vlock_plugin.h"
 
@@ -31,13 +31,13 @@ const char *before[] = { "vlock-all", NULL };
 const char *requires[] = { "vlock-all", NULL };
 
 /* name of the virtual console device */
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #define CONSOLE "/dev/ttyv0"
 #else
 #define CONSOLE "/dev/tty0"
 #endif
 /* template for the device of a given virtual console */
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #define VTNAME "/dev/ttyv%x"
 #else
 #define VTNAME "/dev/tty%d"
@@ -46,7 +46,7 @@ const char *requires[] = { "vlock-all", NULL };
 /* Get the currently active console from the given
  * console file descriptor.  Returns console number
  * (starting from 1) on success, -1 on error. */
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined (__FreeBSD_kernel__)
 static int get_active_console(int consfd) {
   int n;
 
@@ -215,7 +215,7 @@ int vlock_end(void **ctx_ptr) {
   if (activate_console(ctx->consfd, ctx->old_vtno) < 0)
     perror("vlock-new: could not activate previous console");
 
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__)
   /* deallocate virtual terminal */
   if (ioctl(ctx->consfd, VT_DISALLOCATE, ctx->new_vtno) < 0)
     perror("vlock-new: could not disallocate console");
