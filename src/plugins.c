@@ -336,7 +336,7 @@ int plugin_hook(unsigned int hook) {
     }
   }
   else if (hook == HOOK_VLOCK_END || hook == HOOK_VLOCK_SAVE_ABORT) {
-    for (GList *item = g_list_last(plugins); item != NULL; item = g_list_next(item)) {
+    for (GList *item = g_list_last(plugins); item != NULL; item = g_list_previous(item)) {
       struct plugin *p = item->data;
       if (p->hooks[hook] == NULL)
         continue;
