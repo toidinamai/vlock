@@ -243,6 +243,18 @@ static GList *get_edges(void) {
   return edges;
 }
 
+static GList *get_zeros(GList *edges) {
+  GList *zeros = g_list_copy(plugins);
+
+  for (GList *item = g_list_first(edges); item != NULL && g_list_length(zeros) > 0; item = g_list_next(item)) {
+    struct edge *edge = item->data;
+
+    zeros = g_list_remove(zeros, edge->successor);
+  }
+
+  return zeros;
+}
+
 static int sort_plugins(void) {
   fprintf(stderr, "vlock-plugins: resolving dependencies is not fully implemented\n");
   return -1;
