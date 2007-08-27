@@ -278,7 +278,10 @@ static int sort_plugins(void) {
     sorted_plugins = g_list_append(sorted_plugins, p);
     zeros = g_list_remove(zeros, p);
 
-    for (GList *item = g_list_first(edges); item != NULL; item = g_list_next(item)) {
+    /* make copy to allow modifying while iterating */
+    GList *edges_ = g_list_copy(edges);
+
+    for (GList *item = g_list_first(edges_); item != NULL; item = g_list_next(item)) {
       struct edge *edge = item->data;
 
       if (edge->predecessor != p)
@@ -289,12 +292,8 @@ static int sort_plugins(void) {
       if (is_zero(edge->successor, edges))
         zeros = g_list_append(zeros, edge->successor);
     }
-  }
 
-  for (GList *item = g_list_first(sorted_plugins); item != NULL; item = g_list_next(item)) {
-    struct plugin *p = item->data;
-    fprintf(stderr, "%s\n", p->name);
-    return -1;
+    g_list_free(edges_);
   }
 
   if (g_list_length(edges) == 0) {
