@@ -210,6 +210,7 @@ int resolve_dependencies(void) {
     for (int i = 0; conflicts != NULL && (*conflicts)[i] != NULL; i++) {
       if (get_plugin((*conflicts)[i]) != NULL) {
         fprintf(stderr, "vlock-plugins: %s and %s cannot be loaded at the same time\n", p->name, (*conflicts)[i]);
+        return -1;
       }
     }
   }
