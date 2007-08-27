@@ -97,10 +97,7 @@ static char *get_console_name(int n) {
 static int activate_console(int consfd, int vtno) {
   int c = ioctl(consfd, VT_ACTIVATE, vtno);
 
-  if (c < 0)
-    return c;
-  else
-    return ioctl(consfd, VT_WAITACTIVE, vtno);
+  return c < 0 ? c : ioctl(consfd, VT_WAITACTIVE, vtno);
 }
 
 struct new_console_context {
@@ -112,87 +109,79 @@ struct new_console_context {
   int saved_stderr;
 };
 
-/* Run vlock-all on a new console. */
+/* Run switch to a new console and redirect stdio there. */
 int vlock_start(void **ctx_ptr) {
   struct new_console_context *ctx;
   int vtfd;
   char *vtname;
 
-  /* allocate the context */
+  /* Allocate the context. */
   if ((ctx = malloc(sizeof *ctx)) == NULL)
     return -1;
 
-  /* try stdin first */
+  /* Try stdin first. */
   ctx->consfd = dup(STDIN_FILENO);
 
-  /* get the number of the currently active console */
+  /* Get the number of the currently active console. */
   ctx->old_vtno = get_active_console(ctx->consfd);
 
   if (ctx->old_vtno < 0) {
-    /* stdin is does not a virtual console */
+    /* stdin is does not a virtual console. */
     (void) close(ctx->consfd);
 
     /* XXX: add optional PAM check here */
 
-    /* open the virtual console directly */
+    /* Open the virtual console directly. */
     if ((ctx->consfd = open(CONSOLE, O_RDWR)) < 0) {
       perror("vlock-new: cannot open virtual console");
       goto err;
     }
 
-    /* get the number of the currently active console, again */
+    /* Get the number of the currently active console, again. */
     ctx->old_vtno = get_active_console(ctx->consfd);
 
     if (ctx->old_vtno < 0) {
-      perror("vlock-new: could not find out currently active console");
+      perror("vlock-new: could not get the currently active console");
       goto err;
     }
   }
 
-  /* get a free virtual terminal number */
+  /* Get a free virtual terminal number. */
   if (ioctl(ctx->consfd, VT_OPENQRY, &ctx->new_vtno) < 0)  {
     perror("vlock-new: could not find a free virtual terminal");
     goto err;
   }
 
-  /* get the device name for the new virtual console */
+  /* Get the device name for the new virtual console. */
   vtname = get_console_name(ctx->new_vtno);
 
-  /* open the free virtual terminal */
+  /* Open the free virtual terminal. */
   if ((vtfd = open(vtname, O_RDWR)) < 0) {
     perror("vlock-new: cannot open new console");
     goto err;
   }
 
-  /* work around stupid X11 bug */
-  if (getenv("DISPLAY") != NULL)
-    sleep(1);
+  /* Work around stupid X11 bug:  When switching immediately after the command
+   * is entered, the enter button may get stuck. */
+  if (getenv("DISPLAY") != NULL) sleep(1);
 
-  /* switch to the virtual terminal */
+  /* Switch to the new virtual terminal. */
   if (activate_console(ctx->consfd, ctx->new_vtno) < 0) {
     perror("vlock-new: could not activate new terminal");
     goto err;
   }
 
-  /* save the stdio file descriptors */
+  /* Save the stdio file descriptors. */
   ctx->saved_stdin = dup(STDIN_FILENO);
   ctx->saved_stdout = dup(STDOUT_FILENO);
   ctx->saved_stderr = dup(STDERR_FILENO);
 
-  /* redirect stdio to virtual terminal */
+  /* Redirect stdio to virtual terminal. */
   (void) dup2(vtfd, STDIN_FILENO);
   (void) dup2(vtfd, STDOUT_FILENO);
   (void) dup2(vtfd, STDERR_FILENO);
 
-#if 0
-  /* make virtual terminal controlling tty of this process */
-  if (ioctl(vtfd, TIOCSCTTY, 1) < 0) {
-    perror("vlock-new: could not set controlling terminal");
-    _exit(111);
-  }
-#endif
-
-  /* close virtual terminal file descriptor */
+  /* Close virtual terminal file descriptor. */
   (void) close(vtfd);
 
   *ctx_ptr = ctx;
@@ -203,20 +192,21 @@ err:
   return -1;
 }
 
+/* Redirect stdio back und switch to the previous console. */
 int vlock_end(void **ctx_ptr) {
   struct new_console_context *ctx = *ctx_ptr;
 
-  /* restore saved stdio filedescriptors */
+  /* Restore saved stdio file descriptors. */
   (void) dup2(ctx->saved_stdin, STDIN_FILENO);
   (void) dup2(ctx->saved_stdout, STDOUT_FILENO);
   (void) dup2(ctx->saved_stderr, STDERR_FILENO);
 
-  /* switch back to former virtual terminal */
+  /* Switch back to previous virtual terminal. */
   if (activate_console(ctx->consfd, ctx->old_vtno) < 0)
     perror("vlock-new: could not activate previous console");
 
 #if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__)
-  /* deallocate virtual terminal */
+  /* Deallocate virtual terminal. */
   if (ioctl(ctx->consfd, VT_DISALLOCATE, ctx->new_vtno) < 0)
     perror("vlock-new: could not disallocate console");
 #endif
