@@ -167,10 +167,14 @@ int resolve_dependencies(void) {
     const char *(*needs)[] = dlsym(p->dl_handle, "needs");
 
     for (int i = 0; needs != NULL && (*needs)[i] != NULL; i++) {
-      if (get_plugin((*needs)[i]) == NULL) {
+      struct plugin *d = get_plugin((*needs)[i]); 
+
+      if (d == NULL) {
         fprintf(stderr, "vlock-plugins: %s does not work without %s\n", p->name, (*needs)[i]);
         goto err;
       }
+
+      required_plugins = g_list_append(required_plugins, d);
     }
   }
 
