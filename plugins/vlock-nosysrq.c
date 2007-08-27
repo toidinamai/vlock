@@ -17,7 +17,7 @@
 
 #include "vlock_plugin.h"
 
-const char *after[] = { "vlock-all", NULL };
+const char *before[] = { "vlock-new", "vlock-all", NULL };
 const char *depends[] = { "vlock-all", NULL };
 
 #define SYSRQ_PATH "/proc/sys/kernel/sysrq"
