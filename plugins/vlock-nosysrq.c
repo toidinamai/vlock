@@ -13,7 +13,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "vlock_plugin.h"
 
@@ -41,7 +43,10 @@ int vlock_start(void **ctx_ptr) {
   /* Open the SysRq sysctl file for reading and writing. */
   if ((ctx->file = fopen(SYSRQ_PATH, "r+")) == NULL) {
     perror("vlock-nosysrq: could not open '" SYSRQ_PATH "'");
-    goto err;
+    if (errno == ENOENT)
+      goto nothing_to_do;
+    else
+      goto err;
   }
 
   /* Read the old value. */
@@ -56,6 +61,10 @@ int vlock_start(void **ctx_ptr) {
     goto err;
   }
 
+  /* Check if SysRq was already disabled. */
+  if (strcmp(SYSRQ_DISABLE_VALUE, ctx->value) == 0)
+    goto nothing_to_do;
+
   /* Disable SysRq. */
   if (fseek(ctx->file, 0, SEEK_SET) < 0
       || ftruncate(fileno(ctx->file), 0) < 0
@@ -66,6 +75,11 @@ int vlock_start(void **ctx_ptr) {
   }
 
   *ctx_ptr = ctx;
+  return 0;
+
+nothing_to_do:
+  free(ctx);
+  *ctx_ptr = NULL;
   return 0;
 
 err:
