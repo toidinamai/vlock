@@ -307,6 +307,8 @@ static int sort_plugins(void) {
 
       if (is_zero(edge->successor, edges))
         zeros = g_list_append(zeros, edge->successor);
+
+      free(edge);
     }
   }
 
@@ -322,11 +324,11 @@ static int sort_plugins(void) {
     for (GList *item = g_list_first(edges); item != NULL; item = g_list_next(item)) {
       struct edge *edge = item->data;
       fprintf(stderr, "\t%s\tmust come before\t%s\n", edge->predecessor->name, edge->successor->name);
+      free(edge);
     }
 
     g_list_free(sorted_plugins);
     g_list_free(edges);
-    g_list_free(zeros);
 
     return -1;
   }
