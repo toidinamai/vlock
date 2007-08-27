@@ -10,6 +10,6 @@ int resolve_dependencies(void);
 #define NR_HOOKS 4
 #define MAX_HOOK HOOK_VLOCK_SAVE_ABORT
 
-extern const char const *hook_names[NR_HOOKS];
+extern const char *hook_names[NR_HOOKS];
 
 int plugin_hook(unsigned int hook);

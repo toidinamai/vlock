@@ -24,7 +24,7 @@ struct timespec;
  * the function returns 0.  The timeout is passed to the prompt functions below
  * if they are called.
  */
-int auth(const char *user, const struct timespec *timeout);
+int auth(const char *user, struct timespec *timeout);
 
 /* Prompt for a string with the given message.  The string is returned if
  * successfully read, otherwise NULL.  The caller is responsible for freeing

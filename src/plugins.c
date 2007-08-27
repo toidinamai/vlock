@@ -14,7 +14,7 @@
 #include "plugins.h"
 
 /* hook names */
-const char const *hook_names[] = {
+const char *hook_names[] = {
   "vlock_start",
   "vlock_end",
   "vlock_save",

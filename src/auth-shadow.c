@@ -23,8 +23,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <termios.h>
 
 #include <sys/mman.h>
 
@@ -32,7 +30,7 @@
 
 #include "vlock.h"
 
-int auth(const char *user, const struct timespec *timeout) {
+int auth(const char *user, struct timespec *timeout) {
   char *pwd;
   char *cryptpw;
   char *msg = NULL;
