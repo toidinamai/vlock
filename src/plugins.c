@@ -246,7 +246,7 @@ static GList *get_edges(void) {
 static GList *get_zeros(GList *edges) {
   GList *zeros = g_list_copy(plugins);
 
-  for (GList *item = g_list_first(edges); item != NULL && g_list_length(zeros) > 0; item = g_list_next(item)) {
+  for (GList *item = g_list_first(edges); item != NULL && g_list_first(zeros) != NULL; item = g_list_next(item)) {
     struct edge *edge = item->data;
 
     zeros = g_list_remove(zeros, edge->successor);
@@ -255,9 +255,66 @@ static GList *get_zeros(GList *edges) {
   return zeros;
 }
 
+static int is_zero(struct plugin *p, GList *edges) {
+  for (GList *item = g_list_first(edges); item != NULL; item = g_list_next(item)) {
+    struct edge *edge = item->data;
+    if (edge->successor == p)
+      return 0;
+  }
+
+  return 1;
+}
+
 static int sort_plugins(void) {
-  fprintf(stderr, "vlock-plugins: resolving dependencies is not fully implemented\n");
-  return -1;
+  GList *edges = get_edges();
+  GList *zeros = get_zeros(edges);
+  GList *sorted_plugins = NULL;
+
+  for (GList *item = g_list_first(zeros); item != NULL; item = g_list_first(zeros)) {
+    struct plugin *p = item->data;
+
+    sorted_plugins = g_list_append(sorted_plugins, p);
+    zeros = g_list_remove(zeros, p);
+
+    for (GList *item = g_list_first(edges); item != NULL; item = g_list_next(item)) {
+      struct edge *edge = item->data;
+
+      if (edge->predecessor != p)
+        continue;
+
+      edges = g_list_remove(edges, edge);
+
+      if (is_zero(edge->successor, edges))
+        zeros = g_list_append(zeros, edge->successor);
+    }
+  }
+
+  for (GList *item = g_list_first(sorted_plugins); item != NULL; item = g_list_next(item)) {
+    struct plugin *p = item->data;
+    fprintf(stderr, "%s\n", p->name);
+    return -1;
+  }
+
+  if (g_list_length(edges) == 0) {
+    GList *tmp = plugins;
+    plugins = sorted_plugins;
+    g_list_free(tmp);
+
+    return 0;
+  } else {
+    fprintf(stderr, "vlock-plugins: circular dependencies in plugins detected:\n");
+
+    for (GList *item = g_list_first(edges); item != NULL; item = g_list_next(item)) {
+      struct edge *edge = item->data;
+      fprintf(stderr, "\t%s\tmust come before\t%s\n", edge->predecessor->name, edge->successor->name);
+    }
+
+    g_list_free(sorted_plugins);
+    g_list_free(edges);
+    g_list_free(zeros);
+
+    return -1;
+  }
 }
 
 int plugin_hook(unsigned int hook) {
