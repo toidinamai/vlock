@@ -9,5 +9,8 @@ high
 medium
 ------
 
+- get rid of glib dependency
+- factor out tsort code
+
 low
 ---
