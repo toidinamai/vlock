@@ -124,9 +124,9 @@ int main(int argc, char *const argv[]) {
 
     if (pw == NULL) {
       if (errno != 0)
-        perror("vlock-current: getpwuid() failed");
+        perror("vlock-main: getpwuid() failed");
       else
-        fprintf(stderr, "vlock-current: getpwuid() failed\n");
+        fprintf(stderr, "vlock-main: getpwuid() failed\n");
 
       exit (111);
     }
