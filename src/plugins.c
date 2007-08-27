@@ -21,25 +21,6 @@ const char const *hook_names[] = {
   "vlock_save_abort",
 };
 
-#define BEFORE 0
-#define AFTER 1
-#define REQUIRES 2
-#define NEEDS 3
-#define DEPENDS 4
-#define CONFLICTS 5
-
-#define NR_DEPENDENCIES 6
-
-/* dependency names */
-const char const *dependency_names[] = {
-  "before",
-  "after",
-  "requires",
-  "needs",
-  "depends",
-  "conflicts",
-};
-
 /* function type for hooks */
 typedef int (*vlock_hook_fn)(void **);
 
@@ -49,12 +30,6 @@ struct plugin {
   char *name;
   /* path to the shared object file */
   char *path;
-
-  /* dependencies */
-  const char *(*deps[NR_DEPENDENCIES])[];
-
-  /* is this plugin required by an other plugin? */
-  int required;
 
   /* plugin hook functions */
   vlock_hook_fn hooks[NR_HOOKS];
@@ -79,7 +54,7 @@ static struct plugin *get_plugin(const char *name) {
   return NULL;
 }
 
-static struct plugin *open_plugin(const char *name, const char *plugin_dir, int required) {
+static struct plugin *open_plugin(const char *name, const char *plugin_dir) {
   struct plugin *new;
   int i;
 
@@ -90,7 +65,6 @@ static struct plugin *open_plugin(const char *name, const char *plugin_dir, int 
   new->ctx = NULL;
   new->path = NULL;
   new->name = NULL;
-  new->required = required;
 
   /* format the plugin path */
   if (asprintf(&new->path, "%s/%s.so", plugin_dir, name) < 0)
@@ -113,11 +87,6 @@ static struct plugin *open_plugin(const char *name, const char *plugin_dir, int 
     *(void **) (&new->hooks[i]) = dlsym(new->dl_handle, hook_names[i]);
   }
 
-  /* load dependencies */
-  for (i = 0; i < NR_DEPENDENCIES; i++) {
-    new->deps[i] = dlsym(new->dl_handle, dependency_names[i]);
-  }
-
   return new;
 
 err:
@@ -132,7 +101,7 @@ int load_plugin(const char *name, const char *plugin_dir) {
   if (get_plugin(name) != NULL) {
     return 0;
   } else {
-    struct plugin *p = open_plugin(name, plugin_dir, 0);
+    struct plugin *p = open_plugin(name, plugin_dir);
 
     if (p == NULL)
       return -1;
@@ -150,14 +119,6 @@ static void unload_plugin(struct plugin *p) {
   free(p);
 }
 
-void disable_plugin(struct plugin *p) {
-  int i;
-
-  for (i = 0; i < NR_HOOKS; i++) {
-    p->hooks[i] = NULL;
-  }
-}
-
 void unload_plugins(void) {
   while (plugins != NULL)
     unload_plugin(plugins->data);
@@ -166,55 +127,6 @@ void unload_plugins(void) {
 static int sort_plugins(void);
 
 int resolve_dependencies(void) {
-  int i;
-  GList *unusable_plugins = NULL;
-
-  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
-    struct plugin *p = item->data;
-
-    /* load plugins that are required */
-    for (i = 0; p->deps[REQUIRES] != NULL && (*p->deps[REQUIRES])[i] != NULL; i++) {
-      struct plugin *d = open_plugin((*p->deps[REQUIRES])[i], VLOCK_PLUGIN_DIR, 1);
-
-      if (d == NULL)
-        return -1;
-
-      plugins = g_list_append(plugins, d);
-    }
-
-    /* fail if a plugins that is needed is not loaded */
-    for (i = 0; p->deps[NEEDS] != NULL && (*p->deps[NEEDS])[i] != NULL; i++) {
-      if (get_plugin((*p->deps[NEEDS])[i]) == NULL) {
-        fprintf(stderr, "vlock-plugins: %s does not work without %s", p->name, (*p->deps[NEEDS])[i]);
-        return -1;
-      }
-    }
-
-    /* unload plugins whose dependencies are not loaded */
-    for (i = 0; p->deps[DEPENDS] != NULL && (*p->deps[DEPENDS])[i] != NULL; i++) {
-      if (get_plugin((*p->deps[DEPENDS])[i]) == NULL) {
-        if (p->required) {
-          fprintf(stderr, "vlock-plugins: %s does not work without %s", p->name, (*p->deps[DEPENDS])[i]);
-          return -1;
-        }
-
-        unusable_plugins = g_list_append(unusable_plugins, p);
-      }
-    }
-
-    for (i = 0; p->deps[CONFLICTS] != NULL && (*p->deps[CONFLICTS])[i] != NULL; i++) {
-      if (get_plugin((*p->deps[CONFLICTS])[i]) != NULL) {
-        fprintf(stderr, "vlock-plugins: %s and %s cannot be loaded at the same time\n", p->name, (*p->deps[CONFLICTS])[i]);
-        return -1;
-      }
-    }
-  }
-
-  for (GList *item = g_list_first(unusable_plugins); item != NULL; item = g_list_next(item))
-    unload_plugin(item->data);
-
-  g_list_free(unusable_plugins);
-
   return sort_plugins();
 }
 
