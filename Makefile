@@ -91,8 +91,9 @@ endif
 
 ifeq ($(USE_PLUGINS),y)
 vlock-main: plugins.o
-vlock-main : override LDFLAGS += $(DL_LIB)
+vlock-main : override LDFLAGS += $(DL_LIB) $(GLIB_LIB)
 vlock-main.o : override CFLAGS += -DUSE_PLUGINS
+plugins.o : override CFLAGS += $(GLIB_CFLAGS)
 endif
 
 .PHONY: clean

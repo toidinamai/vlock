@@ -51,3 +51,6 @@ DL_LIB = -ldl
 CRYPT_LIB = -lcrypt
 # linker flags needed for pam
 PAM_LIBS = $(DL_LIB) -lpam
+# linker flags for the glib-2.0
+GLIB_LIB := $(shell pkg-config --libs glib-2.0)
+GLIB_CFLAGS := $(shell pkg-config --cflags glib-2.0)
