@@ -1,4 +1,4 @@
-/* vlock-all.c -- console grabbing routine for vlock,
+/* vlock-all.c -- console grabbing plugin for vlock,
  *                the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
@@ -31,14 +31,14 @@
 /* This handler is called by a signal whenever a user tries to
  * switch away from this virtual console. */
 static void release_vt(int __attribute__((__unused__)) signum) {
-  /* kernel is not allowed to switch */
+  /* Deny console switch. */
   (void) ioctl(STDIN_FILENO, VT_RELDISP, 0);
 }
 
 /* This handler is called whenever a user switches to this
  * virtual console. */
 static void acquire_vt(int __attribute__((__unused__)) signum) {
-  /* acknowledge, this is a noop */
+  /* Acknowledge console switch. */
   (void) ioctl(STDIN_FILENO, VT_RELDISP, VT_ACKACQ);
 }
 
@@ -46,11 +46,11 @@ int vlock_start(void **ctx_ptr) {
   struct vt_mode vtm, *ctx;
   struct sigaction sa;
 
-  /* allocate the context */
+  /* Allocate the context. */
   if ((ctx = malloc(sizeof *ctx)) == NULL)
     return -1;
 
-  /* get the virtual console mode */
+  /* Get the virtual console mode. */
   if (ioctl(STDIN_FILENO, VT_GETMODE, &vtm) < 0) {
     if (errno == ENOTTY || errno == EINVAL)
       fprintf(stderr, "vlock-all: this terminal is not a virtual console\n");
@@ -60,7 +60,7 @@ int vlock_start(void **ctx_ptr) {
     goto err;
   }
 
-  /* save the virtual console mode */
+  /* Save a copy of the virtual console mode. */
   (void) memcpy(ctx, &vtm, sizeof vtm);
 
   (void) sigemptyset(&(sa.sa_mask));
@@ -98,12 +98,13 @@ err:
 int vlock_end(void **ctx_ptr) {
   struct vt_mode *ctx = *ctx_ptr;
 
-  if (ctx != NULL)
+  if (ctx != NULL) {
     /* globally enable virtual console switching */
     if (ioctl(STDIN_FILENO, VT_SETMODE, ctx) < 0) {
       perror("vlock-all: could not restore console mode");
       return -1;
     }
+  }
 
   return 0;
 }
