@@ -53,6 +53,9 @@
 
 #define PROMPT_BUFFER_SIZE 512
 
+/* Prompt with the given string for a single line of input.  The read string is
+ * returned in a new buffer that should be freed by the caller.  If reading
+ * fails or the timeout (if given) occurs NULL is retured. */
 char *prompt(const char *msg, const struct timespec *timeout) {
   char buffer[PROMPT_BUFFER_SIZE];
   char *result;
@@ -62,8 +65,13 @@ char *prompt(const char *msg, const struct timespec *timeout) {
   tcflag_t lflag;
   fd_set readfds;
 
-  if (timeout != NULL
-      && (timeout_val = malloc(sizeof *timeout_val)) != NULL) {
+  /* copy timeout */
+  if (timeout != NULL) {
+    timeout_val = malloc(sizeof *timeout_val);
+
+    if (timeout_val == NULL)
+      return NULL;
+
     timeout_val->tv_sec = timeout->tv_sec;
     timeout_val->tv_usec = timeout->tv_nsec / 1000;
   }
@@ -90,11 +98,12 @@ char *prompt(const char *msg, const struct timespec *timeout) {
   FD_ZERO(&readfds);
   FD_SET(STDIN_FILENO, &readfds);
 
+  /* Reset errno. */
   errno = 0;
 
   /* Wait until a string was entered. */
   if (select(STDIN_FILENO+1, &readfds, NULL, NULL, timeout_val) != 1) {
-    if (errno)
+    if (errno != 0)
       perror("vlock-auth: select() on stdin failed");
     else
       fprintf(stderr, "timeout!\n");
@@ -138,6 +147,7 @@ out:
   return result;
 }
 
+/* Same as prompt except that the characters entered are not echoed. */
 char *prompt_echo_off(const char *msg, const struct timespec *timeout) {
   struct termios term;
   tcflag_t lflag;
