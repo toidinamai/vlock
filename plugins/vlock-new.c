@@ -222,6 +222,7 @@ int vlock_end(void **ctx_ptr) {
 #endif
 
   (void) close(ctx->consfd);
+  free(ctx);
 
   return 0;
 }
