@@ -28,34 +28,35 @@ struct sysrq_context {
   char value[32];
 };
 
+/* Disable SysRq and save old value in context. */
 int vlock_start(void **ctx_ptr) {
   struct sysrq_context *ctx;
 
-  /* allocate the context */
+  /* Allocate the context. */
   if ((ctx = malloc(sizeof *ctx)) == NULL)
     return -1;
 
   /* XXX: add optional PAM check here */
 
-  /* open the sysrq sysctl file for reading and writing */
+  /* Open the SysRq sysctl file for reading and writing. */
   if ((ctx->file = fopen(SYSRQ_PATH, "r+")) == NULL) {
     perror("vlock-nosysrq: could not open '" SYSRQ_PATH "'");
     goto err;
   }
 
-  /* read the old value */
+  /* Read the old value. */
   if (fgets(ctx->value, sizeof ctx->value, ctx->file) == NULL) {
     perror("vlock-nosysrq: could not read from '" SYSRQ_PATH "'");
     goto err;
   }
 
-  /* check whether all was read */
+  /* Check whether all data was read. */
   if (feof(ctx->file) != 0) {
     fprintf(stderr, "vlock-nosysrq: sysrq buffer to small: %d\n", sizeof ctx->value);
     goto err;
   }
 
-  /* disable sysrq */
+  /* Disable SysRq. */
   if (fseek(ctx->file, 0, SEEK_SET) < 0
       || ftruncate(fileno(ctx->file), 0) < 0
       || fputs(SYSRQ_DISABLE_VALUE, ctx->file) < 0
@@ -73,17 +74,19 @@ err:
 }
 
 
+/* Restore old SysRq value. */
 int vlock_end(void **ctx_ptr) {
   struct sysrq_context *ctx = *ctx_ptr;
 
   if (ctx == NULL)
     return 0;
 
+  /* Restore SysRq. */
   if (fseek(ctx->file, 0, SEEK_SET) < 0
       || ftruncate(fileno(ctx->file), 0) < 0
       || fputs(ctx->value, ctx->file) < 0
       || fflush(ctx->file) < 0)
-    perror("vlock-nosysrq: could not restore old value to '" SYSRQ_PATH "'");
+    perror("vlock-nosysrq: could not write old value to '" SYSRQ_PATH "'");
 
   free(ctx);
   return 0;
