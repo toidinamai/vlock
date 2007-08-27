@@ -299,7 +299,7 @@ static int sort_plugins(void) {
 
     return 0;
   } else {
-    fprintf(stderr, "vlock-plugins: circular dependencies in plugins detected:\n");
+    fprintf(stderr, "vlock-plugins: circular dependencies detected:\n");
 
     for (GList *item = g_list_first(edges); item != NULL; item = g_list_next(item)) {
       struct edge *edge = item->data;
