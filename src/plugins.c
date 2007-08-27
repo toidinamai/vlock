@@ -54,24 +54,25 @@ struct plugin {
   void *dl_handle;
 };
 
+/* the list of plugins */
 GList *plugins = NULL;
 
-static gint compare_name(gconstpointer p, gconstpointer n) {
-  return strcmp(((struct plugin *)p)->name, (const char *)n);
+static gint compare_name(struct plugin *p, const char *name) {
+  return strcmp(p->name, name);
 }
 
+/* Get the plugin with the given name.  Returns the first plugin
+ * with the given name or NULL if none could be found. */
 static struct plugin *get_plugin(const char *name) {
-  GList *item = g_list_find_custom(plugins, name, &compare_name);
+  GList *item = g_list_find_custom(plugins, name, (GCompareFunc)compare_name);
 
-  if (item != NULL)
-    return item->data;
-  else
-    return NULL;
+  return item != NULL ? item->data : NULL;
 }
 
+/* Open the plugin in file with the given name at the specified location.
+ * Returns the new plugin or NULL on error. */
 static struct plugin *open_plugin(const char *name, const char *plugin_dir) {
   struct plugin *new;
-  int i;
 
   /* allocate a new plugin object */
   if ((new = malloc(sizeof *new)) == NULL)
@@ -93,12 +94,12 @@ static struct plugin *open_plugin(const char *name, const char *plugin_dir) {
   new->dl_handle = dlopen(new->path, RTLD_NOW | RTLD_LOCAL);
 
   if (new->dl_handle == NULL) {
-    fprintf(stderr, "%s\n", dlerror());
+    fprintf(stderr, "vlock-plugins: %s\n", dlerror());
     goto err;
   }
 
   /* load the hooks, unimplemented hooks are NULL */
-  for (i = 0; i < NR_HOOKS; i++) {
+  for (int i = 0; i < NR_HOOKS; i++) {
     *(void **) (&new->hooks[i]) = dlsym(new->dl_handle, hook_names[i]);
   }
 
@@ -112,6 +113,8 @@ err:
   return NULL;
 }
 
+/* Same as open_plugin except that an old plugin is returned if there
+ * already is one with the given name. */
 static struct plugin *__load_plugin(const char *name, const char *plugin_dir) {
   struct plugin *p = get_plugin(name);
 
@@ -124,10 +127,12 @@ static struct plugin *__load_plugin(const char *name, const char *plugin_dir) {
   return p;
 }
 
+/* Same as __load_plugin except that -1 is returned on error and 0 on success. */
 int load_plugin(const char *name, const char *plugin_dir) {
-  return - (__load_plugin(name, plugin_dir) == NULL);
+  return __load_plugin(name, plugin_dir) != NULL ? 0 : -1;
 }
 
+/* Unload the given plugin and remove from the plugins list. */
 static void unload_plugin(struct plugin *p) {
   plugins = g_list_remove(plugins, p);
   (void) dlclose(p->dl_handle);
@@ -136,11 +141,13 @@ static void unload_plugin(struct plugin *p) {
   free(p);
 }
 
+/* Unload all plugins */
 void unload_plugins(void) {
-  while (plugins != NULL)
-    unload_plugin(plugins->data);
+  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_first(plugins))
+    unload_plugin(item->data);
 }
 
+/* Forward declaration */
 static int sort_plugins(void);
 
 int resolve_dependencies(void) {
@@ -222,11 +229,22 @@ err:
   return -1;
 }
 
+/* A plugin may declare which plugins it must come before or after.  All those
+ * relations together form a directed (acyclic) graph.  This graph is sorted
+ * using a topological sort as described at [1].
+ *
+ * [1]: http://en.wikipedia.org/w/index.php?title=Topological_sorting&oldid=153157450#Algorithms
+ */
+
+/* An edge of the graph, specifying that predecessor must come before
+ * successor. */
 struct edge {
   struct plugin *predecessor;
   struct plugin *successor;
 };
 
+/* Get all edges as specified by the all plugins' "after" and "before"
+ * attributes. */
 static GList *get_edges(void) {
   GList *edges = NULL;
 
@@ -263,6 +281,7 @@ static GList *get_edges(void) {
   return edges;
 }
 
+/* Get all nodes (plugins) with no incoming edges. */
 static GList *get_zeros(GList *edges) {
   GList *zeros = g_list_copy(plugins);
 
@@ -275,6 +294,7 @@ static GList *get_zeros(GList *edges) {
   return zeros;
 }
 
+/* Check if the given node has no incoming edges in the given set. */
 static int is_zero(struct plugin *p, GList *edges) {
   for (GList *item = g_list_first(edges); item != NULL; item = g_list_next(item)) {
     struct edge *edge = item->data;
@@ -285,6 +305,8 @@ static int is_zero(struct plugin *p, GList *edges) {
   return 1;
 }
 
+/* Sort all plugins with a topological sort.  Returns 1 if sorting was
+ * successful and -1 if cycles were found. */
 static int sort_plugins(void) {
   GList *edges = get_edges();
   GList *zeros = get_zeros(edges);
@@ -334,6 +356,7 @@ static int sort_plugins(void) {
   }
 }
 
+/* Call the given plugin hook. */
 int plugin_hook(unsigned int hook) {
   int result;
 
