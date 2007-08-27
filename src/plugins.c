@@ -8,6 +8,8 @@
 #include <dlfcn.h>
 #include <string.h>
 
+#include <glib.h>
+
 #include "vlock.h"
 #include "plugins.h"
 
@@ -62,51 +64,14 @@ struct plugin {
 
   /* dl handle */
   void *dl_handle;
-
-  /* linked list pointers */
-  struct plugin *next;
-  struct plugin *previous;
 };
 
-static struct plugin *first = NULL;
-static struct plugin *last = NULL;
-
-static void add_plugin(struct plugin *p) {
-  if (first == NULL) {
-    first = last = p;
-    p->previous = NULL;
-    p->next = NULL;
-  } else {
-    last->next = p;
-    p->previous = last;
-    p->next = NULL;
-    last = p;
-  }
-}
-
-static void remove_plugin(struct plugin *p) {
-  if (p->previous != NULL && p->next != NULL) {
-    /* p is somewhere in the middle */
-    p->previous->next = p->next;
-    p->next->previous = p->previous;
-  } else if (p->next != NULL) {
-    /* p is first */
-    first = p->next;
-    p->next->previous = NULL;
-  } else if (p->previous != NULL) {
-    /* p is last */
-    last = p->previous;
-    p->previous->next = NULL;
-  } else {
-    /* p is last and first */
-    first = last = NULL;
-  }
-}
+GList *plugins = NULL;
 
 static struct plugin *get_plugin(const char *name) {
-  struct plugin *p;
+  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+    struct plugin *p = item->data;
 
-  for (p = first; p != NULL; p = p->next) {
     if (strcmp(name, p->name) == 0)
       return p;
   }
@@ -114,7 +79,7 @@ static struct plugin *get_plugin(const char *name) {
   return NULL;
 }
 
-static struct plugin *open_plugin(const char *name, const char *plugin_dir) {
+static struct plugin *open_plugin(const char *name, const char *plugin_dir, int required) {
   struct plugin *new;
   int i;
 
@@ -125,7 +90,7 @@ static struct plugin *open_plugin(const char *name, const char *plugin_dir) {
   new->ctx = NULL;
   new->path = NULL;
   new->name = NULL;
-  new->required = 0;
+  new->required = required;
 
   /* format the plugin path */
   if (asprintf(&new->path, "%s/%s.so", plugin_dir, name) < 0)
@@ -164,23 +129,21 @@ err:
 }
 
 int load_plugin(const char *name, const char *plugin_dir) {
-  struct plugin *p;
-
-  if ((p = get_plugin(name)) != NULL) {
+  if (get_plugin(name) != NULL) {
     return 0;
   } else {
-    p = open_plugin(name, plugin_dir);
+    struct plugin *p = open_plugin(name, plugin_dir, 0);
 
     if (p == NULL)
       return -1;
 
-    add_plugin(p);
+    plugins = g_list_append(plugins, p);
     return 0;
   }
 }
 
 static void unload_plugin(struct plugin *p) {
-  remove_plugin(p);
+  plugins = g_list_remove(plugins, p);
   (void) dlclose(p->dl_handle);
   free(p->path);
   free(p->name);
@@ -196,26 +159,27 @@ void disable_plugin(struct plugin *p) {
 }
 
 void unload_plugins(void) {
-  while (first != NULL)
-    unload_plugin(first);
+  while (plugins != NULL)
+    unload_plugin(plugins->data);
 }
 
 static int sort_plugins(void);
 
 int resolve_dependencies(void) {
-  struct plugin *p;
   int i;
+  GList *unusable_plugins = NULL;
 
-  for (p = first; p != NULL; p = p->next) {
+  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+    struct plugin *p = item->data;
+
     /* load plugins that are required */
     for (i = 0; p->deps[REQUIRES] != NULL && (*p->deps[REQUIRES])[i] != NULL; i++) {
-      struct plugin *d = open_plugin((*p->deps[REQUIRES])[i], VLOCK_PLUGIN_DIR);
+      struct plugin *d = open_plugin((*p->deps[REQUIRES])[i], VLOCK_PLUGIN_DIR, 1);
 
       if (d == NULL)
         return -1;
 
-      d->required = 1;
-      add_plugin(d);
+      plugins = g_list_append(plugins, d);
     }
 
     /* fail if a plugins that is needed is not loaded */
@@ -234,7 +198,7 @@ int resolve_dependencies(void) {
           return -1;
         }
 
-        disable_plugin(p);
+        unusable_plugins = g_list_append(unusable_plugins, p);
       }
     }
 
@@ -246,6 +210,11 @@ int resolve_dependencies(void) {
     }
   }
 
+  for (GList *item = g_list_first(unusable_plugins); item != NULL; item = g_list_next(item))
+    unload_plugin(item->data);
+
+  g_list_free(unusable_plugins);
+
   return sort_plugins();
 }
 
@@ -255,11 +224,12 @@ static int sort_plugins(void) {
 }
 
 int plugin_hook(unsigned int hook) {
-  struct plugin *p;
   int result;
 
   if (hook == HOOK_VLOCK_START || hook == HOOK_VLOCK_SAVE) {
-    for (p = first; p != NULL; p = p->next) {
+    for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+      struct plugin *p = item->data;
+
       if (p->hooks[hook] == NULL)
         continue;
 
@@ -275,7 +245,8 @@ int plugin_hook(unsigned int hook) {
     }
   }
   else if (hook == HOOK_VLOCK_END || hook == HOOK_VLOCK_SAVE_ABORT) {
-    for (p = last; p != NULL; p = p->previous) {
+    for (GList *item = g_list_last(plugins); item != NULL; item = g_list_next(item)) {
+      struct plugin *p = item->data;
       if (p->hooks[hook] == NULL)
         continue;
 
