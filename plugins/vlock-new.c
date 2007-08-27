@@ -1,4 +1,4 @@
-/* vlock-new.c -- console allocation routine for vlock,
+/* vlock-new.c -- console allocation plugin for vlock,
  *                the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
