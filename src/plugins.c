@@ -214,8 +214,10 @@ static GList *get_edges(void) {
 
   for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
     struct plugin *p = item->data;
-    const char *(*successors)[] = dlsym(p->dl_handle, "after");
-    const char *(*predecessors)[] = dlsym(p->dl_handle, "before");
+    /* p must come after these */
+    const char *(*predecessors)[] = dlsym(p->dl_handle, "after");
+    /* p must come before these */
+    const char *(*successors)[] = dlsym(p->dl_handle, "before");
 
     for (int i = 0; successors != NULL && (*successors)[i] != NULL; i++) {
       struct plugin *successor = get_plugin((*successors)[i]);
