@@ -9,8 +9,5 @@ high
 medium
 ------
 
-- get rid of glib dependency
-- aborting malloc
-
 low
 ---
