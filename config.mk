@@ -1,5 +1,7 @@
 ### configuration options ###
 
+# operating system, determines some defaults
+UNAME := $(shell uname)
 # authentification method (pam or shadow)
 AUTH_METHOD = pam
 # use pam for permission checking
