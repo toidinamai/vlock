@@ -22,11 +22,10 @@
 #include <string.h>
 #include <assert.h>
 
-#include <glib.h>
-
 #include "vlock.h"
 #include "plugins.h"
 #include "tsort.h"
+#include "list.h"
 
 /* hook names */
 const char *hook_names[] = {
@@ -57,18 +56,19 @@ struct plugin {
 };
 
 /* the list of plugins */
-GList *plugins = NULL;
-
-static gint compare_name(struct plugin *p, const char *name) {
-  return strcmp(p->name, name);
-}
+struct List *plugins = NULL;
 
 /* Get the plugin with the given name.  Returns the first plugin
  * with the given name or NULL if none could be found. */
 static struct plugin *get_plugin(const char *name) {
-  GList *item = g_list_find_custom(plugins, name, (GCompareFunc)compare_name);
+  for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
+    struct plugin *p = item->data;
 
-  return item != NULL ? item->data : NULL;
+    if (strcmp(p->name, name) == 0)
+      return p;
+  }
+
+  return NULL;
 }
 
 /* Open the plugin in file with the given name at the specified location.
@@ -124,7 +124,7 @@ static struct plugin *__load_plugin(const char *name, const char *plugin_dir) {
     return p;
 
   p = open_plugin(name, plugin_dir);
-    plugins = g_list_append(plugins, p);
+    plugins = list_append(plugins, p);
 
   return p;
 }
@@ -136,7 +136,7 @@ int load_plugin(const char *name, const char *plugin_dir) {
 
 /* Unload the given plugin and remove from the plugins list. */
 static void unload_plugin(struct plugin *p) {
-  plugins = g_list_remove(plugins, p);
+  plugins = list_remove(plugins, p);
   (void) dlclose(p->dl_handle);
   free(p->path);
   free(p->name);
@@ -145,7 +145,7 @@ static void unload_plugin(struct plugin *p) {
 
 /* Unload all plugins */
 void unload_plugins(void) {
-  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_first(plugins))
+  for (struct List *item = list_first(plugins); item != NULL; item = list_first(plugins))
     unload_plugin(item->data);
 }
 
@@ -153,10 +153,10 @@ void unload_plugins(void) {
 static int sort_plugins(void);
 
 int resolve_dependencies(void) {
-  GList *required_plugins = NULL;
+  struct List *required_plugins = NULL;
 
   /* load plugins that are required */
-  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+  for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
     struct plugin *p = item->data;
     const char *(*requires)[] = dlsym(p->dl_handle, "requires");
 
@@ -166,12 +166,12 @@ int resolve_dependencies(void) {
       if (d == NULL)
         goto err;
 
-      required_plugins = g_list_append(required_plugins, d);
+      required_plugins = list_append(required_plugins, d);
     }
   }
 
   /* fail if a plugins that is needed is not loaded */
-  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+  for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
     struct plugin *p = item->data;
     const char *(*needs)[] = dlsym(p->dl_handle, "needs");
 
@@ -183,12 +183,12 @@ int resolve_dependencies(void) {
         goto err;
       }
 
-      required_plugins = g_list_append(required_plugins, d);
+      required_plugins = list_append(required_plugins, d);
     }
   }
 
   /* unload plugins whose prerequisites are not present */
-  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+  for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
     struct plugin *p = item->data;
     const char *(*depends)[] = dlsym(p->dl_handle, "depends");
 
@@ -198,7 +198,7 @@ int resolve_dependencies(void) {
       if (d != NULL)
         continue;
 
-      if (g_list_find(required_plugins, p) != NULL) {
+      if (list_find(required_plugins, p) != NULL) {
         fprintf(stderr, "vlock-plugins: %s does not work without %s\n", p->name, (*depends)[i]);
         goto err;
       }
@@ -209,10 +209,10 @@ int resolve_dependencies(void) {
     }
   }
 
-  g_list_free(required_plugins);
+  list_free(required_plugins);
 
   /* fail if conflicting plugins are loaded */
-  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+  for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
     struct plugin *p = item->data;
     const char *(*conflicts)[] = dlsym(p->dl_handle, "conflicts");
 
@@ -227,7 +227,7 @@ int resolve_dependencies(void) {
   return sort_plugins();
 
 err:
-  g_list_free(required_plugins);
+  list_free(required_plugins);
   return -1;
 }
 
@@ -238,10 +238,10 @@ err:
 
 /* Get all edges as specified by the all plugins' "after" and "before"
  * attributes. */
-static GList *get_edges(void) {
-  GList *edges = NULL;
+static struct List *get_edges(void) {
+  struct List *edges = NULL;
 
-  for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+  for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
     struct plugin *p = item->data;
     /* p must come after these */
     const char *(*predecessors)[] = dlsym(p->dl_handle, "after");
@@ -255,7 +255,7 @@ static GList *get_edges(void) {
         struct Edge *edge = malloc(sizeof *edge);
         edge->predecessor = p;
         edge->successor = successor;
-        edges = g_list_append(edges, edge);
+        edges = list_append(edges, edge);
       }
     }
 
@@ -266,7 +266,7 @@ static GList *get_edges(void) {
         struct Edge *edge = malloc(sizeof *edge);
         edge->predecessor = predecessor;
         edge->successor = p;
-        edges = g_list_append(edges, edge);
+        edges = list_append(edges, edge);
       }
     }
   }
@@ -275,20 +275,19 @@ static GList *get_edges(void) {
 }
 
 static int sort_plugins(void) {
-  GList *edges = get_edges();
-  GList *sorted_plugins = tsort(plugins, &edges);
+  struct List *edges = get_edges();
+  struct List *sorted_plugins = tsort(plugins, &edges);
 
-  if (sorted_plugins != NULL) {
-    assert(edges == NULL);
-    GList *tmp = plugins;
+  if (edges == NULL) {
+    struct List *tmp = plugins;
     plugins = sorted_plugins;
-    g_list_free(tmp);
+    list_free(tmp);
 
     return 0;
   } else {
     fprintf(stderr, "vlock-plugins: circular dependencies detected:\n");
 
-    for (GList *item = g_list_first(edges); item != NULL; item = g_list_next(item)) {
+    for (struct List *item = list_first(edges); item != NULL; item = list_next(item)) {
       struct Edge *edge = item->data;
       struct plugin *p = edge->predecessor;
       struct plugin *s = edge->successor;
@@ -296,7 +295,7 @@ static int sort_plugins(void) {
       free(edge);
     }
 
-    g_list_free(edges);
+    list_free(edges);
 
     return -1;
   }
@@ -307,7 +306,7 @@ int plugin_hook(unsigned int hook) {
   int result;
 
   if (hook == HOOK_VLOCK_START || hook == HOOK_VLOCK_SAVE) {
-    for (GList *item = g_list_first(plugins); item != NULL; item = g_list_next(item)) {
+    for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
       struct plugin *p = item->data;
 
       if (p->hooks[hook] == NULL)
@@ -325,7 +324,7 @@ int plugin_hook(unsigned int hook) {
     }
   }
   else if (hook == HOOK_VLOCK_END || hook == HOOK_VLOCK_SAVE_ABORT) {
-    for (GList *item = g_list_last(plugins); item != NULL; item = g_list_previous(item)) {
+    for (struct List *item = list_last(plugins); item != NULL; item = list_previous(item)) {
       struct plugin *p = item->data;
       if (p->hooks[hook] == NULL)
         continue;

@@ -1,12 +1,11 @@
 #include <stdlib.h>
 
-#include <glib.h>
-
 #include "tsort.h"
+#include "list.h"
 
 /* Check if the given node has no incoming edges. */
-static int is_zero(void *node, GList *edges) {
-  for (GList *item = g_list_first(edges); item != NULL; item = g_list_next(item)) {
+static int is_zero(void *node, struct List *edges) {
+  for (struct List *item = list_first(edges); item != NULL; item = list_next(item)) {
     struct Edge *edge = item->data;
 
     if (edge->successor == node)
@@ -18,13 +17,13 @@ static int is_zero(void *node, GList *edges) {
 
 
 /* Get all nodes (plugins) with no incoming edges. */
-static GList *get_zeros(GList *nodes, GList *edges) {
-  GList *zeros = g_list_copy(nodes);
+static struct List *get_zeros(struct List *nodes, struct List *edges) {
+  struct List *zeros = list_copy(nodes);
 
-  for (GList *item = g_list_first(edges); item != NULL && g_list_first(zeros) != NULL; item = g_list_next(item)) {
+  for (struct List *item = list_first(edges); item != NULL && list_first(zeros) != NULL; item = list_next(item)) {
     struct Edge *edge = item->data;
 
-    zeros = g_list_remove(zeros, edge->successor);
+    zeros = list_remove(zeros, edge->successor);
   }
 
   return zeros;
@@ -39,36 +38,36 @@ static GList *get_zeros(GList *nodes, GList *edges) {
  * Algorithm:
  * http://en.wikipedia.org/w/index.php?title=Topological_sorting&oldid=153157450#Algorithms
  */
-GList *tsort(GList *nodes, GList **edges) {
-  GList *sorted_nodes = NULL;
-  GList *zeros = get_zeros(nodes, *edges);
+struct List *tsort(struct List *nodes, struct List **edges) {
+  struct List *sorted_nodes = NULL;
+  struct List *zeros = get_zeros(nodes, *edges);
 
-  for (GList *item = g_list_first(zeros); item != NULL; item = g_list_first(zeros)) {
+  for (struct List *item = list_first(zeros); item != NULL; item = list_first(zeros)) {
     void *node = item->data;
 
-    sorted_nodes = g_list_append(sorted_nodes, node);
-    zeros = g_list_remove(zeros, node);
+    sorted_nodes = list_append(sorted_nodes, node);
+    zeros = list_remove(zeros, node);
 
-    for (GList *item = g_list_first(*edges); item != NULL;) {
+    for (struct List *item = list_first(*edges); item != NULL;) {
       struct Edge *edge = item->data;
-      item = g_list_next(item);
+      item = list_next(item);
 
       if (edge->predecessor != node)
         continue;
 
-      *edges = g_list_remove(*edges, edge);
+      *edges = list_remove(*edges, edge);
 
       if (is_zero(edge->successor, *edges))
-        zeros = g_list_append(zeros, edge->successor);
+        zeros = list_append(zeros, edge->successor);
 
       free(edge);
     }
   }
 
-  if (g_list_length(*edges) == 0) {
+  if (*edges == NULL) {
     return sorted_nodes;
   } else {
-    g_list_free(sorted_nodes);
+    list_free(sorted_nodes);
     return NULL;
   }
 }
