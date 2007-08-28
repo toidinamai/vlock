@@ -243,16 +243,12 @@ int main(int argc, char *const argv[]) {
   }
 
 #ifdef USE_PLUGINS
+out:
   (void) plugin_hook("vlock_end");
+  unload_plugins();
 #else
   /* call vlock-new and vlock-all statically */
 #error "Not implemented."
-#endif
-
-#ifdef USE_PLUGINS
-out:
-
-  unload_plugins();
 #endif
 
   /* restore the terminal */
