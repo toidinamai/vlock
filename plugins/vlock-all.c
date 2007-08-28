@@ -42,13 +42,13 @@ static void acquire_vt(int __attribute__((__unused__)) signum) {
   (void) ioctl(STDIN_FILENO, VT_RELDISP, VT_ACKACQ);
 }
 
-int vlock_start(void **ctx_ptr) {
+bool vlock_start(void **ctx_ptr) {
   struct vt_mode vtm, *ctx;
   struct sigaction sa;
 
   /* Allocate the context. */
   if ((ctx = malloc(sizeof *ctx)) == NULL)
-    return -1;
+    return false;
 
   /* Get the virtual console mode. */
   if (ioctl(STDIN_FILENO, VT_GETMODE, &vtm) < 0) {
@@ -88,23 +88,23 @@ int vlock_start(void **ctx_ptr) {
   }
 
   *ctx_ptr = ctx;
-  return 0;
+  return true;
 
 err:
   free(ctx);
-  return -1;
+  return false;
 }
 
-int vlock_end(void **ctx_ptr) {
+bool vlock_end(void **ctx_ptr) {
   struct vt_mode *ctx = *ctx_ptr;
 
   if (ctx != NULL) {
     /* globally enable virtual console switching */
     if (ioctl(STDIN_FILENO, VT_SETMODE, ctx) < 0) {
       perror("vlock-all: could not restore console mode");
-      return -1;
+      return false;
     }
   }
 
-  return 0;
+  return true;
 }
