@@ -342,7 +342,7 @@ bool plugin_hook(const char *hook_name) {
       }
     }
 
-    return false;
+    return true;
   } else if (hook_index == HOOK_VLOCK_END || hook_index == HOOK_VLOCK_SAVE_ABORT) {
     for (struct List *item = list_last(plugins); item != NULL; item = list_previous(item)) {
       struct plugin *p = item->data;
