@@ -11,11 +11,24 @@
  *
  */
 
+/* Inspired by the doubly linked list code from glib:
+ *
+ * GLIB - Library of useful routines for C programming
+ * Copyright (C) 1995-1997  Peter Mattis, Spencer Kimball and Josh MacDonald
+ *
+ * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
+ * file for a list of people on the GLib Team.  See the ChangeLog
+ * files for a list of changes.  These files are distributed with
+ * GLib at ftp://ftp.gtk.org/pub/gtk/. 
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "list.h"
 
+/* Like list_append() but returns the item that was added instead of the start
+ * of the list. */
 static struct List *__list_append(struct List *list, void *data) {
   struct List *new_item = malloc(sizeof (struct List));
   struct List *last = list_last(list);
@@ -49,9 +62,12 @@ struct List *list_copy(struct List *list) {
   struct List *last = NULL;
   struct List *item = list_first(list);
 
+  /* Make a copy of the first item.  It is now also the last item of the new
+   * list. */
   if (item != NULL)
     last = new_list = list_append(new_list, item->data);
 
+  /* Append all further items to the first. */
   for (item = list_next(item); item != NULL; item = list_next(item))
     last = __list_append(last, item->data);
 
@@ -99,6 +115,7 @@ struct List *list_find(struct List *list, void *data) {
   return NULL;
 }
 
+/* Delete one item from the list.  Returns the new start of the list. */
 static struct List *list_delete_link(struct List *list, struct List *item) {
   if (item != NULL) {
     if (item->previous != NULL)
