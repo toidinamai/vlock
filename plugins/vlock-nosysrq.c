@@ -31,12 +31,12 @@ struct sysrq_context {
 };
 
 /* Disable SysRq and save old value in context. */
-int vlock_start(void **ctx_ptr) {
+bool vlock_start(void **ctx_ptr) {
   struct sysrq_context *ctx;
 
   /* Allocate the context. */
   if ((ctx = malloc(sizeof *ctx)) == NULL)
-    return -1;
+    return false;
 
   /* XXX: add optional PAM check here */
 
@@ -80,20 +80,20 @@ int vlock_start(void **ctx_ptr) {
 nothing_to_do:
   free(ctx);
   *ctx_ptr = NULL;
-  return 0;
+  return true;
 
 err:
   free(ctx);
-  return -1;
+  return false;
 }
 
 
 /* Restore old SysRq value. */
-int vlock_end(void **ctx_ptr) {
+bool vlock_end(void **ctx_ptr) {
   struct sysrq_context *ctx = *ctx_ptr;
 
   if (ctx == NULL)
-    return 0;
+    return true;
 
   /* Restore SysRq. */
   if (fseek(ctx->file, 0, SEEK_SET) < 0
@@ -103,5 +103,5 @@ int vlock_end(void **ctx_ptr) {
     perror("vlock-nosysrq: could not write old value to '" SYSRQ_PATH "'");
 
   free(ctx);
-  return 0;
+  return true;
 }
