@@ -10,18 +10,17 @@ USE_PAM = n
 USE_ROOT_PASS = y
 # enable plugins for vlock-main
 USE_PLUGINS = y
-# which plugins should be build (default is architecture dependent)
+# which plugins should be build, default is architecture dependent
 # PLUGINS = 
 
-# group to install vlock-all and vlock-nosysrq as
-# defaults to 'root')
-VLOCK_GROUP =
-# mode to install vlock-all and vlock-nosysrq as
-# defaults to 4711 if group is unset and 4710 otherwise
-VLOCK_MODE =
-
-# root's group (default is architecture dependent)
+# root's group, default is architecture dependent
 ROOT_GROUP =
+
+# group to install vlock-main with, defaults to ROOT_GROUP
+VLOCK_GROUP =
+# mode to install privileged plugins with, defaults to 0750 if VLOCK_GROUP
+# is unset and 0755 otherwise
+VLOCK_PLUGIN_MODE =
 
 ### paths ###
 
