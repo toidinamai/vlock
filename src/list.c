@@ -115,8 +115,7 @@ struct List *list_find(struct List *list, void *data) {
   return NULL;
 }
 
-/* Delete one item from the list.  Returns the new start of the list. */
-static struct List *list_delete_link(struct List *list, struct List *item) {
+struct List *list_delete_link(struct List *list, struct List *item) {
   if (item != NULL) {
     if (item->previous != NULL)
       item->previous->next = item->next;

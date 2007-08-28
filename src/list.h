@@ -59,6 +59,9 @@ struct List *list_append(struct List *list, void *data);
  * list.  Returns the new start of the list.  Does not free the data. */
 struct List *list_remove(struct List *list, void *data);
 
+/* Delete one item from the list.  Returns the new start of the list. */
+struct List *list_delete_link(struct List *list, struct List *item);
+
 /* Returns the first item with the given data pointer or NULL if none is found.
  */
 struct List *list_find(struct List *list, void *data);
