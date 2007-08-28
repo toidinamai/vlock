@@ -9,5 +9,8 @@ high
 medium
 ------
 
+- make it possible to use vlock-new and vlock-all without USE_PLUGINS
+- do not depend on bash when not using plugins
+
 low
 ---
