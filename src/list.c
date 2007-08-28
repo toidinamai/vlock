@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "list.h"
 
@@ -6,8 +7,10 @@ static struct List *__list_append(struct List *list, void *data) {
   struct List *new_item = malloc(sizeof (struct List));
   struct List *last = list_last(list);
 
-  if (new_item == NULL)
+  if (new_item == NULL) {
+    fprintf(stderr, "%s:%d failed to allocate new list item\n", __FILE__, __LINE__);
     abort();
+  }
 
   new_item->data = data;
   new_item->next = NULL;
