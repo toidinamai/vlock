@@ -5,7 +5,7 @@
 
 /* Check if the given node has no incoming edges. */
 static int is_zero(void *node, struct List *edges) {
-  for (struct List *item = list_first(edges); item != NULL; item = list_next(item)) {
+  list_for_each(edges, item) {
     struct Edge *edge = item->data;
 
     if (edge->successor == node)
@@ -20,10 +20,13 @@ static int is_zero(void *node, struct List *edges) {
 static struct List *get_zeros(struct List *nodes, struct List *edges) {
   struct List *zeros = list_copy(nodes);
 
-  for (struct List *item = list_first(edges); item != NULL && list_first(zeros) != NULL; item = list_next(item)) {
+  list_for_each(edges, item) {
     struct Edge *edge = item->data;
 
     zeros = list_remove(zeros, edge->successor);
+
+    if (zeros == NULL)
+      break;
   }
 
   return zeros;
@@ -42,11 +45,11 @@ struct List *tsort(struct List *nodes, struct List **edges) {
   struct List *sorted_nodes = NULL;
   struct List *zeros = get_zeros(nodes, *edges);
 
-  for (struct List *item = list_first(zeros); item != NULL; item = list_first(zeros)) {
-    void *node = item->data;
+  while (zeros != NULL) {
+    void *node = zeros->data;
 
     sorted_nodes = list_append(sorted_nodes, node);
-    zeros = list_remove(zeros, node);
+    zeros = list_delete_link(zeros, zeros);
 
     for (struct List *item = list_first(*edges); item != NULL;) {
       struct Edge *edge = item->data;
