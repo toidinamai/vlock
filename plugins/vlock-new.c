@@ -109,14 +109,14 @@ struct new_console_context {
 };
 
 /* Run switch to a new console and redirect stdio there. */
-int vlock_start(void **ctx_ptr) {
+bool vlock_start(void **ctx_ptr) {
   struct new_console_context *ctx;
   int vtfd;
   char *vtname;
 
   /* Allocate the context. */
   if ((ctx = malloc(sizeof *ctx)) == NULL)
-    return -1;
+    return false;
 
   /* Try stdin first. */
   ctx->consfd = dup(STDIN_FILENO);
@@ -184,16 +184,19 @@ int vlock_start(void **ctx_ptr) {
   (void) close(vtfd);
 
   *ctx_ptr = ctx;
-  return 0;
+  return true;
 
 err:
   free(ctx);
-  return -1;
+  return false;
 }
 
 /* Redirect stdio back und switch to the previous console. */
-int vlock_end(void **ctx_ptr) {
+bool vlock_end(void **ctx_ptr) {
   struct new_console_context *ctx = *ctx_ptr;
+
+  if (ctx == NULL)
+    return true;
 
   /* Restore saved stdio file descriptors. */
   (void) dup2(ctx->saved_stdin, STDIN_FILENO);
@@ -213,5 +216,5 @@ int vlock_end(void **ctx_ptr) {
   (void) close(ctx->consfd);
   free(ctx);
 
-  return 0;
+  return true;
 }
