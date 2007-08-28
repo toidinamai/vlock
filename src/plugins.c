@@ -153,8 +153,9 @@ bool load_plugin(const char *name, const char *plugin_dir) {
 }
 
 /* Unload the given plugin and remove from the plugins list. */
-static void unload_plugin(struct plugin *p) {
-  plugins = list_remove(plugins, p);
+static void unload_plugin(struct List *item) {
+  struct plugin *p = item->data;
+  plugins = list_delete_link(plugins, item);
   (void) dlclose(p->dl_handle);
   free(p->path);
   free(p->name);
@@ -163,8 +164,8 @@ static void unload_plugin(struct plugin *p) {
 
 /* Unload all plugins */
 void unload_plugins(void) {
-  for (struct List *item = list_first(plugins); item != NULL; item = list_first(plugins))
-    unload_plugin(item->data);
+  while (plugins != NULL)
+    unload_plugin(plugins);
 }
 
 /* Forward declaration */
@@ -220,7 +221,8 @@ bool resolve_dependencies(void) {
         fprintf(stderr, "vlock-plugins: %s does not work without %s\n", p->name, (*depends)[i]);
         goto err;
       } else {
-        unload_plugin(p); 
+        /* BUG: modifying list while iterating */
+        unload_plugin(item); 
         break;
       }
     }
