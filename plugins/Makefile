@@ -1,5 +1,13 @@
 include ../config.mk
 
+ifeq ($(origin PLUGINS),undefined)
+ifeq ($(UNAME),Linux)
+PLUGINS = vlock-all.so vlock-new.so vlock-nosysrq.so vlock-blank.so
+else ifneq (,$(findstring FreeBSD,$(UNAME)))
+PLUGINS = vlock-all.so vlock-new.so
+endif
+endif
+
 .PHONY: all
 all: $(PLUGINS)
 

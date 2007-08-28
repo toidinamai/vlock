@@ -10,8 +10,8 @@ USE_PAM = n
 USE_ROOT_PASS = y
 # enable plugins for vlock-main
 USE_PLUGINS = y
-# which plugins should be build
-PLUGINS = vlock-all.so vlock-new.so vlock-nosysrq.so vlock-blank.so
+# which plugins should be build (default is architecture dependent)
+# PLUGINS = 
 
 # group to install vlock-all and vlock-nosysrq as
 # defaults to 'root')
