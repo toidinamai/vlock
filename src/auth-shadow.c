@@ -38,7 +38,8 @@ int auth(const char *user, struct timespec *timeout) {
   int result = 0;
 
   /* format the prompt */
-  (void) asprintf(&msg, "%s's Password: ", user);
+  if (asprintf(&msg, "%s's Password: ", user) < 0)
+    goto out;
 
   if ((pwd = prompt_echo_off(msg, timeout)) == NULL)
     goto out;
