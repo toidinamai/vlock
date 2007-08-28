@@ -69,3 +69,6 @@ struct List *list_copy(struct List *list);
 
 /* Free the entire list.  Does free the items'. */
 void list_free(struct List *list);
+
+#define list_for_each(list, item) \
+  for (struct List *item = list_first(list); item != NULL; item = list_next(item))
