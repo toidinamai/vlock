@@ -217,8 +217,9 @@ int main(int argc, char *const argv[]) {
       }
 #ifdef USE_PLUGINS
       else if (c == '\033' || c == 0) {
-        plugin_hook(HOOK_VLOCK_SAVE);
-        (void) read_character(NULL);
+        if (plugin_hook(HOOK_VLOCK_SAVE) == 0)
+          /* wait for key press */
+          (void) read_character(NULL);
         plugin_hook(HOOK_VLOCK_SAVE_ABORT);
       }
 #endif
