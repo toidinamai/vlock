@@ -129,9 +129,10 @@ static struct plugin *__load_plugin(const char *name, const char *plugin_dir) {
   return p;
 }
 
-/* Same as __load_plugin except that -1 is returned on error and 0 on success. */
-int load_plugin(const char *name, const char *plugin_dir) {
-  return __load_plugin(name, plugin_dir) != NULL ? 0 : -1;
+/* Same as __load_plugin except that true is returned on success and false on
+ * error. */
+bool load_plugin(const char *name, const char *plugin_dir) {
+  return __load_plugin(name, plugin_dir) != NULL;
 }
 
 /* Unload the given plugin and remove from the plugins list. */
@@ -150,9 +151,9 @@ void unload_plugins(void) {
 }
 
 /* Forward declaration */
-static int sort_plugins(void);
+static bool sort_plugins(void);
 
-int resolve_dependencies(void) {
+bool resolve_dependencies(void) {
   struct List *required_plugins = NULL;
 
   /* load plugins that are required */
@@ -227,7 +228,7 @@ int resolve_dependencies(void) {
 
 err:
   list_free(required_plugins);
-  return -1;
+  return false;
 }
 
 /* A plugin may declare which plugins it must come before or after.  All those
@@ -273,7 +274,7 @@ static struct List *get_edges(void) {
   return edges;
 }
 
-static int sort_plugins(void) {
+static bool sort_plugins(void) {
   struct List *edges = get_edges();
   struct List *sorted_plugins = tsort(plugins, &edges);
 
@@ -282,7 +283,7 @@ static int sort_plugins(void) {
     plugins = sorted_plugins;
     list_free(tmp);
 
-    return 0;
+    return true;
   } else {
     fprintf(stderr, "vlock-plugins: circular dependencies detected:\n");
 
@@ -296,7 +297,7 @@ static int sort_plugins(void) {
 
     list_free(edges);
 
-    return -1;
+    return false;
   }
 }
 

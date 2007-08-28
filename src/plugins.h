@@ -13,12 +13,12 @@
 
 /* Load the named plugin from the specified directory.  Returns true if loading
  * was successful and false otherwise. */
-int load_plugin(const char *name, const char *plugin_dir);
+bool load_plugin(const char *name, const char *plugin_dir);
 
 /* Resolve all the dependencies between all plugins.  Returns false if there
  * was an error and true otherwise.  This function *must* be called after all
  * plugins were loaded. */
-int resolve_dependencies(void);
+bool resolve_dependencies(void);
 
 /* Unload all plugins. */
 void unload_plugins(void);
