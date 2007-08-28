@@ -19,6 +19,7 @@
 #define _GNU_SOURCE
 #endif
 
+#include <stdbool.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,12 +31,12 @@
 
 #include "vlock.h"
 
-int auth(const char *user, struct timespec *timeout) {
+bool auth(const char *user, struct timespec *timeout) {
   char *pwd;
   char *cryptpw;
   char *msg = NULL;
   struct spwd *spw;
-  int result = 0;
+  int result = false;
 
   /* format the prompt */
   if (asprintf(&msg, "%s's Password: ", user) < 0)

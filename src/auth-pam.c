@@ -41,6 +41,7 @@
  *
  */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -104,7 +105,7 @@ fail:
   return PAM_CONV_ERR;
 }
 
-int auth(const char *user, struct timespec *timeout) {
+bool auth(const char *user, struct timespec *timeout) {
   pam_handle_t *pamh;
   int pam_status;
   int pam_end_status;

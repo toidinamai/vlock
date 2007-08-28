@@ -10,6 +10,8 @@
  *
  */
 
+#include <stdbool.h>
+
 /* hard coded paths */
 #define VLOCK_PLUGIN_DIR PREFIX "/lib/vlock/modules"
 
@@ -17,11 +19,11 @@
 struct timespec;
 
 /* Try to authenticate the user.  When the user is successfully authenticated
- * this function returns 1.  When the authentication fails for whatever reason
- * the function returns 0.  The timeout is passed to the prompt functions below
- * if they are called.
+ * this function returns true.  When the authentication fails for whatever
+ * reason the function returns false.  The timeout is passed to the prompt
+ * functions below if they are called.
  */
-int auth(const char *user, struct timespec *timeout);
+bool auth(const char *user, struct timespec *timeout);
 
 /* Prompt for a string with the given message.  The string is returned if
  * successfully read, otherwise NULL.  The caller is responsible for freeing
