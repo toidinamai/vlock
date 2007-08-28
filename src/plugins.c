@@ -20,11 +20,13 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 #include <string.h>
+#include <assert.h>
 
 #include <glib.h>
 
 #include "vlock.h"
 #include "plugins.h"
+#include "tsort.h"
 
 /* hook names */
 const char *hook_names[] = {
@@ -231,17 +233,8 @@ err:
 
 /* A plugin may declare which plugins it must come before or after.  All those
  * relations together form a directed (acyclic) graph.  This graph is sorted
- * using a topological sort as described at [1].
- *
- * [1]: http://en.wikipedia.org/w/index.php?title=Topological_sorting&oldid=153157450#Algorithms
+ * using a topological sort.
  */
-
-/* An edge of the graph, specifying that predecessor must come before
- * successor. */
-struct edge {
-  struct plugin *predecessor;
-  struct plugin *successor;
-};
 
 /* Get all edges as specified by the all plugins' "after" and "before"
  * attributes. */
@@ -259,7 +252,7 @@ static GList *get_edges(void) {
       struct plugin *successor = get_plugin((*successors)[i]);
 
       if (successor != NULL) {
-        struct edge *edge = malloc(sizeof (struct edge));
+        struct Edge *edge = malloc(sizeof *edge);
         edge->predecessor = p;
         edge->successor = successor;
         edges = g_list_append(edges, edge);
@@ -270,7 +263,7 @@ static GList *get_edges(void) {
       struct plugin *predecessor = get_plugin((*predecessors)[i]);
 
       if (predecessor != NULL) {
-        struct edge *edge = malloc(sizeof (struct edge));
+        struct Edge *edge = malloc(sizeof *edge);
         edge->predecessor = predecessor;
         edge->successor = p;
         edges = g_list_append(edges, edge);
@@ -281,60 +274,12 @@ static GList *get_edges(void) {
   return edges;
 }
 
-/* Get all nodes (plugins) with no incoming edges. */
-static GList *get_zeros(GList *edges) {
-  GList *zeros = g_list_copy(plugins);
-
-  for (GList *item = g_list_first(edges); item != NULL && g_list_first(zeros) != NULL; item = g_list_next(item)) {
-    struct edge *edge = item->data;
-
-    zeros = g_list_remove(zeros, edge->successor);
-  }
-
-  return zeros;
-}
-
-/* Check if the given node has no incoming edges in the given set. */
-static int is_zero(struct plugin *p, GList *edges) {
-  for (GList *item = g_list_first(edges); item != NULL; item = g_list_next(item)) {
-    struct edge *edge = item->data;
-    if (edge->successor == p)
-      return 0;
-  }
-
-  return 1;
-}
-
-/* Sort all plugins with a topological sort.  Returns 1 if sorting was
- * successful and -1 if cycles were found. */
 static int sort_plugins(void) {
   GList *edges = get_edges();
-  GList *zeros = get_zeros(edges);
-  GList *sorted_plugins = NULL;
+  GList *sorted_plugins = tsort(plugins, &edges);
 
-  for (GList *item = g_list_first(zeros); item != NULL; item = g_list_first(zeros)) {
-    struct plugin *p = item->data;
-
-    sorted_plugins = g_list_append(sorted_plugins, p);
-    zeros = g_list_remove(zeros, p);
-
-    for (GList *item = g_list_first(edges); item != NULL;) {
-      struct edge *edge = item->data;
-      item = g_list_next(item);
-
-      if (edge->predecessor != p)
-        continue;
-
-      edges = g_list_remove(edges, edge);
-
-      if (is_zero(edge->successor, edges))
-        zeros = g_list_append(zeros, edge->successor);
-
-      free(edge);
-    }
-  }
-
-  if (g_list_length(edges) == 0) {
+  if (sorted_plugins != NULL) {
+    assert(edges == NULL);
     GList *tmp = plugins;
     plugins = sorted_plugins;
     g_list_free(tmp);
@@ -344,12 +289,13 @@ static int sort_plugins(void) {
     fprintf(stderr, "vlock-plugins: circular dependencies detected:\n");
 
     for (GList *item = g_list_first(edges); item != NULL; item = g_list_next(item)) {
-      struct edge *edge = item->data;
-      fprintf(stderr, "\t%s\tmust come before\t%s\n", edge->predecessor->name, edge->successor->name);
+      struct Edge *edge = item->data;
+      struct plugin *p = edge->predecessor;
+      struct plugin *s = edge->successor;
+      fprintf(stderr, "\t%s\tmust come before\t%s\n", p->name, s->name);
       free(edge);
     }
 
-    g_list_free(sorted_plugins);
     g_list_free(edges);
 
     return -1;

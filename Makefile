@@ -90,10 +90,10 @@ vlock-main : override LDFLAGS += $(CRYPT_LIB)
 endif
 
 ifeq ($(USE_PLUGINS),y)
-vlock-main: plugins.o
+vlock-main: plugins.o tsort.o
 vlock-main : override LDFLAGS += $(DL_LIB) $(GLIB_LIB)
 vlock-main.o : override CFLAGS += -DUSE_PLUGINS
-plugins.o : override CFLAGS += $(GLIB_CFLAGS)
+plugins.o tsort.o : override CFLAGS += $(GLIB_CFLAGS)
 endif
 
 .PHONY: clean
