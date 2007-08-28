@@ -20,12 +20,12 @@
 
 const char *depends[] = { "vlock-all", NULL };
 
-int vlock_save(void __attribute__((__unused__)) **ctx) {
+bool vlock_save(void __attribute__((__unused__)) **ctx) {
   char arg[] = {TIOCL_BLANKSCREEN, 0};
-  return ioctl(STDIN_FILENO, TIOCLINUX, arg);
+  return ioctl(STDIN_FILENO, TIOCLINUX, arg) == 0;
 }
 
-int vlock_save_abort(void __attribute__((__unused__)) **ctx) {
+bool vlock_save_abort(void __attribute__((__unused__)) **ctx) {
   char arg[] = {TIOCL_UNBLANKSCREEN, 0};
-  return ioctl(STDIN_FILENO, TIOCLINUX, arg);
+  return ioctl(STDIN_FILENO, TIOCLINUX, arg) == 0;
 }
