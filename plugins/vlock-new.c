@@ -86,8 +86,7 @@ static char *get_console_name(int n) {
   if (namelen > sizeof name) {
     fprintf(stderr, "vlock-new: virtual terminal number too large\n");
     return NULL;
-  }
-  else {
+  } else {
     return name;
   }
 }

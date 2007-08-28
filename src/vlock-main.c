@@ -212,9 +212,9 @@ int main(int argc, char *const argv[]) {
     for (;;) {
       char c = read_character(timeout);
 
-      if (c == '\n') {
+      if (c == '\n')
         break;
-      }
+
 #ifdef USE_PLUGINS
       else if (c == '\033' || c == 0) {
         if (plugin_hook(HOOK_VLOCK_SAVE) == 0)

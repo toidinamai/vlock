@@ -201,8 +201,7 @@ int resolve_dependencies(void) {
       if (list_find(required_plugins, p) != NULL) {
         fprintf(stderr, "vlock-plugins: %s does not work without %s\n", p->name, (*depends)[i]);
         goto err;
-      }
-      else {
+      } else {
         unload_plugin(p); 
         break;
       }
@@ -322,8 +321,7 @@ int plugin_hook(unsigned int hook) {
           p->hooks[hook] = NULL;
       }
     }
-  }
-  else if (hook == HOOK_VLOCK_END || hook == HOOK_VLOCK_SAVE_ABORT) {
+  } else if (hook == HOOK_VLOCK_END || hook == HOOK_VLOCK_SAVE_ABORT) {
     for (struct List *item = list_last(plugins); item != NULL; item = list_previous(item)) {
       struct plugin *p = item->data;
       if (p->hooks[hook] == NULL)
@@ -337,8 +335,7 @@ int plugin_hook(unsigned int hook) {
         p->hooks[HOOK_VLOCK_SAVE] = NULL;
       }
     }
-  }
-  else {
+  } else {
     fprintf(stderr, "vlock-plugins: unknown hook '%d'\n", hook);
     return -1;
   }
