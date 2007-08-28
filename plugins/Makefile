@@ -10,7 +10,7 @@ endif
 endif
 
 .PHONY: all
-all: $(PLUGINS)
+all: $(PLUGINS) $(EXTRA_PLUGINS)
 
 .PHONY: install
 install: $(addprefix install-, $(PLUGINS))

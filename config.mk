@@ -12,6 +12,7 @@ USE_ROOT_PASS = y
 USE_PLUGINS = y
 # which plugins should be build, default is architecture dependent
 # PLUGINS = 
+EXTRA_PLUGINS =
 
 # root's group, default is architecture dependent
 ROOT_GROUP =
