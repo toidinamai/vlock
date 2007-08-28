@@ -35,6 +35,23 @@ const char *hook_names[] = {
   "vlock_save_abort",
 };
 
+enum hooks {
+  HOOK_VLOCK_START = 0,
+  HOOK_VLOCK_END,
+  HOOK_VLOCK_SAVE,
+  HOOK_VLOCK_SAVE_ABORT,
+};
+
+const size_t nr_hooks = (sizeof (hook_names)/sizeof (hook_names[0]));
+
+int get_hook_index(const char *name) {
+  for (size_t i = 0; i < nr_hooks; i++)
+    if (strcmp(hook_names[i], name) == 0)
+      return i;
+
+  return -1;
+}
+
 /* function type for hooks */
 typedef int (*vlock_hook_fn)(void **);
 
@@ -45,14 +62,14 @@ struct plugin {
   /* path to the shared object file */
   char *path;
 
-  /* plugin hook functions */
-  vlock_hook_fn hooks[NR_HOOKS];
-
   /* plugin hook context */
   void *ctx;
 
   /* dl handle */
   void *dl_handle;
+
+  /* plugin hook functions */
+  vlock_hook_fn hooks[];
 };
 
 /* the list of plugins */
@@ -77,7 +94,7 @@ static struct plugin *open_plugin(const char *name, const char *plugin_dir) {
   struct plugin *new;
 
   /* allocate a new plugin object */
-  if ((new = malloc(sizeof *new)) == NULL)
+  if ((new = malloc((sizeof *new) + nr_hooks * (sizeof (vlock_hook_fn)))) == NULL)
     return NULL;
 
   new->ctx = NULL;
@@ -101,7 +118,7 @@ static struct plugin *open_plugin(const char *name, const char *plugin_dir) {
   }
 
   /* load the hooks, unimplemented hooks are NULL */
-  for (int i = 0; i < NR_HOOKS; i++) {
+  for (size_t i = 0; i < nr_hooks; i++) {
     *(void **) (&new->hooks[i]) = dlsym(new->dl_handle, hook_names[i]);
   }
 
@@ -302,42 +319,47 @@ static bool sort_plugins(void) {
 }
 
 /* Call the given plugin hook. */
-int plugin_hook(unsigned int hook) {
-  int result;
+int plugin_hook(const char *hook_name) {
+  int hook_index = get_hook_index(hook_name);
 
-  if (hook == HOOK_VLOCK_START || hook == HOOK_VLOCK_SAVE) {
+  if (hook_index == HOOK_VLOCK_START || hook_index == HOOK_VLOCK_SAVE) {
     for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
       struct plugin *p = item->data;
+      vlock_hook_fn hook = p->hooks[hook_index];
+      int result;
 
-      if (p->hooks[hook] == NULL)
+      if (hook == NULL)
         continue;
 
-      result = p->hooks[hook](&p->ctx);
+      result = hook(&p->ctx);
 
       if (result != 0) {
-        if (hook == HOOK_VLOCK_START)
+        if (hook_index == HOOK_VLOCK_START)
           return result;
-        else if (hook == HOOK_VLOCK_SAVE)
+        else if (hook_index == HOOK_VLOCK_SAVE)
           /* don't call again */
-          p->hooks[hook] = NULL;
+          p->hooks[hook_index] = NULL;
       }
     }
-  } else if (hook == HOOK_VLOCK_END || hook == HOOK_VLOCK_SAVE_ABORT) {
+  } else if (hook_index == HOOK_VLOCK_END || hook_index == HOOK_VLOCK_SAVE_ABORT) {
     for (struct List *item = list_last(plugins); item != NULL; item = list_previous(item)) {
       struct plugin *p = item->data;
-      if (p->hooks[hook] == NULL)
+      vlock_hook_fn hook = p->hooks[hook_index];
+      int result;
+
+      if (hook == NULL)
         continue;
 
-      result = p->hooks[hook](&p->ctx);
+      result = hook(&p->ctx);
 
-      if (result != 0 && hook == HOOK_VLOCK_SAVE_ABORT) {
+      if (result != 0 && hook_index == HOOK_VLOCK_SAVE_ABORT) {
         /* don't call again */
-        p->hooks[hook] = NULL;
+        p->hooks[hook_index] = NULL;
         p->hooks[HOOK_VLOCK_SAVE] = NULL;
       }
     }
   } else {
-    fprintf(stderr, "vlock-plugins: unknown hook '%d'\n", hook);
+    fprintf(stderr, "vlock-plugins: unknown hook '%s'\n", hook_name);
     return -1;
   }
 

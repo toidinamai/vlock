@@ -23,12 +23,5 @@ bool resolve_dependencies(void);
 /* Unload all plugins. */
 void unload_plugins(void);
 
-#define HOOK_VLOCK_START 0
-#define HOOK_VLOCK_END 1
-#define HOOK_VLOCK_SAVE 2
-#define HOOK_VLOCK_SAVE_ABORT 3
-
-#define NR_HOOKS 4
-
 /* Call the given plugin hook. */
-int plugin_hook(unsigned int hook);
+int plugin_hook(const char *hook);
