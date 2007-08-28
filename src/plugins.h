@@ -11,9 +11,17 @@
  *
  */
 
+/* Load the named plugin from the specified directory.  Returns true if loading
+ * was successful and false otherwise. */
 int load_plugin(const char *name, const char *plugin_dir);
-void unload_plugins(void);
+
+/* Resolve all the dependencies between all plugins.  Returns false if there
+ * was an error and true otherwise.  This function *must* be called after all
+ * plugins were loaded. */
 int resolve_dependencies(void);
+
+/* Unload all plugins. */
+void unload_plugins(void);
 
 #define HOOK_VLOCK_START 0
 #define HOOK_VLOCK_END 1
@@ -22,6 +30,5 @@ int resolve_dependencies(void);
 
 #define NR_HOOKS 4
 
-extern const char *hook_names[];
-
+/* Call the given plugin hook. */
 int plugin_hook(unsigned int hook);
