@@ -1,4 +1,5 @@
 include ../config.mk
+include ../system.mk
 
 ifeq ($(origin PLUGINS),undefined)
 ifeq ($(UNAME),Linux)

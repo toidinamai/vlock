@@ -1,6 +1,7 @@
 # vlock makefile
 
 include config.mk
+include system.mk
 
 VPATH = src
 
@@ -20,25 +21,6 @@ plugins:
 	@$(MAKE) -C plugins
 
 ### installation rules ###
-
-ifndef VLOCK_GROUP
-VLOCK_GROUP = root
-ifndef VLOCK_MODE
-VLOCK_MODE = 4711
-endif
-else # VLOCK_GROUP is defined
-ifndef VLOCK_MODE
-VLOCK_MODE = 4710
-endif
-endif
-
-ifndef ROOT_GROUP
-ifeq ($(UNAME),FreeBSD)
-ROOT_GROUP = wheel
-else ifneq (,$(findstring FreeBSD,$(UNAME)))
-ROOT_GROUP = root
-endif
-endif
 
 .PHONY: install
 install: install-programs install-man
