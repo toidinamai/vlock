@@ -174,7 +174,9 @@ static bool sort_plugins(void);
 bool resolve_dependencies(void) {
   struct List *required_plugins = NULL;
 
-  /* load plugins that are required */
+  /* load plugins that are required, this automagically takes care of plugins
+   * that are required by the plugins loaded here because they are appended to
+   * the end of the list */
   list_for_each(plugins, item) {
     struct plugin *p = item->data;
     const char *(*requires)[] = dlsym(p->dl_handle, "requires");
