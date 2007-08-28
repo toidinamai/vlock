@@ -78,7 +78,7 @@ struct List *plugins = NULL;
 /* Get the plugin with the given name.  Returns the first plugin
  * with the given name or NULL if none could be found. */
 static struct plugin *get_plugin(const char *name) {
-  for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
+  list_for_each(plugins, item) {
     struct plugin *p = item->data;
 
     if (strcmp(p->name, name) == 0)
@@ -174,7 +174,7 @@ bool resolve_dependencies(void) {
   struct List *required_plugins = NULL;
 
   /* load plugins that are required */
-  for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
+  list_for_each(plugins, item) {
     struct plugin *p = item->data;
     const char *(*requires)[] = dlsym(p->dl_handle, "requires");
 
@@ -189,7 +189,7 @@ bool resolve_dependencies(void) {
   }
 
   /* fail if a plugins that is needed is not loaded */
-  for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
+  list_for_each(plugins, item) {
     struct plugin *p = item->data;
     const char *(*needs)[] = dlsym(p->dl_handle, "needs");
 
@@ -206,7 +206,7 @@ bool resolve_dependencies(void) {
   }
 
   /* unload plugins whose prerequisites are not present */
-  for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
+  list_for_each(plugins, item) {
     struct plugin *p = item->data;
     const char *(*depends)[] = dlsym(p->dl_handle, "depends");
 
@@ -229,7 +229,7 @@ bool resolve_dependencies(void) {
   list_free(required_plugins);
 
   /* fail if conflicting plugins are loaded */
-  for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
+  list_for_each(plugins, item) {
     struct plugin *p = item->data;
     const char *(*conflicts)[] = dlsym(p->dl_handle, "conflicts");
 
@@ -258,7 +258,7 @@ err:
 static struct List *get_edges(void) {
   struct List *edges = NULL;
 
-  for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
+  list_for_each(plugins, item) {
     struct plugin *p = item->data;
     /* p must come after these */
     const char *(*predecessors)[] = dlsym(p->dl_handle, "after");
@@ -304,7 +304,7 @@ static bool sort_plugins(void) {
   } else {
     fprintf(stderr, "vlock-plugins: circular dependencies detected:\n");
 
-    for (struct List *item = list_first(edges); item != NULL; item = list_next(item)) {
+    list_for_each(edges, item) {
       struct Edge *edge = item->data;
       struct plugin *p = edge->predecessor;
       struct plugin *s = edge->successor;
@@ -323,7 +323,7 @@ bool plugin_hook(const char *hook_name) {
   int hook_index = get_hook_index(hook_name);
 
   if (hook_index == HOOK_VLOCK_START || hook_index == HOOK_VLOCK_SAVE) {
-    for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
+    list_for_each(plugins, item) {
       struct plugin *p = item->data;
       vlock_hook_fn hook = p->hooks[hook_index];
       bool result;
