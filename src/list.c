@@ -107,7 +107,7 @@ struct List *list_previous(struct List *list) {
 }
 
 struct List *list_find(struct List *list, void *data) {
-  for (struct List *item = list_first(list); item != NULL; item = list_next(item)) {
+  list_for_each(list, item) {
     if (item->data == data)
       return item;
   }
