@@ -209,9 +209,11 @@ bool resolve_dependencies(void) {
   }
 
   /* unload plugins whose prerequisites are not present */
-  list_for_each(plugins, item) {
+  for (struct List *item = list_first(plugins); item != NULL;) {
     struct plugin *p = item->data;
     const char *(*depends)[] = dlsym(p->dl_handle, "depends");
+    struct List *tmp = item;
+    item = list_next(item);
 
     for (int i = 0; depends != NULL && (*depends)[i] != NULL; i++) {
       struct plugin *d = get_plugin((*depends)[i]);
@@ -223,8 +225,7 @@ bool resolve_dependencies(void) {
         fprintf(stderr, "vlock-plugins: %s does not work without %s\n", p->name, (*depends)[i]);
         goto err;
       } else {
-        /* BUG: modifying list while iterating */
-        unload_plugin(item); 
+        unload_plugin(tmp); 
         break;
       }
     }
