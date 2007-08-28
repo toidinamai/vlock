@@ -32,6 +32,14 @@ VLOCK_MODE = 4710
 endif
 endif
 
+ifndef ROOT_GROUP
+ifeq ($(UNAME),FreeBSD)
+ROOT_GROUP = wheel
+else ifneq (,$(findstring FreeBSD,$(UNAME)))
+ROOT_GROUP = root
+endif
+endif
+
 .PHONY: install
 install: install-programs install-man
 

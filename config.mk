@@ -20,8 +20,8 @@ VLOCK_GROUP =
 # defaults to 4711 if group is unset and 4710 otherwise
 VLOCK_MODE =
 
-# root's group
-ROOT_GROUP = root
+# root's group (default is architecture dependent)
+ROOT_GROUP =
 
 ### paths ###
 
