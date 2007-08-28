@@ -53,7 +53,7 @@ int get_hook_index(const char *name) {
 }
 
 /* function type for hooks */
-typedef int (*vlock_hook_fn)(void **);
+typedef bool (*vlock_hook_fn)(void **);
 
 /* vlock plugin */
 struct plugin {
@@ -326,14 +326,14 @@ bool plugin_hook(const char *hook_name) {
     for (struct List *item = list_first(plugins); item != NULL; item = list_next(item)) {
       struct plugin *p = item->data;
       vlock_hook_fn hook = p->hooks[hook_index];
-      int result;
+      bool result;
 
       if (hook == NULL)
         continue;
 
       result = hook(&p->ctx);
 
-      if (result != 0) {
+      if (!result) {
         if (hook_index == HOOK_VLOCK_START)
           return false;
         else if (hook_index == HOOK_VLOCK_SAVE)
@@ -347,14 +347,14 @@ bool plugin_hook(const char *hook_name) {
     for (struct List *item = list_last(plugins); item != NULL; item = list_previous(item)) {
       struct plugin *p = item->data;
       vlock_hook_fn hook = p->hooks[hook_index];
-      int result;
+      bool result;
 
       if (hook == NULL)
         continue;
 
       result = hook(&p->ctx);
 
-      if (result != 0 && hook_index == HOOK_VLOCK_SAVE_ABORT) {
+      if (!result && hook_index == HOOK_VLOCK_SAVE_ABORT) {
         /* don't call again */
         p->hooks[hook_index] = NULL;
         p->hooks[HOOK_VLOCK_SAVE] = NULL;
