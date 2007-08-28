@@ -186,7 +186,7 @@ int main(int argc, char *const argv[]) {
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
 #ifdef USE_PLUGINS
-  if (plugin_hook("vlock_start") < 0) {
+  if (!plugin_hook("vlock_start")) {
     exit_status = 111;
     goto out;
   }
@@ -217,10 +217,10 @@ int main(int argc, char *const argv[]) {
 
 #ifdef USE_PLUGINS
       else if (c == '\033' || c == 0) {
-        if (plugin_hook("vlock_save") == 0)
+        if (!plugin_hook("vlock_save") == 0)
           /* wait for key press */
           (void) read_character(NULL);
-        plugin_hook("vlock_save_abort");
+        (void) plugin_hook("vlock_save_abort");
       }
 #endif
     }
@@ -243,7 +243,7 @@ int main(int argc, char *const argv[]) {
   }
 
 #ifdef USE_PLUGINS
-  plugin_hook("vlock_end");
+  (void) plugin_hook("vlock_end");
 #else
   /* call vlock-new and vlock-all statically */
 #error "Not implemented."

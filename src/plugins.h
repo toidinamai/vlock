@@ -24,4 +24,4 @@ bool resolve_dependencies(void);
 void unload_plugins(void);
 
 /* Call the given plugin hook. */
-int plugin_hook(const char *hook);
+bool plugin_hook(const char *hook);

@@ -319,7 +319,7 @@ static bool sort_plugins(void) {
 }
 
 /* Call the given plugin hook. */
-int plugin_hook(const char *hook_name) {
+bool plugin_hook(const char *hook_name) {
   int hook_index = get_hook_index(hook_name);
 
   if (hook_index == HOOK_VLOCK_START || hook_index == HOOK_VLOCK_SAVE) {
@@ -335,12 +335,14 @@ int plugin_hook(const char *hook_name) {
 
       if (result != 0) {
         if (hook_index == HOOK_VLOCK_START)
-          return result;
+          return false;
         else if (hook_index == HOOK_VLOCK_SAVE)
           /* don't call again */
           p->hooks[hook_index] = NULL;
       }
     }
+
+    return false;
   } else if (hook_index == HOOK_VLOCK_END || hook_index == HOOK_VLOCK_SAVE_ABORT) {
     for (struct List *item = list_last(plugins); item != NULL; item = list_previous(item)) {
       struct plugin *p = item->data;
@@ -358,10 +360,10 @@ int plugin_hook(const char *hook_name) {
         p->hooks[HOOK_VLOCK_SAVE] = NULL;
       }
     }
+
+    return true;
   } else {
     fprintf(stderr, "vlock-plugins: unknown hook '%s'\n", hook_name);
-    return -1;
+    return false;
   }
-
-  return 0;
 }
