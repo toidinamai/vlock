@@ -100,6 +100,10 @@ int main(int argc, char *const argv[]) {
   struct sigaction sa;
   /* get the user id */
   uid_t uid = getuid();
+#ifdef USE_PLUGINS
+  /* get the effective user id */
+  uid_t euid = geteuid();
+#endif
   /* get the user name from the environment */
   char *envuser = getenv("USER"); 
 
@@ -141,6 +145,9 @@ int main(int argc, char *const argv[]) {
   }
 
 #ifdef USE_PLUGINS
+  /* drop privileges while loading plugins */
+  seteuid(getuid());
+
   for (int i = 1; i < argc; i++) {
     errno = 0;
 
@@ -153,6 +160,9 @@ int main(int argc, char *const argv[]) {
       exit (111);
     }
   }
+
+  /* regain privileges after loading plugins */
+  seteuid(euid);
 
   if (resolve_dependencies() < 0)
     exit (111);
