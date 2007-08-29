@@ -75,7 +75,7 @@ bool vlock_start(void **ctx_ptr) {
   }
 
   *ctx_ptr = ctx;
-  return 0;
+  return true;
 
 nothing_to_do:
   free(ctx);
