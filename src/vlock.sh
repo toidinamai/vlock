@@ -9,22 +9,24 @@ set -e
 # magic characters to clear the terminal
 CLEAR_SCREEN="`echo -e '\033[H\033[J'`"
 
+VLOCK_ENTER_PROMPT="Please press [ENTER] to unlock."
+
 # message that is displayed when console switching is disabled
 VLOCK_ALL_MESSAGE="${CLEAR_SCREEN}\
 The entire console display is now completely locked.
 You will not be able to switch to another virtual console.
 
-Please press [ENTER] to unlock."
+${VLOCK_ENTER_PROMPT}"
 
 # message that is displayed when only the current terminal is locked
 VLOCK_CURRENT_MESSAGE="${CLEAR_SCREEN}\
 This TTY is now locked.
 
-Please press [ENTER] to unlock."
+${VLOCK_ENTER_PROMPT}"
 
 # read user settings
-if [ -r "$HOME/.vlockrc" ] ; then
-  . "$HOME/.vlockrc"
+if [ -r "${HOME}/.vlockrc" ] ; then
+  . "${HOME}/.vlockrc"
 fi
 
 VLOCK_ALL=%PREFIX%/sbin/vlock-all
@@ -104,7 +106,7 @@ main() {
        print_help 0
        ;;
       -v|--version)
-        echo "vlock version $VLOCK_VERSION" >&2
+        echo "vlock version ${VLOCK_VERSION}" >&2
         exit
         ;;
       --) shift ; break ;;
@@ -115,7 +117,7 @@ main() {
     esac
   done
 
-  if [ $lock_new -ne 0 ] && [ -n "$DISPLAY" ] ; then
+  if [ ${lock_new} -ne 0 ] && [ -n "${DISPLAY}" ] ; then
     # work around an annoying X11 bug
     sleep 1
   fi
@@ -124,25 +126,27 @@ main() {
   export VLOCK_MESSAGE VLOCK_PROMPT_TIMEOUT
 
   if [ $lock_all -ne 0 ] ; then
-    : ${VLOCK_MESSAGE:="$VLOCK_ALL_MESSAGE"}
+    : ${VLOCK_MESSAGE:="${VLOCK_ALL_MESSAGE}"}
 
     if [ $nosysrq -ne 0 ] ; then
       if [ $lock_new -ne 0 ] ; then
+        # tell vlock-nosysrq to start vlock-new
         export VLOCK_NEW=1
       else
+        # tell vlock-nosysrq to start vlock-all
         unset VLOCK_NEW
       fi
 
-      checked_exec "$VLOCK_NOSYSRQ"
+      checked_exec "${VLOCK_NOSYSRQ}"
     elif [ $lock_new -ne 0 ] ; then
-      checked_exec "$VLOCK_NEW"
+      checked_exec "${VLOCK_NEW}"
     else
-      checked_exec "$VLOCK_ALL"
+      checked_exec "${VLOCK_ALL}"
     fi
   else
-    : ${VLOCK_MESSAGE:="$VLOCK_CURRENT_MESSAGE"}
+    : ${VLOCK_MESSAGE:="${VLOCK_CURRENT_MESSAGE}"}
 
-    checked_exec "$VLOCK_CURRENT"
+    checked_exec "${VLOCK_CURRENT}"
   fi
 }
 
