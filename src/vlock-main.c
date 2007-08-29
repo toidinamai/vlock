@@ -196,7 +196,7 @@ int main(int argc, char *const argv[]) {
 #endif
 
   for (;;) {
-    tcflag_t lflag = term.c_lflag;;
+    tcflag_t lflag = term.c_lflag;
 
     if (vlock_message) {
       /* print vlock message */
