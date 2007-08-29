@@ -3,12 +3,15 @@ high
 
 - comments
 - documentation
+- better error handling in src/plugins.c
 
 medium
 ------
 
-- make it possible to use vlock-new and vlock-all without USE_PLUGINS
+- make it possible to use vlock-all without USE_PLUGINS
 - do not depend on bash when not using plugins
+- do not require key press when no plugin with a vlock_save
+  is active
 
 low
 ---
