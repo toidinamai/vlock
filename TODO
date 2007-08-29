@@ -9,8 +9,3 @@ medium
 
 low
 ---
-
-- add configurable actions to be executed when terminal
-  is locked
-- add configurable actions to be executed when authentication
-  times out
