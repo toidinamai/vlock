@@ -9,22 +9,24 @@ set -e
 # magic characters to clear the terminal
 CLEAR_SCREEN="`echo -e '\033[H\033[J'`"
 
+VLOCK_ENTER_PROMPT="Please press [ENTER] to unlock."
+
 # message that is displayed when console switching is disabled
 VLOCK_ALL_MESSAGE="${CLEAR_SCREEN}\
 The entire console display is now completely locked.
 You will not be able to switch to another virtual console.
 
-Please press [ENTER] to unlock."
+${VLOCK_ENTER_PROMPT}"
 
 # message that is displayed when only the current terminal is locked
 VLOCK_CURRENT_MESSAGE="${CLEAR_SCREEN}\
 This TTY is now locked.
 
-Please press [ENTER] to unlock."
+${VLOCK_ENTER_PROMPT}"
 
 # read user settings
-if [ -r "$HOME/.vlockrc" ] ; then
-  . "$HOME/.vlockrc"
+if [ -r "${HOME}/.vlockrc" ] ; then
+  . "${HOME}/.vlockrc"
 fi
 
 VLOCK_MAIN="%PREFIX%/sbin/vlock-main"
@@ -139,7 +141,7 @@ main() {
        exit
        ;;
       -v|--version)
-        echo "vlock version $VLOCK_VERSION" >&2
+        echo "vlock version ${VLOCK_VERSION}" >&2
         exit
         ;;
       *) 

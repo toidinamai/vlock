@@ -1,3 +1,15 @@
+2007-08-29 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.1 rc1
+
+	* Really tiny cleanups.
+
+2007-08-23 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.1 beta1
+
+	* Fix compilation on Debian/kFreeBSD.
+
 2007-08-16 Frank Benkstein <frank-vlock@benkstein.net>
 
 	vlock 2.1 alpha2
