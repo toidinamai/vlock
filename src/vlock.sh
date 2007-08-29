@@ -33,7 +33,7 @@ VLOCK_ALL="%PREFIX%/sbin/vlock-all"
 VLOCK_NEW="%PREFIX%/sbin/vlock-new"
 VLOCK_NOSYSRQ="%PREFIX%/sbin/vlock-nosysrq"
 VLOCK_CURRENT="%PREFIX%/sbin/vlock-current"
-VLOCK_VERSION=%VLOCK_VERSION%
+VLOCK_VERSION="%VLOCK_VERSION%"
 
 print_help() {
   echo >&2 "vlock: locks virtual consoles, saving your current session."
