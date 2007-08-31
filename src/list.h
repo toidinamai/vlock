@@ -75,3 +75,6 @@ void list_free(struct List *list);
 
 #define list_for_each(list, item) \
   for (struct List *item = list_first(list); item != NULL; item = list_next(item))
+
+#define list_reverse_for_each(list, item) \
+    for (struct List *item = list_last(plugins); item != NULL; item = list_previous(item))
