@@ -93,6 +93,11 @@ static struct plugin *get_plugin(const char *name) {
   return NULL;
 }
 
+/* Check if the given plugin is loaded. */
+bool is_loaded(const char *name) {
+  return get_plugin(name) != NULL;
+}
+
 /* Open the plugin in file with the given name at the specified location.
  * Returns the new plugin or NULL on error. */
 static struct plugin *open_plugin(const char *name, const char *plugin_dir) {
