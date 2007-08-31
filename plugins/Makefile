@@ -9,8 +9,10 @@ PLUGINS = all.so new.so
 endif
 endif
 
+PLUGINS += $(EXTRA_PLUGINS)
+
 .PHONY: all
-all: $(PLUGINS) $(EXTRA_PLUGINS)
+all: $(PLUGINS)
 
 .PHONY: install
 install: $(addprefix install-, $(PLUGINS))
