@@ -39,19 +39,19 @@ declare -a plugin_name plugin_short_option plugin_long_option plugin_help
 load_plugins() {
   local plugin_file long_option short_option help i=0
 
-  for plugin_file in "$VLOCK_PLUGIN_DIR"/*.sh ; do
+  for plugin_file in "${VLOCK_PLUGIN_DIR}"/*.sh ; do
     # clear the variables that should be set by the plugin file
     unset short_option long_option help
 
     # load the plugin file
-    . "$plugin_file"
+    . "${plugin_file}"
 
     # remember the plugin in the global arrays
     # strip the VLOCK_PLUGIN_DIR start and the ".sh" end
     plugin_name[$i]="${plugin_file:${#VLOCK_PLUGIN_DIR}+1:${#plugin_file}-${#VLOCK_PLUGIN_DIR}-4}"
-    plugin_short_option[$i]="$short_option"
-    plugin_long_option[$i]="$long_option"
-    plugin_help[$i]="$help"
+    plugin_short_option[$i]="${short_option}"
+    plugin_long_option[$i]="${long_option}"
+    plugin_help[$i]="${help}"
 
     : $((i++))
   done
@@ -61,8 +61,8 @@ print_plugin_help() {
   local help
 
   for help in "${plugin_help[@]}" ; do
-    if [ -n "$help" ] ; then
-      echo >&2 "$help"
+    if [ -n "${help}" ] ; then
+      echo >&2 "${help}"
     fi
   done
 }
@@ -91,14 +91,14 @@ main() {
   load_plugins
 
   for opt in "${plugin_short_option[@]}" ; do
-    if [ -n "$opt" ] ; then
-      short_options="$short_options$opt"
+    if [ -n "${opt}" ] ; then
+      short_options="${short_options}${opt}"
     fi
   done
 
   for opt in "${plugin_long_option[@]}" ; do
-    if [ -n "$opt" ] ; then
-      long_options="$long_options,$opt"
+    if [ -n "${opt}" ] ; then
+      long_options="${long_options},${opt}"
     fi
   done
 
@@ -107,18 +107,18 @@ main() {
 
   if [ $? -eq 4 ] ; then
     # gnu getopt
-    options=`getopt -o "$short_options" --long "$long_options" -n vlock -- "$@"` || getopt_error=1
+    options=`getopt -o "${short_options}" --long "${long_options}" -n vlock -- "$@"` || getopt_error=1
   else
     # other getopt, e.g. BSD
-    options=`getopt "$short_options" "$@"` || getopt_error=1
+    options=`getopt "${short_options}" "$@"` || getopt_error=1
   fi
 
-  if [ -n "$getopt_error" ] ; then
+  if [ -n "${getopt_error}" ] ; then
     print_help
     exit 1
   fi
 
-  eval set -- "$options"
+  eval set -- "${options}"
 
   while : ; do
     case "$1" in
@@ -147,55 +147,60 @@ main() {
       *) 
         local plugin="" i=0
 
+        # find the plugin this option belongs to
+
+        # try short options first
         for opt in "${plugin_short_option[@]}" ; do
-          if [ -n "$opt" ] && [ "$1" = "-$opt" ] ; then
+          if [ -n "${opt}" ] && [ "$1" = "-$opt" ] ; then
             plugin="${plugin_name[$i]}"
             break
           fi
           : $((i++))
         done
 
-        if [ -z "$plugin" ] ; then
+        if [ -z "${plugin}" ] ; then
           i=0
 
+          # now try long options
           for opt in "${plugin_long_option[@]}" ; do
-            if [ -n "$opt" ] && [ "$1" = "--$opt" ] ; then
+            if [ -n "${opt}" ] && [ "$1" = "--${opt}" ] ; then
               plugin="${plugin_name[$i]}"
-              long_options="$long_options,$opt"
+              break
             fi
+          : $((i++))
           done
         fi
 
-        if [ -n "$plugin" ] ; then
-          plugins[${#plugins[@]}]="$plugin"
+        if [ -n "${plugin}" ] ; then
+          plugins[${#plugins[@]}]="${plugin}"
           shift
         else
-          echo "getopt error: $1" >&2
+          echo "getopt error: unknown option '$1'" >&2
           exit 1
         fi
         ;;
     esac
   done
 
-  # export variables for vlock-current
+  # export variables for vlock-main
   export VLOCK_MESSAGE VLOCK_TIMEOUT VLOCK_PROMPT_TIMEOUT
 
-  if [ -z "$VLOCK_MESSAGE" ] ; then
+  if [ -z "${VLOCK_MESSAGE}" ] ; then
     local plugin
-    VLOCK_MESSAGE="$VLOCK_CURRENT_MESSAGE"
+    VLOCK_MESSAGE="${VLOCK_CURRENT_MESSAGE}"
 
-    # XXX: this bit should probably be moved to vlock-main
+    # XXX: this bit should be moved to vlock-main
     for plugin in "${plugin_name[@]}" ; do
       if [ "$plugin" = "all" ] \
         || [ "$plugin" = "new" ] \
         || [ "$plugin" = "nosysrq" ] ; then
-        VLOCK_MESSAGE="$VLOCK_ALL_MESSAGE"
+        VLOCK_MESSAGE="${VLOCK_ALL_MESSAGE}"
         break
       fi
     done
   fi
 
-  exec "$VLOCK_MAIN" "${plugins[@]}" "$@"
+  exec "${VLOCK_MAIN}" "${plugins[@]}" "$@"
 }
 
 main "$@"
