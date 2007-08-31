@@ -3,9 +3,9 @@ include ../system.mk
 
 ifeq ($(origin PLUGINS),undefined)
 ifeq ($(UNAME),Linux)
-PLUGINS = vlock-all.so vlock-new.so vlock-nosysrq.so
+PLUGINS = all.so new.so nosysrq.so
 else ifneq (,$(findstring FreeBSD,$(UNAME)))
-PLUGINS = vlock-all.so vlock-new.so
+PLUGINS = all.so new.so
 endif
 endif
 
@@ -18,10 +18,10 @@ install: $(addprefix install-, $(PLUGINS))
 PLUGIN_GROUP = $(ROOT_GROUP)
 PLUGIN_MODE = 0755
 
-install-vlock-new.so : PLUGIN_GROUP=$(VLOCK_GROUP)
-install-vlock-new.so : PLUGIN_MODE=$(VLOCK_PLUGIN_MODE)
-install-vlock-nosysrq.so : PLUGIN_GROUP=$(VLOCK_GROUP)
-install-vlock-nosysrq.so : PLUGIN_MODE=$(VLOCK_PLUGIN_MODE)
+install-new.so : PLUGIN_GROUP=$(VLOCK_GROUP)
+install-new.so : PLUGIN_MODE=$(VLOCK_PLUGIN_MODE)
+install-nosysrq.so : PLUGIN_GROUP=$(VLOCK_GROUP)
+install-nosysrq.so : PLUGIN_MODE=$(VLOCK_PLUGIN_MODE)
 
 .PHONY: install-%
 install-% : PLUGIN_SCRIPT=$(<:.so=.sh)
