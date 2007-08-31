@@ -35,14 +35,19 @@ const char *hook_names[] = {
   "vlock_save_abort",
 };
 
-enum hooks {
-  HOOK_VLOCK_START = 0,
-  HOOK_VLOCK_END,
-  HOOK_VLOCK_SAVE,
-  HOOK_VLOCK_SAVE_ABORT,
-};
-
 const size_t nr_hooks = (sizeof (hook_names)/sizeof (hook_names[0]));
+
+static bool handle_vlock_start(int hook_index);
+static bool handle_vlock_end(int hook_index);
+static bool handle_vlock_save(int hook_index);
+static bool handle_vlock_save_abort(int hook_index);
+
+bool (*hook_handlers[])(int) = {
+  handle_vlock_start,
+  handle_vlock_end,
+  handle_vlock_save,
+  handle_vlock_save_abort,
+};
 
 int get_hook_index(const char *name) {
   for (size_t i = 0; i < nr_hooks; i++)
@@ -327,48 +332,66 @@ static bool sort_plugins(void) {
 bool plugin_hook(const char *hook_name) {
   int hook_index = get_hook_index(hook_name);
 
-  if (hook_index == HOOK_VLOCK_START || hook_index == HOOK_VLOCK_SAVE) {
-    list_for_each(plugins, item) {
-      struct plugin *p = item->data;
-      vlock_hook_fn hook = p->hooks[hook_index];
-      bool result;
-
-      if (hook == NULL)
-        continue;
-
-      result = hook(&p->ctx);
-
-      if (!result) {
-        if (hook_index == HOOK_VLOCK_START)
-          return false;
-        else if (hook_index == HOOK_VLOCK_SAVE)
-          /* don't call again */
-          p->hooks[hook_index] = NULL;
-      }
-    }
-
-    return true;
-  } else if (hook_index == HOOK_VLOCK_END || hook_index == HOOK_VLOCK_SAVE_ABORT) {
-    for (struct List *item = list_last(plugins); item != NULL; item = list_previous(item)) {
-      struct plugin *p = item->data;
-      vlock_hook_fn hook = p->hooks[hook_index];
-      bool result;
-
-      if (hook == NULL)
-        continue;
-
-      result = hook(&p->ctx);
-
-      if (!result && hook_index == HOOK_VLOCK_SAVE_ABORT) {
-        /* don't call again */
-        p->hooks[hook_index] = NULL;
-        p->hooks[HOOK_VLOCK_SAVE] = NULL;
-      }
-    }
-
-    return true;
-  } else {
+  if (hook_index < 0) {
     fprintf(stderr, "vlock-plugins: unknown hook '%s'\n", hook_name);
     return false;
+  } else {
+    return hook_handlers[hook_index](hook_index);
   }
+}
+
+static bool handle_vlock_start(int hook_index) {
+  list_for_each(plugins, item) {
+    struct plugin *p = item->data;
+    vlock_hook_fn hook = p->hooks[hook_index];
+
+    if (!hook(&p->ctx))
+      return false;
+  }
+
+  return true;
+}
+
+static bool handle_vlock_end(int hook_index) {
+  list_reverse_for_each(plugins, item) {
+    struct plugin *p = item->data;
+    vlock_hook_fn hook = p->hooks[hook_index];
+
+    (void) hook(&p->ctx);
+  }
+
+  return true;
+}
+
+static bool handle_vlock_save(int hook_index) {
+  bool result = (plugins != NULL);
+
+  list_for_each(plugins, item) {
+    struct plugin *p = item->data;
+    vlock_hook_fn hook = p->hooks[hook_index];
+
+    if (!hook(&p->ctx)) {
+      /* don't call again */
+      p->hooks[hook_index] = NULL;
+
+      result = false;
+    }
+  }
+
+  return result;
+}
+
+static bool handle_vlock_save_abort(int hook_index) {
+  list_reverse_for_each(plugins, item) {
+    struct plugin *p = item->data;
+    vlock_hook_fn hook = p->hooks[hook_index];
+
+    if (!hook(&p->ctx)) {
+      /* don't call again */
+      p->hooks[hook_index] = NULL;
+      p->hooks[get_hook_index("vlock_save")] = NULL;
+    }
+  }
+
+  return true;
 }
