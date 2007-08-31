@@ -184,11 +184,13 @@ main() {
     local plugin
     VLOCK_MESSAGE="$VLOCK_CURRENT_MESSAGE"
 
+    # XXX: this bit should probably be moved to vlock-main
     for plugin in "${plugin_name[@]}" ; do
-      if [ "$plugin" = "vlock-all" ] \
-        || [ "$plugin" = "vlock-new" ] \
-        || [ "$plugin" = "vlock-nosysrq" ] ; then
+      if [ "$plugin" = "all" ] \
+        || [ "$plugin" = "new" ] \
+        || [ "$plugin" = "nosysrq" ] ; then
         VLOCK_MESSAGE="$VLOCK_ALL_MESSAGE"
+        break
       fi
     done
   fi
