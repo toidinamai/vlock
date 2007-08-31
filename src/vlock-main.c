@@ -171,6 +171,15 @@ int main(int argc, char *const argv[]) {
   /* get the vlock message from the environment */
   vlock_message = getenv("VLOCK_MESSAGE");
 
+#ifdef USE_PLUGINS
+  if (vlock_message == NULL) {
+    if (is_loaded("all"))
+      vlock_message = getenv("VLOCK_ALL_MESSAGE");
+    else
+      vlock_message = getenv("VLOCK_CURRENT_MESSAGE");
+  }
+#endif
+
   /* get the timeouts from the environment */
   prompt_timeout = parse_seconds(getenv("VLOCK_PROMPT_TIMEOUT"));
 #ifdef USE_PLUGINS

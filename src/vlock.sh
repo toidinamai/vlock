@@ -183,22 +183,8 @@ main() {
   done
 
   # export variables for vlock-main
-  export VLOCK_MESSAGE VLOCK_TIMEOUT VLOCK_PROMPT_TIMEOUT
-
-  if [ -z "${VLOCK_MESSAGE}" ] ; then
-    local plugin
-    VLOCK_MESSAGE="${VLOCK_CURRENT_MESSAGE}"
-
-    # XXX: this bit should be moved to vlock-main
-    for plugin in "${plugin_name[@]}" ; do
-      if [ "$plugin" = "all" ] \
-        || [ "$plugin" = "new" ] \
-        || [ "$plugin" = "nosysrq" ] ; then
-        VLOCK_MESSAGE="${VLOCK_ALL_MESSAGE}"
-        break
-      fi
-    done
-  fi
+  export VLOCK_TIMEOUT VLOCK_PROMPT_TIMEOUT
+  export VLOCK_MESSAGE VLOCK_ALL_MESSAGE VLOCK_CURRENT_MESSAGE
 
   exec "${VLOCK_MAIN}" "${plugins[@]}" "$@"
 }
