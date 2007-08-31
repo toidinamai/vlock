@@ -350,8 +350,9 @@ static bool handle_vlock_start(int hook_index) {
     struct plugin *p = item->data;
     vlock_hook_fn hook = p->hooks[hook_index];
 
-    if (!hook(&p->ctx))
-      return false;
+    if (hook != NULL)
+      if (!hook(&p->ctx))
+        return false;
   }
 
   return true;
@@ -362,7 +363,8 @@ static bool handle_vlock_end(int hook_index) {
     struct plugin *p = item->data;
     vlock_hook_fn hook = p->hooks[hook_index];
 
-    (void) hook(&p->ctx);
+    if (hook != NULL)
+      (void) hook(&p->ctx);
   }
 
   return true;
@@ -375,12 +377,13 @@ static bool handle_vlock_save(int hook_index) {
     struct plugin *p = item->data;
     vlock_hook_fn hook = p->hooks[hook_index];
 
-    if (!hook(&p->ctx)) {
-      /* don't call again */
-      p->hooks[hook_index] = NULL;
+    if (hook != NULL)
+      if (!hook(&p->ctx)) {
+        /* don't call again */
+        p->hooks[hook_index] = NULL;
 
-      result = false;
-    }
+        result = false;
+      }
   }
 
   return result;
@@ -391,10 +394,14 @@ static bool handle_vlock_save_abort(int hook_index) {
     struct plugin *p = item->data;
     vlock_hook_fn hook = p->hooks[hook_index];
 
-    if (!hook(&p->ctx)) {
-      /* don't call again */
-      p->hooks[hook_index] = NULL;
-      p->hooks[get_hook_index("vlock_save")] = NULL;
+    if (hook != NULL) {
+      int vlock_save_index = get_hook_index("vlock_save");
+
+      if (!hook(&p->ctx) || p->hooks[vlock_save_index] == NULL) {
+        /* don't call again */
+        p->hooks[hook_index] = NULL;
+        p->hooks[vlock_save_index] = NULL;
+      }
     }
   }
 
