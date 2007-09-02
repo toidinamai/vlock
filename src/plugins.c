@@ -265,7 +265,7 @@ bool resolve_dependencies(void)
         fprintf(stderr,
                 "vlock-plugins: %s and %s cannot be loaded at the same time\n",
                 p->name, (*conflicts)[i]);
-        return -1;
+        return false;
       }
     }
   }
