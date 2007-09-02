@@ -33,7 +33,8 @@
 
 /* Read a single character from the stdin.  If the timeout is reached
  * 0 is returned. */
-static char read_character(struct timespec *timeout) {
+static char read_character(struct timespec *timeout)
+{
   char c = 0;
   struct timeval *timeout_val = NULL;
   fd_set readfds;
@@ -52,7 +53,7 @@ static char read_character(struct timespec *timeout) {
   FD_SET(STDIN_FILENO, &readfds);
 
   /* Wait for a character. */
-  if (select(STDIN_FILENO+1, &readfds, NULL, NULL, timeout_val) != 1)
+  if (select(STDIN_FILENO + 1, &readfds, NULL, NULL, timeout_val) != 1)
     goto out;
 
   /* Read the character. */
@@ -67,7 +68,8 @@ out:
  * timespec.  On error NULL is returned.  The caller is responsible
  * to free the result.   The string may be NULL, in which case NULL
  * is returned, too. */
-static struct timespec *parse_seconds(const char *s) {
+static struct timespec *parse_seconds(const char *s)
+{
   if (s == NULL)
     return NULL;
   else {
@@ -89,7 +91,8 @@ static struct timespec *parse_seconds(const char *s) {
 }
 
 /* Lock the current terminal until proper authentication is received. */
-int main(int argc, char *const argv[]) {
+int main(int argc, char *const argv[])
+{
   int exit_status = 0;
   char user[40];
   char *vlock_message;
@@ -105,7 +108,7 @@ int main(int argc, char *const argv[]) {
   uid_t euid = geteuid();
 #endif
   /* get the user name from the environment */
-  char *envuser = getenv("USER"); 
+  char *envuser = getenv("USER");
 
   /* ignore some signals */
   /* these signals shouldn't be delivered anyway, because
@@ -132,7 +135,7 @@ int main(int argc, char *const argv[]) {
       else
         fprintf(stderr, "vlock-main: getpwuid() failed\n");
 
-      exit (111);
+      exit(111);
     }
 
     /* copy the username */
@@ -153,11 +156,12 @@ int main(int argc, char *const argv[]) {
 
     if (!load_plugin(argv[i], VLOCK_PLUGIN_DIR)) {
       if (errno)
-        fprintf(stderr, "vlock-main: error loading plugin '%s': %s\n", argv[i], strerror(errno));
+        fprintf(stderr, "vlock-main: error loading plugin '%s': %s\n",
+                argv[i], strerror(errno));
       else
         fprintf(stderr, "vlock-main: error loading plugin '%s'\n", argv[i]);
 
-      exit (111);
+      exit(111);
     }
   }
 
@@ -165,7 +169,7 @@ int main(int argc, char *const argv[]) {
   seteuid(euid);
 
   if (!resolve_dependencies())
-    exit (111);
+    exit(111);
 #endif
 
   /* get the vlock message from the environment */
@@ -191,7 +195,7 @@ int main(int argc, char *const argv[]) {
   /* disable terminal echoing and signals */
   (void) tcgetattr(STDIN_FILENO, &term);
   lflag = term.c_lflag;
-  term.c_lflag &= ~(ECHO|ISIG);
+  term.c_lflag &= ~(ECHO | ISIG);
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
 #ifdef USE_PLUGINS
@@ -268,5 +272,5 @@ out:
   free(timeout);
   free(prompt_timeout);
 
-  exit (exit_status);
+  exit(exit_status);
 }

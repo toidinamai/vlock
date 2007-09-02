@@ -30,19 +30,22 @@
 
 /* This handler is called by a signal whenever a user tries to
  * switch away from this virtual console. */
-static void release_vt(int __attribute__((__unused__)) signum) {
+static void release_vt(int __attribute__ ((__unused__)) signum)
+{
   /* Deny console switch. */
   (void) ioctl(STDIN_FILENO, VT_RELDISP, 0);
 }
 
 /* This handler is called whenever a user switches to this
  * virtual console. */
-static void acquire_vt(int __attribute__((__unused__)) signum) {
+static void acquire_vt(int __attribute__ ((__unused__)) signum)
+{
   /* Acknowledge console switch. */
   (void) ioctl(STDIN_FILENO, VT_RELDISP, VT_ACKACQ);
 }
 
-bool vlock_start(void **ctx_ptr) {
+bool vlock_start(void **ctx_ptr)
+{
   struct vt_mode vtm, *ctx;
   struct sigaction sa;
 
@@ -95,7 +98,8 @@ err:
   return false;
 }
 
-bool vlock_end(void **ctx_ptr) {
+bool vlock_end(void **ctx_ptr)
+{
   struct vt_mode *ctx = *ctx_ptr;
 
   if (ctx != NULL) {

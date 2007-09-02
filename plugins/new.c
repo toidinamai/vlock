@@ -47,7 +47,8 @@ const char *requires[] = { "all", NULL };
  * console file descriptor.  Returns console number
  * (starting from 1) on success, -1 on error. */
 #if defined(__FreeBSD__) || defined (__FreeBSD_kernel__)
-static int get_active_console(int consfd) {
+static int get_active_console(int consfd)
+{
   int n;
 
   if (ioctl(consfd, VT_GETACTIVE, &n) == 0)
@@ -56,7 +57,8 @@ static int get_active_console(int consfd) {
     return -1;
 }
 #else
-static int get_active_console(int consfd) {
+static int get_active_console(int consfd)
+{
   struct vt_stat vtstate;
 
   /* get the virtual console status */
@@ -69,7 +71,8 @@ static int get_active_console(int consfd) {
 
 /* Get the device name for the given console number.
  * Returns the device name or NULL on error. */
-static char *get_console_name(int n) {
+static char *get_console_name(int n)
+{
   static char name[sizeof VTNAME + 2];
   size_t namelen;
 
@@ -78,7 +81,7 @@ static char *get_console_name(int n) {
 
   /* format the virtual terminal filename from the number */
 #ifdef __FreeBSD__
-  namelen = snprintf(name, sizeof name, VTNAME, n-1);
+  namelen = snprintf(name, sizeof name, VTNAME, n - 1);
 #else
   namelen = snprintf(name, sizeof name, VTNAME, n);
 #endif
@@ -93,7 +96,8 @@ static char *get_console_name(int n) {
 
 /* Change to the given console number using the given console
  * file descriptor. */
-static int activate_console(int consfd, int vtno) {
+static int activate_console(int consfd, int vtno)
+{
   int c = ioctl(consfd, VT_ACTIVATE, vtno);
 
   return c < 0 ? c : ioctl(consfd, VT_WAITACTIVE, vtno);
@@ -109,7 +113,8 @@ struct new_console_context {
 };
 
 /* Run switch to a new console and redirect stdio there. */
-bool vlock_start(void **ctx_ptr) {
+bool vlock_start(void **ctx_ptr)
+{
   struct new_console_context *ctx;
   int vtfd;
   char *vtname;
@@ -146,7 +151,7 @@ bool vlock_start(void **ctx_ptr) {
   }
 
   /* Get a free virtual terminal number. */
-  if (ioctl(ctx->consfd, VT_OPENQRY, &ctx->new_vtno) < 0)  {
+  if (ioctl(ctx->consfd, VT_OPENQRY, &ctx->new_vtno) < 0) {
     perror("vlock-new: could not find a free virtual terminal");
     goto err;
   }
@@ -162,7 +167,8 @@ bool vlock_start(void **ctx_ptr) {
 
   /* Work around stupid X11 bug:  When switching immediately after the command
    * is entered, the enter button may get stuck. */
-  if (getenv("DISPLAY") != NULL) sleep(1);
+  if (getenv("DISPLAY") != NULL)
+    sleep(1);
 
   /* Switch to the new virtual terminal. */
   if (activate_console(ctx->consfd, ctx->new_vtno) < 0) {
@@ -192,7 +198,8 @@ err:
 }
 
 /* Redirect stdio back und switch to the previous console. */
-bool vlock_end(void **ctx_ptr) {
+bool vlock_end(void **ctx_ptr)
+{
   struct new_console_context *ctx = *ctx_ptr;
 
   if (ctx == NULL)

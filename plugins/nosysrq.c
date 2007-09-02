@@ -31,7 +31,8 @@ struct sysrq_context {
 };
 
 /* Disable SysRq and save old value in context. */
-bool vlock_start(void **ctx_ptr) {
+bool vlock_start(void **ctx_ptr)
+{
   struct sysrq_context *ctx;
 
   /* Allocate the context. */
@@ -57,7 +58,8 @@ bool vlock_start(void **ctx_ptr) {
 
   /* Check whether all data was read. */
   if (feof(ctx->file) != 0) {
-    fprintf(stderr, "vlock-nosysrq: sysrq buffer to small: %d\n", sizeof ctx->value);
+    fprintf(stderr, "vlock-nosysrq: sysrq buffer to small: %d\n",
+            sizeof ctx->value);
     goto err;
   }
 
@@ -89,7 +91,8 @@ err:
 
 
 /* Restore old SysRq value. */
-bool vlock_end(void **ctx_ptr) {
+bool vlock_end(void **ctx_ptr)
+{
   struct sysrq_context *ctx = *ctx_ptr;
 
   if (ctx == NULL)
@@ -98,8 +101,7 @@ bool vlock_end(void **ctx_ptr) {
   /* Restore SysRq. */
   if (fseek(ctx->file, 0, SEEK_SET) < 0
       || ftruncate(fileno(ctx->file), 0) < 0
-      || fputs(ctx->value, ctx->file) < 0
-      || fflush(ctx->file) < 0)
+      || fputs(ctx->value, ctx->file) < 0 || fflush(ctx->file) < 0)
     perror("vlock-nosysrq: could not write old value to '" SYSRQ_PATH "'");
 
   free(ctx);

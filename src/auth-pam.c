@@ -51,14 +51,15 @@
 #include "vlock.h"
 
 static int conversation(int num_msg, const struct pam_message **msg, struct
-    pam_response **resp, void *appdata_ptr) {
+                        pam_response **resp, void *appdata_ptr)
+{
   struct pam_response *aresp;
   struct timespec *timeout = appdata_ptr;
 
   if (num_msg <= 0 || num_msg > PAM_MAX_NUM_MSG)
     return PAM_CONV_ERR;
 
-  if ((aresp = calloc((size_t)num_msg, sizeof *aresp)) == NULL)
+  if ((aresp = calloc((size_t) num_msg, sizeof *aresp)) == NULL)
     return PAM_BUF_ERR;
 
   for (int i = 0; i < num_msg; i++) {
@@ -92,10 +93,10 @@ static int conversation(int num_msg, const struct pam_message **msg, struct
 
 fail:
   for (int i = 0; i < num_msg; ++i) {
-     if (aresp[i].resp != NULL) {
-       memset(aresp[i].resp, 0, strlen(aresp[i].resp));
-       free(aresp[i].resp);
-     }
+    if (aresp[i].resp != NULL) {
+      memset(aresp[i].resp, 0, strlen(aresp[i].resp));
+      free(aresp[i].resp);
+    }
   }
 
   memset(aresp, 0, num_msg * sizeof *aresp);
@@ -105,7 +106,8 @@ fail:
   return PAM_CONV_ERR;
 }
 
-bool auth(const char *user, struct timespec *timeout) {
+bool auth(const char *user, struct timespec *timeout)
+{
   pam_handle_t *pamh;
   int pam_status;
   int pam_end_status;
@@ -123,7 +125,8 @@ bool auth(const char *user, struct timespec *timeout) {
   }
 
   /* put the username before the password prompt */
-  fprintf(stderr, "%s's ", user); fflush(stderr);
+  fprintf(stderr, "%s's ", user);
+  fflush(stderr);
   /* authenticate the user */
   pam_status = pam_authenticate(pamh, 0);
 

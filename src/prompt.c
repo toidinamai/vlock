@@ -56,7 +56,8 @@
 /* Prompt with the given string for a single line of input.  The read string is
  * returned in a new buffer that should be freed by the caller.  If reading
  * fails or the timeout (if given) occurs NULL is retured. */
-char *prompt(const char *msg, const struct timespec *timeout) {
+char *prompt(const char *msg, const struct timespec *timeout)
+{
   char buffer[PROMPT_BUFFER_SIZE];
   char *result;
   int len;
@@ -78,7 +79,8 @@ char *prompt(const char *msg, const struct timespec *timeout) {
 
   if (msg != NULL) {
     /* Write out the prompt. */
-    (void) fputs(msg, stderr); fflush(stderr);
+    (void) fputs(msg, stderr);
+    fflush(stderr);
   }
 
   /* Get the current terminal attributes. */
@@ -102,7 +104,7 @@ char *prompt(const char *msg, const struct timespec *timeout) {
   errno = 0;
 
   /* Wait until a string was entered. */
-  if (select(STDIN_FILENO+1, &readfds, NULL, NULL, timeout_val) != 1) {
+  if (select(STDIN_FILENO + 1, &readfds, NULL, NULL, timeout_val) != 1) {
     if (errno != 0)
       perror("vlock-auth: select() on stdin failed");
     else
@@ -124,7 +126,7 @@ char *prompt(const char *msg, const struct timespec *timeout) {
 
   /* Strip trailing newline characters. */
   for (len = strlen(buffer); len > 0; --len) {
-    if (buffer[len-1] != '\r' && buffer[len-1] != '\n')
+    if (buffer[len - 1] != '\r' && buffer[len - 1] != '\n')
       break;
   }
 
@@ -148,7 +150,8 @@ out:
 }
 
 /* Same as prompt except that the characters entered are not echoed. */
-char *prompt_echo_off(const char *msg, const struct timespec *timeout) {
+char *prompt_echo_off(const char *msg, const struct timespec *timeout)
+{
   struct termios term;
   tcflag_t lflag;
   char *result;

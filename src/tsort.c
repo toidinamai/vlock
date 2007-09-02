@@ -4,7 +4,8 @@
 #include "list.h"
 
 /* Check if the given node has no incoming edges. */
-static int is_zero(void *node, struct List *edges) {
+static int is_zero(void *node, struct List *edges)
+{
   list_for_each(edges, item) {
     struct Edge *edge = item->data;
 
@@ -17,7 +18,8 @@ static int is_zero(void *node, struct List *edges) {
 
 
 /* Get all nodes (plugins) with no incoming edges. */
-static struct List *get_zeros(struct List *nodes, struct List *edges) {
+static struct List *get_zeros(struct List *nodes, struct List *edges)
+{
   struct List *zeros = list_copy(nodes);
 
   list_for_each(edges, item) {
@@ -41,7 +43,8 @@ static struct List *get_zeros(struct List *nodes, struct List *edges) {
  * Algorithm:
  * http://en.wikipedia.org/w/index.php?title=Topological_sorting&oldid=153157450#Algorithms
  */
-struct List *tsort(struct List *nodes, struct List **edges) {
+struct List *tsort(struct List *nodes, struct List **edges)
+{
   struct List *sorted_nodes = NULL;
   struct List *zeros = get_zeros(nodes, *edges);
 

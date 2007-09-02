@@ -35,7 +35,7 @@ const char *hook_names[] = {
   "vlock_save_abort",
 };
 
-const size_t nr_hooks = (sizeof (hook_names)/sizeof (hook_names[0]));
+const size_t nr_hooks = (sizeof (hook_names) / sizeof (hook_names[0]));
 
 static bool handle_vlock_start(int hook_index);
 static bool handle_vlock_end(int hook_index);
@@ -49,7 +49,8 @@ bool (*hook_handlers[])(int) = {
   handle_vlock_save_abort,
 };
 
-int get_hook_index(const char *name) {
+int get_hook_index(const char *name)
+{
   for (size_t i = 0; i < nr_hooks; i++)
     if (strcmp(hook_names[i], name) == 0)
       return i;
@@ -82,7 +83,8 @@ struct List *plugins = NULL;
 
 /* Get the plugin with the given name.  Returns the first plugin
  * with the given name or NULL if none could be found. */
-static struct plugin *get_plugin(const char *name) {
+static struct plugin *get_plugin(const char *name)
+{
   list_for_each(plugins, item) {
     struct plugin *p = item->data;
 
@@ -94,17 +96,20 @@ static struct plugin *get_plugin(const char *name) {
 }
 
 /* Check if the given plugin is loaded. */
-bool is_loaded(const char *name) {
+bool is_loaded(const char *name)
+{
   return get_plugin(name) != NULL;
 }
 
 /* Open the plugin in file with the given name at the specified location.
  * Returns the new plugin or NULL on error. */
-static struct plugin *open_plugin(const char *name, const char *plugin_dir) {
+static struct plugin *open_plugin(const char *name, const char *plugin_dir)
+{
   struct plugin *new;
 
   /* allocate a new plugin object */
-  if ((new = malloc((sizeof *new) + nr_hooks * (sizeof (vlock_hook_fn)))) == NULL)
+  if ((new =
+       malloc((sizeof *new) + nr_hooks * (sizeof (vlock_hook_fn)))) == NULL)
     return NULL;
 
   new->ctx = NULL;
@@ -144,26 +149,29 @@ err:
 
 /* Same as open_plugin except that an old plugin is returned if there
  * already is one with the given name. */
-static struct plugin *__load_plugin(const char *name, const char *plugin_dir) {
+static struct plugin *__load_plugin(const char *name, const char *plugin_dir)
+{
   struct plugin *p = get_plugin(name);
 
   if (p != NULL)
     return p;
 
   p = open_plugin(name, plugin_dir);
-    plugins = list_append(plugins, p);
+  plugins = list_append(plugins, p);
 
   return p;
 }
 
 /* Same as __load_plugin except that true is returned on success and false on
  * error. */
-bool load_plugin(const char *name, const char *plugin_dir) {
+bool load_plugin(const char *name, const char *plugin_dir)
+{
   return __load_plugin(name, plugin_dir) != NULL;
 }
 
 /* Unload the given plugin and remove from the plugins list. */
-static void unload_plugin(struct List *item) {
+static void unload_plugin(struct List *item)
+{
   struct plugin *p = item->data;
   plugins = list_delete_link(plugins, item);
   (void) dlclose(p->dl_handle);
@@ -173,7 +181,8 @@ static void unload_plugin(struct List *item) {
 }
 
 /* Unload all plugins */
-void unload_plugins(void) {
+void unload_plugins(void)
+{
   while (plugins != NULL)
     unload_plugin(plugins);
 }
@@ -181,7 +190,8 @@ void unload_plugins(void) {
 /* Forward declaration */
 static bool sort_plugins(void);
 
-bool resolve_dependencies(void) {
+bool resolve_dependencies(void)
+{
   struct List *required_plugins = NULL;
 
   /* load plugins that are required, this automagically takes care of plugins
@@ -207,10 +217,11 @@ bool resolve_dependencies(void) {
     const char *(*needs)[] = dlsym(p->dl_handle, "needs");
 
     for (int i = 0; needs != NULL && (*needs)[i] != NULL; i++) {
-      struct plugin *d = get_plugin((*needs)[i]); 
+      struct plugin *d = get_plugin((*needs)[i]);
 
       if (d == NULL) {
-        fprintf(stderr, "vlock-plugins: %s does not work without %s\n", p->name, (*needs)[i]);
+        fprintf(stderr, "vlock-plugins: %s does not work without %s\n",
+                p->name, (*needs)[i]);
         goto err;
       }
 
@@ -232,10 +243,11 @@ bool resolve_dependencies(void) {
         continue;
 
       if (list_find(required_plugins, p) != NULL) {
-        fprintf(stderr, "vlock-plugins: %s does not work without %s\n", p->name, (*depends)[i]);
+        fprintf(stderr, "vlock-plugins: %s does not work without %s\n",
+                p->name, (*depends)[i]);
         goto err;
       } else {
-        unload_plugin(tmp); 
+        unload_plugin(tmp);
         break;
       }
     }
@@ -250,7 +262,9 @@ bool resolve_dependencies(void) {
 
     for (int i = 0; conflicts != NULL && (*conflicts)[i] != NULL; i++) {
       if (get_plugin((*conflicts)[i]) != NULL) {
-        fprintf(stderr, "vlock-plugins: %s and %s cannot be loaded at the same time\n", p->name, (*conflicts)[i]);
+        fprintf(stderr,
+                "vlock-plugins: %s and %s cannot be loaded at the same time\n",
+                p->name, (*conflicts)[i]);
         return -1;
       }
     }
@@ -270,7 +284,8 @@ err:
 
 /* Get all edges as specified by the all plugins' "after" and "before"
  * attributes. */
-static struct List *get_edges(void) {
+static struct List *get_edges(void)
+{
   struct List *edges = NULL;
 
   list_for_each(plugins, item) {
@@ -306,7 +321,8 @@ static struct List *get_edges(void) {
   return edges;
 }
 
-static bool sort_plugins(void) {
+static bool sort_plugins(void)
+{
   struct List *edges = get_edges();
   struct List *sorted_plugins = tsort(plugins, &edges);
 
@@ -334,18 +350,20 @@ static bool sort_plugins(void) {
 }
 
 /* Call the given plugin hook. */
-bool plugin_hook(const char *hook_name) {
+bool plugin_hook(const char *hook_name)
+{
   int hook_index = get_hook_index(hook_name);
 
   if (hook_index < 0) {
     fprintf(stderr, "vlock-plugins: unknown hook '%s'\n", hook_name);
     return false;
   } else {
-    return hook_handlers[hook_index](hook_index);
+    return hook_handlers[hook_index] (hook_index);
   }
 }
 
-static bool handle_vlock_start(int hook_index) {
+static bool handle_vlock_start(int hook_index)
+{
   list_for_each(plugins, item) {
     struct plugin *p = item->data;
     vlock_hook_fn hook = p->hooks[hook_index];
@@ -358,7 +376,8 @@ static bool handle_vlock_start(int hook_index) {
   return true;
 }
 
-static bool handle_vlock_end(int hook_index) {
+static bool handle_vlock_end(int hook_index)
+{
   list_reverse_for_each(plugins, item) {
     struct plugin *p = item->data;
     vlock_hook_fn hook = p->hooks[hook_index];
@@ -370,7 +389,8 @@ static bool handle_vlock_end(int hook_index) {
   return true;
 }
 
-static bool handle_vlock_save(int hook_index) {
+static bool handle_vlock_save(int hook_index)
+{
   bool result = (plugins != NULL);
 
   list_for_each(plugins, item) {
@@ -389,7 +409,8 @@ static bool handle_vlock_save(int hook_index) {
   return result;
 }
 
-static bool handle_vlock_save_abort(int hook_index) {
+static bool handle_vlock_save_abort(int hook_index)
+{
   list_reverse_for_each(plugins, item) {
     struct plugin *p = item->data;
     vlock_hook_fn hook = p->hooks[hook_index];

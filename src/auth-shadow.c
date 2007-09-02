@@ -31,7 +31,8 @@
 
 #include "vlock.h"
 
-bool auth(const char *user, struct timespec *timeout) {
+bool auth(const char *user, struct timespec *timeout)
+{
   char *pwd;
   char *cryptpw;
   char *msg = NULL;
