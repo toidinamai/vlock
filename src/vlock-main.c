@@ -210,6 +210,7 @@ int main(int argc, char *const argv[])
 
   for (;;) {
     tcflag_t lflag = term.c_lflag;
+    char *c;
 
     if (vlock_message) {
       /* print vlock message */
@@ -221,26 +222,24 @@ int main(int argc, char *const argv[])
     term.c_lflag &= ~ICANON;
     (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
-    /* wait for enter to be pressed */
-    for (;;) {
-      char c = read_character(timeout);
-
-      if (c == '\n')
-        break;
-
-#ifdef USE_PLUGINS
-      else if (c == '\033' || c == 0) {
-        if (!plugin_hook("vlock_save") == 0)
-          /* wait for key press */
-          (void) read_character(NULL);
-        (void) plugin_hook("vlock_save_abort");
-      }
-#endif
-    }
+    /* wait for enter or escape to be pressed */
+    while ((c = strchr("\n\033", read_character(timeout))) == NULL);
 
     /* restore line buffering */
     term.c_lflag = lflag;
     (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
+
+    /* escape was pressed or the timeout occurred */
+    if (*c == '\033' || *c == 0) {
+#ifdef USE_PLUGINS
+      if (plugin_hook("vlock_save"))
+        /* wait for key press */
+        (void) read_character(NULL);
+
+      (void) plugin_hook("vlock_save_abort");
+#endif
+      continue;
+    }
 
     if (auth(user, prompt_timeout))
       break;
