@@ -217,7 +217,7 @@ int main(int argc, char *const argv[])
       fputc('\n', stderr);
     }
 
-    /* switch of line buffering */
+    /* switch off line buffering */
     term.c_lflag &= ~ICANON;
     (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
