@@ -12,6 +12,7 @@ medium
 - do not depend on bash when not using plugins
 - do not require key press when no plugin with a vlock_save
   is active
+- exit properly on SIGTERM
 
 low
 ---
