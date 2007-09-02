@@ -389,21 +389,27 @@ static bool handle_vlock_end(int hook_index)
   return true;
 }
 
+/* Return true if at least one hook was called and all hooks were successful. */
 static bool handle_vlock_save(int hook_index)
 {
-  bool result = (plugins != NULL);
+  bool result = false;
 
   list_for_each(plugins, item) {
     struct plugin *p = item->data;
     vlock_hook_fn hook = p->hooks[hook_index];
 
-    if (hook != NULL)
+    if (hook != NULL) {
       if (!hook(&p->ctx)) {
         /* don't call again */
         p->hooks[hook_index] = NULL;
 
         result = false;
       }
+      else if (item->previous == NULL) {
+        /* first */
+        result = true;
+      }
+    }
   }
 
   return result;
