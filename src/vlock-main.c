@@ -31,6 +31,8 @@
 #include "plugins.h"
 #endif
 
+static struct termios term;
+
 /* Read a single character from the stdin.  If the timeout is reached
  * 0 is returned. */
 static char read_character(struct timespec *timeout)
@@ -68,12 +70,10 @@ out:
  * stdin.  If charset is NULL wait for any character.  Returns 0 when the
  * timeout occurs. */
 static char wait_for_character(const char *charset, struct timespec *timeout) {
-  struct termios term;
   tcflag_t lflag;
   char c;
 
   /* switch off line buffering */
-  (void) tcgetattr(STDIN_FILENO, &term);
   lflag = term.c_lflag;
   term.c_lflag &= ~ICANON;
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
@@ -128,7 +128,6 @@ int main(int argc, char *const argv[])
   char *vlock_message;
   struct timespec *prompt_timeout;
   struct timespec *timeout;
-  struct termios term;
   tcflag_t lflag;
   struct sigaction sa;
   /* get the user id */
