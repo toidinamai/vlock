@@ -186,7 +186,7 @@ main() {
   export VLOCK_TIMEOUT VLOCK_PROMPT_TIMEOUT
   export VLOCK_MESSAGE VLOCK_ALL_MESSAGE VLOCK_CURRENT_MESSAGE
 
-  exec "${VLOCK_MAIN}" "${plugins[@]}" "$@"
+  exec "${VLOCK_MAIN}" "${plugins[@]}" "${VLOCK_PLUGINS[@]}" "$@"
 }
 
 main "$@"
