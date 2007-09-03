@@ -222,12 +222,6 @@ int main(int argc, char *const argv[])
   timeout = NULL;
 #endif
 
-  /* disable terminal echoing and signals */
-  (void) tcgetattr(STDIN_FILENO, &term);
-  lflag = term.c_lflag;
-  term.c_lflag &= ~(ECHO | ISIG);
-  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
-
 #ifdef USE_PLUGINS
   if (!plugin_hook("vlock_start")) {
     exit_status = 111;
@@ -237,6 +231,12 @@ int main(int argc, char *const argv[])
   /* call vlock-new and vlock-all statically */
 #error "Not implemented."
 #endif
+
+  /* disable terminal echoing and signals */
+  (void) tcgetattr(STDIN_FILENO, &term);
+  lflag = term.c_lflag;
+  term.c_lflag &= ~(ECHO | ISIG);
+  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
   for (;;) {
     char c;
@@ -275,6 +275,10 @@ int main(int argc, char *const argv[])
 #endif
   }
 
+  /* restore the terminal */
+  term.c_lflag = lflag;
+  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
+
 #ifdef USE_PLUGINS
 out:
   (void) plugin_hook("vlock_end");
@@ -283,10 +287,6 @@ out:
   /* call vlock-new and vlock-all statically */
 #error "Not implemented."
 #endif
-
-  /* restore the terminal */
-  term.c_lflag = lflag;
-  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
   /* free some memory */
   free(timeout);
