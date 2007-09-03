@@ -389,7 +389,8 @@ static bool handle_vlock_end(int hook_index)
   return true;
 }
 
-/* Return true if at least one hook was called and all hooks were successful. */
+/* Return true if at least one hook was called and all hooks were successful.
+ * Does not continue after the first failing hook. */
 static bool handle_vlock_save(int hook_index)
 {
   bool result = false;
@@ -399,15 +400,13 @@ static bool handle_vlock_save(int hook_index)
     vlock_hook_fn hook = p->hooks[hook_index];
 
     if (hook != NULL) {
-      if (!hook(&p->ctx)) {
+      result = hook(&p->ctx);
+
+      if (!result) {
         /* don't call again */
         p->hooks[hook_index] = NULL;
-
         result = false;
-      }
-      else if (item->previous == NULL) {
-        /* first */
-        result = true;
+        break;
       }
     }
   }
