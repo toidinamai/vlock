@@ -64,6 +64,36 @@ out:
   return c;
 }
 
+/* Wait for any of the characters in the given character set to be read from
+ * stdin.  If charset is NULL wait for any character.  Returns 0 when the
+ * timeout occurs. */
+static char wait_for_character(const char *charset, struct timespec *timeout) {
+  struct termios term;
+  tcflag_t lflag;
+  char c;
+
+  /* switch off line buffering */
+  (void) tcgetattr(STDIN_FILENO, &term);
+  lflag = term.c_lflag;
+  term.c_lflag &= ~ICANON;
+  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
+
+  for (;;) {
+    c = read_character(timeout);
+
+    if (c == 0 || charset == NULL)
+      break;
+    else if (strchr(charset, c) != NULL)
+      break;
+  }
+
+  /* restore line buffering */
+  term.c_lflag = lflag;
+  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
+
+  return c;
+}
+
 /* Parse the given string (interpreted as seconds) into a
  * timespec.  On error NULL is returned.  The caller is responsible
  * to free the result.   The string may be NULL, in which case NULL
@@ -209,8 +239,7 @@ int main(int argc, char *const argv[])
 #endif
 
   for (;;) {
-    tcflag_t lflag = term.c_lflag;
-    char *c;
+    char c;
 
     if (vlock_message) {
       /* print vlock message */
@@ -218,23 +247,15 @@ int main(int argc, char *const argv[])
       fputc('\n', stderr);
     }
 
-    /* switch off line buffering */
-    term.c_lflag &= ~ICANON;
-    (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
-
     /* wait for enter or escape to be pressed */
-    while ((c = strchr("\n\033", read_character(timeout))) == NULL);
-
-    /* restore line buffering */
-    term.c_lflag = lflag;
-    (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
+    c = wait_for_character("\n\033", timeout);
 
     /* escape was pressed or the timeout occurred */
-    if (*c == '\033' || *c == 0) {
+    if (c == '\033' || c == 0) {
 #ifdef USE_PLUGINS
       if (plugin_hook("vlock_save"))
-        /* wait for key press */
-        (void) read_character(NULL);
+        /* wait for any key to be pressed */
+        (void) wait_for_character(NULL, NULL);
 
       (void) plugin_hook("vlock_save_abort");
 #endif
