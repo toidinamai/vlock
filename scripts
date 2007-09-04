@@ -1,5 +1,0 @@
-src/script_plugins.c:
-  - provide own versions of hooks
-  - execute scripts on a pipe
-    - write name of hook to be executed
-    - remove on exit
