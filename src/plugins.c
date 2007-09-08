@@ -106,7 +106,7 @@ bool is_loaded(const char *name)
 
 /* Open the plugin in file with the given name.  Returns the new plugin or NULL
  * on error. */
-static struct plugin *open_plugin(const char *name)
+static struct plugin *open_module(const char *name)
 {
   struct plugin *new;
 
@@ -159,7 +159,8 @@ static struct plugin *__load_plugin(const char *name)
   if (p != NULL)
     return p;
 
-  p = open_plugin(name);
+  p = open_module(name);
+
   plugins = list_append(plugins, p);
 
   return p;
