@@ -13,6 +13,9 @@ medium
 - do not require key press when no plugin with a vlock_save
   is active
 - exit properly on SIGTERM
+- abandon plugin based options
+  - plugins only by name
+  - hardcoded defaults for --new, --all and --disable-sysrq
 
 low
 ---
