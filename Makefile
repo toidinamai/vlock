@@ -65,7 +65,7 @@ auth-pam.o: auth-pam.c vlock.h
 auth-shadow.o: auth-shadow.c vlock.h
 prompt.o: prompt.c vlock.h
 vlock-main.o: vlock-main.c vlock.h
-plugins.o: plugins.c vlock.h
+plugins.o: plugins.c tsort.h list.h plugins.h vlock.h
 
 ifneq ($(USE_ROOT_PASS),y)
 vlock-main.o : override CFLAGS += -DNO_ROOT_PASS
