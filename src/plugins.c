@@ -27,8 +27,20 @@
 #include "tsort.h"
 #include "list.h"
 
+#define ARRAY_SIZE(x) ((sizeof (x) / sizeof (x[0])))
+
 /* hard coded paths */
 #define VLOCK_MODULE_DIR PREFIX "/lib/vlock/modules"
+
+/* dependency names */
+const char *dependency_names[] = {
+  "after",
+  "before",
+  "requires",
+  "needs",
+  "depends",
+  "conflicts",
+};
 
 /* hook names */
 const char *hook_names[] = {
@@ -37,8 +49,6 @@ const char *hook_names[] = {
   "vlock_save",
   "vlock_save_abort",
 };
-
-#define nr_hooks ((sizeof (hook_names) / sizeof (hook_names[0])))
 
 static bool handle_vlock_start(int hook_index);
 static bool handle_vlock_end(int hook_index);
@@ -51,15 +61,6 @@ bool (*hook_handlers[])(int) = {
   handle_vlock_save,
   handle_vlock_save_abort,
 };
-
-int get_hook_index(const char *name)
-{
-  for (size_t i = 0; i < nr_hooks; i++)
-    if (strcmp(hook_names[i], name) == 0)
-      return i;
-
-  return -1;
-}
 
 /* function type for hooks */
 typedef bool (*vlock_hook_fn)(void **);
@@ -78,11 +79,21 @@ struct plugin {
   void *dl_handle;
 
   /* plugin hook functions */
-  vlock_hook_fn hooks[nr_hooks];
+  vlock_hook_fn hooks[ARRAY_SIZE(hook_names)];
 };
 
 /* the list of plugins */
 struct List *plugins = NULL;
+
+static int __get_index(const char *a[], size_t l, const char *s) {
+  for (size_t i = 0; i < l; i++)
+    if (strcmp(a[i], s) == 0)
+      return i;
+
+  return -1;
+}
+
+#define get_index(a, s) __get_index(a, ARRAY_SIZE(a), s)
 
 /* Get the plugin with the given name.  Returns the first plugin
  * with the given name or NULL if none could be found. */
@@ -135,7 +146,7 @@ static struct plugin *open_module(const char *name)
   }
 
   /* load the hooks, unimplemented hooks are NULL */
-  for (size_t i = 0; i < nr_hooks; i++) {
+  for (size_t i = 0; i < ARRAY_SIZE(new->hooks); i++) {
     *(void **) (&new->hooks[i]) = dlsym(new->dl_handle, hook_names[i]);
   }
 
@@ -355,7 +366,7 @@ static bool sort_plugins(void)
 /* Call the given plugin hook. */
 bool plugin_hook(const char *hook_name)
 {
-  int hook_index = get_hook_index(hook_name);
+  int hook_index = get_index(hook_names, hook_name);
 
   if (hook_index < 0) {
     fprintf(stderr, "vlock-plugins: unknown hook '%s'\n", hook_name);
@@ -424,7 +435,7 @@ static bool handle_vlock_save_abort(int hook_index)
     vlock_hook_fn hook = p->hooks[hook_index];
 
     if (hook != NULL) {
-      int vlock_save_index = get_hook_index("vlock_save");
+      int vlock_save_index = get_index(hook_names, "vlock_save");
 
       if (!hook(&p->ctx) || p->hooks[vlock_save_index] == NULL) {
         /* don't call again */
