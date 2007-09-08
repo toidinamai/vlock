@@ -38,7 +38,7 @@ const char *hook_names[] = {
   "vlock_save_abort",
 };
 
-const size_t nr_hooks = (sizeof (hook_names) / sizeof (hook_names[0]));
+#define nr_hooks ((sizeof (hook_names) / sizeof (hook_names[0])))
 
 static bool handle_vlock_start(int hook_index);
 static bool handle_vlock_end(int hook_index);
@@ -78,7 +78,7 @@ struct plugin {
   void *dl_handle;
 
   /* plugin hook functions */
-  vlock_hook_fn hooks[];
+  vlock_hook_fn hooks[nr_hooks];
 };
 
 /* the list of plugins */
@@ -111,8 +111,7 @@ static struct plugin *open_module(const char *name)
   struct plugin *new;
 
   /* allocate a new plugin object */
-  if ((new =
-       malloc((sizeof *new) + nr_hooks * (sizeof (vlock_hook_fn)))) == NULL)
+  if ((new = malloc((sizeof *new))) == NULL)
     return NULL;
 
   new->ctx = NULL;
