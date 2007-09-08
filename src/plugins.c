@@ -78,6 +78,9 @@ struct plugin {
   /* dl handle */
   void *dl_handle;
 
+  /* dependencies */
+  const char *(*dependencies[ARRAY_SIZE(dependency_names)])[];
+
   /* plugin hook functions */
   vlock_hook_fn hooks[ARRAY_SIZE(hook_names)];
 };
@@ -94,6 +97,9 @@ static int __get_index(const char *a[], size_t l, const char *s) {
 }
 
 #define get_index(a, s) __get_index(a, ARRAY_SIZE(a), s)
+
+#define get_dependency(p, d) \
+  (p->dependencies[get_index(dependency_names, d)])
 
 /* Get the plugin with the given name.  Returns the first plugin
  * with the given name or NULL if none could be found. */
@@ -148,6 +154,11 @@ static struct plugin *open_module(const char *name)
   /* load the hooks, unimplemented hooks are NULL */
   for (size_t i = 0; i < ARRAY_SIZE(new->hooks); i++) {
     *(void **) (&new->hooks[i]) = dlsym(new->dl_handle, hook_names[i]);
+  }
+
+  /* load dependencies */
+  for (size_t i = 0; i < ARRAY_SIZE(new->dependencies); i++) {
+    new->dependencies[i] = dlsym(new->dl_handle, dependency_names[i]);
   }
 
   return new;
@@ -213,7 +224,7 @@ bool resolve_dependencies(void)
    * the end of the list */
   list_for_each(plugins, item) {
     struct plugin *p = item->data;
-    const char *(*requires)[] = dlsym(p->dl_handle, "requires");
+    const char *(*requires)[] = get_dependency(p, "requires");
 
     for (int i = 0; requires != NULL && (*requires)[i] != NULL; i++) {
       struct plugin *d = __load_plugin((*requires)[i]);
@@ -228,7 +239,7 @@ bool resolve_dependencies(void)
   /* fail if a plugins that is needed is not loaded */
   list_for_each(plugins, item) {
     struct plugin *p = item->data;
-    const char *(*needs)[] = dlsym(p->dl_handle, "needs");
+    const char *(*needs)[] = get_dependency(p, "needs");
 
     for (int i = 0; needs != NULL && (*needs)[i] != NULL; i++) {
       struct plugin *d = get_plugin((*needs)[i]);
@@ -246,7 +257,7 @@ bool resolve_dependencies(void)
   /* unload plugins whose prerequisites are not present */
   for (struct List *item = list_first(plugins); item != NULL;) {
     struct plugin *p = item->data;
-    const char *(*depends)[] = dlsym(p->dl_handle, "depends");
+    const char *(*depends)[] = get_dependency(p, "depends");
     struct List *tmp = item;
     item = list_next(item);
 
@@ -272,7 +283,7 @@ bool resolve_dependencies(void)
   /* fail if conflicting plugins are loaded */
   list_for_each(plugins, item) {
     struct plugin *p = item->data;
-    const char *(*conflicts)[] = dlsym(p->dl_handle, "conflicts");
+    const char *(*conflicts)[] = get_dependency(p, "conflicts");
 
     for (int i = 0; conflicts != NULL && (*conflicts)[i] != NULL; i++) {
       if (get_plugin((*conflicts)[i]) != NULL) {
@@ -305,9 +316,9 @@ static struct List *get_edges(void)
   list_for_each(plugins, item) {
     struct plugin *p = item->data;
     /* p must come after these */
-    const char *(*predecessors)[] = dlsym(p->dl_handle, "after");
+    const char *(*predecessors)[] = get_dependency(p, "after");
     /* p must come before these */
-    const char *(*successors)[] = dlsym(p->dl_handle, "before");
+    const char *(*successors)[] = get_dependency(p, "before");
 
     for (int i = 0; successors != NULL && (*successors)[i] != NULL; i++) {
       struct plugin *successor = get_plugin((*successors)[i]);
