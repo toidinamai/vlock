@@ -76,12 +76,12 @@ $ alias vlock=\(aqenv VLOCK_MESSAGE="$(fortune)" vlock\(aq
 .IP
 Set this variable to specify the amount of time (in seconds) you will have to
 enter your password at the password prompt.  \fBWarning\fR: If this value is too
-low, you will not be able to unlock your machine.
+low, you will have trouble unlocking your machine.
 .SH FILES
 .B ~/.vlockrc
 .IP
-If existent, this file is read by \fBvlock\fR on startup.  All the above
-mentioned variables can be set here.
+If existent, this file is read by \fBvlock\fR on startup.  All the 
+variables mentioned above can be set here.
 .SH SECURITY
 \fBvlock\fR consists of several programs.  To use the \fB-n,--new\fR and
 \fB-s,--disable-sysrq\fR options you need to be able to execute vlock-new(8)
@@ -91,7 +91,7 @@ SECURITY file in the \fBvlock\fR distribution for more information.
 .PP
 .SH NOTES
 Long options depend on the availability of an enhanced getopt(1) command.  On
-system without it only the short options will work and long options will cause
+systems without it only the short options will work and long options will cause
 errors.
 .PP
 .SH "SEE ALSO"
