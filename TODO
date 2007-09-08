@@ -18,6 +18,9 @@ medium
   - execute scripts on a pipe
     - write name of hook to be executed
     - remove on exit
+- abandon plugin based options
+  - plugins only by name
+  - hardcoded defaults for --new, --all and --disable-sysrq
 
 low
 ---
