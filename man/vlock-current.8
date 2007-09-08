@@ -18,10 +18,16 @@ set \fBvlock-current\fR works the same as if it was run by that user.
 .IP
 When this environment variable is set \fBvlock-current\fR prints its contents
 before each password prompt.
+.PP
+.B VLOCK_PROMPT_TIMEOUT
+.IP
+Set this variable to specify the amount of time (in seconds) you will have to
+enter your password at the password prompt.  \fBWarning\fR: If this value is too
+low, you will have trouble unlocking your machine.
 .SH "EXIT CODES"
 \fBvlock-current\fR exits 111 when the username can not be determined.
 .SH SIGNALS
-SIGINT, SIGQUIT, and SIGTSTP are ignored ignored.  In case \fBvlock-current\fR
+SIGINT, SIGQUIT, and SIGTSTP are ignored ignored.  If \fBvlock-current\fR
 is killed by any other signal the terminal is not restored.
 .SH "SEE ALSO"
 .BR vlock (1)
