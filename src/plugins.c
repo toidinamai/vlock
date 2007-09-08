@@ -27,6 +27,9 @@
 #include "tsort.h"
 #include "list.h"
 
+/* hard coded paths */
+#define VLOCK_MODULE_DIR PREFIX "/lib/vlock/modules"
+
 /* hook names */
 const char *hook_names[] = {
   "vlock_start",
@@ -101,9 +104,9 @@ bool is_loaded(const char *name)
   return get_plugin(name) != NULL;
 }
 
-/* Open the plugin in file with the given name at the specified location.
- * Returns the new plugin or NULL on error. */
-static struct plugin *open_plugin(const char *name, const char *plugin_dir)
+/* Open the plugin in file with the given name.  Returns the new plugin or NULL
+ * on error. */
+static struct plugin *open_plugin(const char *name)
 {
   struct plugin *new;
 
@@ -117,7 +120,7 @@ static struct plugin *open_plugin(const char *name, const char *plugin_dir)
   new->name = NULL;
 
   /* format the plugin path */
-  if (asprintf(&new->path, "%s/%s.so", plugin_dir, name) < 0)
+  if (asprintf(&new->path, "%s/%s.so", VLOCK_MODULE_DIR, name) < 0)
     goto err;
 
   /* remember the name */
@@ -149,14 +152,14 @@ err:
 
 /* Same as open_plugin except that an old plugin is returned if there
  * already is one with the given name. */
-static struct plugin *__load_plugin(const char *name, const char *plugin_dir)
+static struct plugin *__load_plugin(const char *name)
 {
   struct plugin *p = get_plugin(name);
 
   if (p != NULL)
     return p;
 
-  p = open_plugin(name, plugin_dir);
+  p = open_plugin(name);
   plugins = list_append(plugins, p);
 
   return p;
@@ -164,9 +167,9 @@ static struct plugin *__load_plugin(const char *name, const char *plugin_dir)
 
 /* Same as __load_plugin except that true is returned on success and false on
  * error. */
-bool load_plugin(const char *name, const char *plugin_dir)
+bool load_plugin(const char *name)
 {
-  return __load_plugin(name, plugin_dir) != NULL;
+  return __load_plugin(name) != NULL;
 }
 
 /* Unload the given plugin and remove from the plugins list. */
@@ -202,7 +205,7 @@ bool resolve_dependencies(void)
     const char *(*requires)[] = dlsym(p->dl_handle, "requires");
 
     for (int i = 0; requires != NULL && (*requires)[i] != NULL; i++) {
-      struct plugin *d = __load_plugin((*requires)[i], VLOCK_PLUGIN_DIR);
+      struct plugin *d = __load_plugin((*requires)[i]);
 
       if (d == NULL)
         goto err;

@@ -11,9 +11,9 @@
  *
  */
 
-/* Load the named plugin from the specified directory.  Returns true if loading
- * was successful and false otherwise. */
-bool load_plugin(const char *name, const char *plugin_dir);
+/* Load the named plugin.  Returns true if loading was successful and false
+ * otherwise. */
+bool load_plugin(const char *name);
 
 /* Check if the named plugin is loaded. */
 bool is_loaded(const char *name);

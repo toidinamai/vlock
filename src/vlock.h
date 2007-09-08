@@ -12,9 +12,6 @@
 
 #include <stdbool.h>
 
-/* hard coded paths */
-#define VLOCK_PLUGIN_DIR PREFIX "/lib/vlock/modules"
-
 /* forward declaration */
 struct timespec;
 
