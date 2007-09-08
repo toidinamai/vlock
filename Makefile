@@ -2,7 +2,7 @@
 
 include config.mk
 
-override CFLAGS += -Isrc -DPREFIX="\"$(PREFIX)"\"
+override CFLAGS += -Isrc -DPREFIX="\"$(PREFIX)\""
 
 VPATH = src
 
