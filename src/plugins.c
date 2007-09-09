@@ -101,16 +101,6 @@ static int __get_index(const char *a[], size_t l, const char *s) {
 #define get_dependency(p, d) \
   (p->dependencies[get_index(dependency_names, d)])
 
-struct List *read_dependency(const char *(*dependency)[])
-{
-  struct List *dependency_list = NULL;
-
-  for (size_t i = 0; dependency != NULL && (*dependency)[i] != NULL; i++)
-    dependency_list = list_append(dependency_list, strdup((*dependency)[i]));
-
-  return dependency_list;
-}
-
 /* Get the plugin with the given name.  Returns the first plugin
  * with the given name or NULL if none could be found. */
 static struct plugin *get_plugin(const char *name)
@@ -166,8 +156,13 @@ static struct plugin *open_module(const char *name)
     *(void **) (&new->hooks[i]) = dlsym(new->dl_handle, hook_names[i]);
 
   /* load dependencies */
-  for (size_t i = 0; i < ARRAY_SIZE(new->dependencies); i++)
-    new->dependencies[i] = read_dependency(dlsym(new->dl_handle, dependency_names[i]));
+  for (size_t i = 0; i < ARRAY_SIZE(new->dependencies); i++) {
+    const char *(*dependency)[] = dlsym(new->dl_handle, dependency_names[i]);
+    new->dependencies[i] = NULL;
+
+    for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++)
+      new->dependencies[i]  = list_append(new->dependencies[i], strdup((*dependency)[j]));
+  }
 
   return new;
 
