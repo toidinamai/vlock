@@ -137,63 +137,63 @@ bool is_loaded(const char *name)
 
 static struct plugin *allocate_plugin(void)
 {
-  struct plugin *new;
+  struct plugin *new_;
 
   /* allocate a new plugin object */
-  if ((new = malloc((sizeof *new))) == NULL)
+  if ((new_ = malloc((sizeof *new_))) == NULL)
     return NULL;
 
-  new->ctx = NULL;
-  new->path = NULL;
-  new->name = NULL;
+  new_->ctx = NULL;
+  new_->path = NULL;
+  new_->name = NULL;
 
-  return new;
+  return new_;
 }
 
 /* Open the module with the given name.  Returns new plugin or NULL
  * on error. */
 static struct plugin *open_module(const char *name)
 {
-  struct plugin *new = allocate_plugin();
+  struct plugin *new_ = allocate_plugin();
 
-  if (new == NULL)
+  if (new_ == NULL)
     return NULL;
 
   /* format the plugin path */
-  if (asprintf(&new->path, "%s/%s.so", VLOCK_MODULE_DIR, name) < 0)
+  if (asprintf(&new_->path, "%s/%s.so", VLOCK_MODULE_DIR, name) < 0)
     goto err;
 
   /* remember the name */
-  if (asprintf(&new->name, "%s", name) < 0)
+  if (asprintf(&new_->name, "%s", name) < 0)
     goto err;
 
   /* load the plugin */
-  new->dl_handle = dlopen(new->path, RTLD_NOW | RTLD_LOCAL);
+  new_->dl_handle = dlopen(new_->path, RTLD_NOW | RTLD_LOCAL);
 
-  if (new->dl_handle == NULL) {
+  if (new_->dl_handle == NULL) {
     fprintf(stderr, "vlock-plugins: %s\n", dlerror());
     goto err;
   }
 
   /* load the hooks, unimplemented hooks are NULL */
-  for (size_t i = 0; i < ARRAY_SIZE(new->hooks); i++)
-    *(void **) (&new->hooks[i]) = dlsym(new->dl_handle, hook_names[i]);
+  for (size_t i = 0; i < ARRAY_SIZE(new_->hooks); i++)
+    *(void **) (&new_->hooks[i]) = dlsym(new_->dl_handle, hook_names[i]);
 
   /* load dependencies */
-  for (size_t i = 0; i < ARRAY_SIZE(new->dependencies); i++) {
-    const char *(*dependency)[] = dlsym(new->dl_handle, dependency_names[i]);
-    new->dependencies[i] = NULL;
+  for (size_t i = 0; i < ARRAY_SIZE(new_->dependencies); i++) {
+    const char *(*dependency)[] = dlsym(new_->dl_handle, dependency_names[i]);
+    new_->dependencies[i] = NULL;
 
     for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++)
-      new->dependencies[i]  = list_append(new->dependencies[i], strdup((*dependency)[j]));
+      new_->dependencies[i]  = list_append(new_->dependencies[i], strdup((*dependency)[j]));
   }
 
-  return new;
+  return new_;
 
 err:
-  free(new->path);
-  free(new->name);
-  free(new);
+  free(new_->path);
+  free(new_->name);
+  free(new_);
 
   return NULL;
 }
@@ -209,30 +209,30 @@ static struct List *get_script_dependency(const char *path, const char *name)
  * on error. */
 static struct plugin *open_script(const char *name)
 {
-  struct plugin *new = allocate_plugin();
+  struct plugin *new_ = allocate_plugin();
 
-  if (new == NULL)
+  if (new_ == NULL)
     return NULL;
 
-  new->dl_handle = NULL;
+  new_->dl_handle = NULL;
 
   /* format the plugin path */
-  if (asprintf(&new->path, "%s/%s", VLOCK_SCRIPT_DIR, name) < 0)
+  if (asprintf(&new_->path, "%s/%s", VLOCK_SCRIPT_DIR, name) < 0)
     goto err;
 
   /* remember the name */
-  if (asprintf(&new->name, "%s", name) < 0)
+  if (asprintf(&new_->name, "%s", name) < 0)
     goto err;
 
   /* load dependencies */
-  for (size_t i = 0; i < ARRAY_SIZE(new->dependencies); i++) {
-    new->dependencies[i] = get_script_dependency(new->path, dependency_names[i]);
+  for (size_t i = 0; i < ARRAY_SIZE(new_->dependencies); i++) {
+    new_->dependencies[i] = get_script_dependency(new_->path, dependency_names[i]);
 
-    if (new->dependencies[i] == SCRIPT_DEPENDENCY_ERROR) {
+    if (new_->dependencies[i] == SCRIPT_DEPENDENCY_ERROR) {
       do {
-        list_for_each(new->dependencies[i], item)
+        list_for_each(new_->dependencies[i], item)
           free(item->data);
-        list_free(new->dependencies[i]);
+        list_free(new_->dependencies[i]);
         i--;
       } while (i > 0);
 
@@ -241,13 +241,13 @@ static struct plugin *open_script(const char *name)
   }
 
   /* set hooks */
-  for (size_t i = 0; i < ARRAY_SIZE(new->hooks); i++)
-    new->hooks[i] = script_hooks[i];
+  for (size_t i = 0; i < ARRAY_SIZE(new_->hooks); i++)
+    new_->hooks[i] = script_hooks[i];
 
 err:
-  free(new->path);
-  free(new->name);
-  free(new);
+  free(new_->path);
+  free(new_->name);
+  free(new_);
 
   return NULL;
 }
