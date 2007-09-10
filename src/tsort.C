@@ -1,35 +1,41 @@
-#include <stdlib.h>
-
+#include <iterator>
+#include <list>
 #include "tsort.h"
-#include "list.h"
 
 /* Check if the given node has no incoming edges. */
-static int is_zero(void *node, struct List *edges)
+template <class T>
+static bool is_zero(T& node, std::list<Edge<T>*>& edges)
 {
-  list_for_each(edges, item) {
-    struct Edge *edge = item->data;
+  for (typename std::list<Edge<T>*>::iterator it = edges.begin();
+      it != edges.end(); it++)
+    if ((*it)->successor == node)
+      return false;
 
-    if (edge->successor == node)
-      return 0;
-  }
+  return true;
+}
 
-  return 1;
+template <class T>
+static bool list_remove(std::list<T> l, T i)
+{
+  for (typename std::list<T>::iterator it = l.begin(); it != l.end(); it++)
+    if (*it == i) {
+      l.erase(it);
+      return true;
+    }
+
+  return false;
 }
 
 
 /* Get all nodes (plugins) with no incoming edges. */
-static struct List *get_zeros(struct List *nodes, struct List *edges)
+template <class T>
+static std::list<T> *get_zeros(std::list<T>& nodes, std::list<Edge<T>*>& edges)
 {
-  struct List *zeros = list_copy(nodes);
+  std::list<T> *zeros = new std::list<T>(nodes);
 
-  list_for_each(edges, item) {
-    struct Edge *edge = item->data;
-
-    zeros = list_remove(zeros, edge->successor);
-
-    if (zeros == NULL)
-      break;
-  }
+  for (typename std::list<Edge<T>*>::iterator it = edges.begin();
+      !zeros.empty() && it != edges.end(); it++)
+    zeros = list_remove(zeros, (*it)->successor);
 
   return zeros;
 }
@@ -43,37 +49,41 @@ static struct List *get_zeros(struct List *nodes, struct List *edges)
  * Algorithm:
  * http://en.wikipedia.org/w/index.php?title=Topological_sorting&oldid=153157450#Algorithms
  */
-struct List *tsort(struct List *nodes, struct List **edges)
+template<class T> bool tsort(std::list<T>& nodes, std::list<Edge<T>*>& edges)
 {
-  struct List *sorted_nodes = NULL;
-  struct List *zeros = get_zeros(nodes, *edges);
+  std::list<T> *sorted_nodes = new std::list<T>;
+  std::list<T> *zeros = get_zeros(nodes, *edges);
+  bool result;
 
-  while (zeros != NULL) {
-    void *node = zeros->data;
+  while (!zeros->empty()) {
+    T zero = zeros->front();
+    zeros->pop_front();
 
-    sorted_nodes = list_append(sorted_nodes, node);
-    zeros = list_delete_link(zeros, zeros);
+    sorted_nodes->push_back(zeros);
 
-    for (struct List *item = list_first(*edges); item != NULL;) {
-      struct Edge *edge = item->data;
-      item = list_next(item);
-
-      if (edge->predecessor != node)
+    for (typename std::list<Edge<T>*>::iterator it = edges.begin();
+        it != edges.end();) {
+      if ((*it)->predecessor != zero) {
+        it++;
         continue;
+      } else {
+        list_remove(edges, *it);
 
-      *edges = list_remove(*edges, edge);
+        if (is_zero((*it)->successor, edges))
+          zeros.push_back((*it)->successor);
 
-      if (is_zero(edge->successor, *edges))
-        zeros = list_append(zeros, edge->successor);
-
-      free(edge);
+        delete *it;
+      }
     }
   }
 
-  if (*edges == NULL) {
-    return sorted_nodes;
-  } else {
-    list_free(sorted_nodes);
-    return NULL;
+  result = edges.empty();
+
+  if (result) {
+    nodes.clear();
+    nodes.insert(nodes.begin(), sorted_nodes.begin(), sorted_nodes.end());
   }
+
+  delete sorted_nodes;
+  return result;
 }

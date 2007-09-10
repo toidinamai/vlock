@@ -405,9 +405,9 @@ err:
 
 /* Get all edges as specified by the all plugins' "after" and "before"
  * attributes. */
-static struct List *get_edges(void)
+static std::list<Edge<struct plugin *>*> *get_edges(void)
 {
-  struct List *edges = NULL;
+  std::list<Edge<struct plugin *>*> *edges = NULL;
 
   for (std::list<struct plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
@@ -421,10 +421,10 @@ static struct List *get_edges(void)
       struct plugin *successor = (struct plugin *)get_plugin((char *)item->data);
 
       if (successor != NULL) {
-        struct Edge *edge = (struct Edge *)malloc(sizeof *edge);
+        Edge<struct plugin *> *edge = new Edge<struct plugin *>;
         edge->predecessor = p;
         edge->successor = successor;
-        edges = list_append(edges, edge);
+        edges->push_back(edge);
       }
     }
 
@@ -432,10 +432,10 @@ static struct List *get_edges(void)
       struct plugin *predecessor = (struct plugin *)get_plugin((char *)item->data);
 
       if (predecessor != NULL) {
-        struct Edge *edge = (struct Edge *)malloc(sizeof *edge);
+        Edge<struct plugin *> *edge = new Edge<struct plugin *>;
         edge->predecessor = predecessor;
         edge->successor = p;
-        edges = list_append(edges, edge);
+        edges->push_back(edge);
       }
     }
   }
@@ -445,27 +445,22 @@ static struct List *get_edges(void)
 
 static bool sort_plugins(void)
 {
-  struct List *edges = get_edges();
+  std::list<Edge<struct plugin *>*> *edges = get_edges();
+  bool result = tsort(plugins, *edges);
 
-  // tsort(plugins, &edges);
-
-  if (edges != NULL) {
+  if (!result) {
     fprintf(stderr, "vlock-plugins: circular dependencies detected:\n");
 
-    list_for_each(edges, item) {
-      struct Edge *edge = (struct Edge *)item->data;
-      struct plugin *p = (struct plugin *)edge->predecessor;
-      struct plugin *s = (struct plugin *)edge->successor;
-      fprintf(stderr, "\t%s\tmust come before\t%s\n", p->name, s->name);
-      free(edge);
+    for (std::list<Edge<struct plugin *>*>::iterator it = edges->begin();
+        it != edges->end(); it = edges->erase(it)) {
+      fprintf(stderr, "\t%s\tmust come before\t%s\n", (*it)->predecessor->name, (*it)->successor->name);
+      delete *it;
     }
-
-    list_free(edges);
-
-    return false;
   }
 
-  return true;
+  delete edges;
+
+  return result;
 }
 
 /* Call the given plugin hook. */
