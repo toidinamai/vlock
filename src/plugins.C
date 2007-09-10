@@ -83,7 +83,7 @@ vlock_hook_fn script_hooks[] = {
 };
 
 /* vlock plugin */
-struct plugin {
+struct Plugin {
   /* name of the plugin */
   char *name;
   /* path to the shared object file */
@@ -103,7 +103,7 @@ struct plugin {
 };
 
 /* the list of plugins */
-std::list<struct plugin *> plugins;
+std::list<Plugin *> plugins;
 
 static int __get_index(const char *a[], size_t l, const char *s) {
   for (size_t i = 0; i < l; i++)
@@ -120,9 +120,9 @@ static int __get_index(const char *a[], size_t l, const char *s) {
 
 /* Get the plugin with the given name.  Returns the first plugin
  * with the given name or NULL if none could be found. */
-static struct plugin *get_plugin(const char *name)
+static Plugin *get_plugin(const char *name)
 {
-  for (std::list<struct plugin*>::iterator it = plugins.begin();
+  for (std::list<Plugin*>::iterator it = plugins.begin();
       it != plugins.end(); it++)
     if (strcmp((*it)->name, name) == 0)
       return *it;
@@ -136,12 +136,12 @@ bool is_loaded(const char *name)
   return get_plugin(name) != NULL;
 }
 
-static struct plugin *allocate_plugin(void)
+static Plugin *allocate_plugin(void)
 {
-  struct plugin *new_;
+  Plugin *new_;
 
   /* allocate a new plugin object */
-  if ((new_ = (struct plugin *)malloc((sizeof *new_))) == NULL)
+  if ((new_ = (Plugin *)malloc((sizeof *new_))) == NULL)
     return NULL;
 
   new_->ctx = NULL;
@@ -153,9 +153,9 @@ static struct plugin *allocate_plugin(void)
 
 /* Open the module with the given name.  Returns new plugin or NULL
  * on error. */
-static struct plugin *open_module(const char *name)
+static Plugin *open_module(const char *name)
 {
-  struct plugin *new_ = allocate_plugin();
+  Plugin *new_ = allocate_plugin();
 
   if (new_ == NULL)
     return NULL;
@@ -208,9 +208,9 @@ static struct List *get_script_dependency(const char *path, const char *name)
 
 /* Open the script with the given name.  Returns new plugin or NULL
  * on error. */
-static struct plugin *open_script(const char *name)
+static Plugin *open_script(const char *name)
 {
-  struct plugin *new_ = allocate_plugin();
+  Plugin *new_ = allocate_plugin();
 
   if (new_ == NULL)
     return NULL;
@@ -255,9 +255,9 @@ err:
 
 /* Same as open_plugin except that an old plugin is returned if there
  * already is one with the given name. */
-static struct plugin *__load_plugin(const char *name)
+static Plugin *__load_plugin(const char *name)
 {
-  struct plugin *p = get_plugin(name);
+  Plugin *p = get_plugin(name);
 
   if (p != NULL)
     return p;
@@ -281,7 +281,7 @@ bool load_plugin(const char *name)
 }
 
 /* Unload the given plugin and remove from the plugins list. */
-static void unload_plugin(struct plugin *p)
+static void unload_plugin(Plugin *p)
 {
   if (p->dl_handle != NULL)
     (void) dlclose(p->dl_handle);
@@ -299,7 +299,7 @@ static void unload_plugin(struct plugin *p)
 void unload_plugins(void)
 {
   while (!plugins.empty()) {
-    struct plugin *p = plugins.front();
+    Plugin *p = plugins.front();
     plugins.pop_front();
     unload_plugin(p);
   }
@@ -315,10 +315,10 @@ bool resolve_dependencies(void)
   /* load plugins that are required, this automagically takes care of plugins
    * that are required by the plugins loaded here because they are appended to
    * the end of the list */
-  for (std::list<struct plugin *>::iterator it = plugins.begin();
+  for (std::list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
     list_for_each(get_dependency(*it, "requires"), dependency_item) {
-      struct plugin *d = (struct plugin *)__load_plugin((char *)dependency_item->data);
+      Plugin *d = (Plugin *)__load_plugin((char *)dependency_item->data);
 
       if (d == NULL)
         goto err;
@@ -328,11 +328,11 @@ bool resolve_dependencies(void)
   }
 
   /* fail if a plugins that is needed is not loaded */
-  for (std::list<struct plugin *>::iterator it = plugins.begin();
+  for (std::list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
     list_for_each(get_dependency(*it, "needs"), dependency_item) {
       char *dependency_name = (char *)dependency_item->data;
-      struct plugin *d = get_plugin(dependency_name);
+      Plugin *d = get_plugin(dependency_name);
 
       if (d == NULL) {
         fprintf(stderr, "vlock-plugins: %s does not work without %s\n",
@@ -345,13 +345,13 @@ bool resolve_dependencies(void)
   }
 
   /* unload plugins whose prerequisites are not present */
-  for (std::list<struct plugin *>::iterator it = plugins.begin();
+  for (std::list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end();) {
     bool dependencies_present = true;
 
     list_for_each(get_dependency(*it, "depends"), dependency_item) {
       char *dependency_name = (char *)dependency_item->data;
-      struct plugin *d = get_plugin(dependency_name);
+      Plugin *d = get_plugin(dependency_name);
 
       if (d != NULL)
         continue;
@@ -368,7 +368,7 @@ bool resolve_dependencies(void)
     if (dependencies_present) {
       it++;
     } else {
-      struct plugin *p = *it;
+      Plugin *p = *it;
       it = plugins.erase(it);
       unload_plugin(p);
     }
@@ -377,7 +377,7 @@ bool resolve_dependencies(void)
   list_free(required_plugins);
 
   /* fail if conflicting plugins are loaded */
-  for (std::list<struct plugin *>::iterator it = plugins.begin();
+  for (std::list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
     list_for_each(get_dependency(*it, "conflicts"), dependency_item) {
       char *dependency_name = (char *)dependency_item->data;
@@ -405,23 +405,23 @@ err:
 
 /* Get all edges as specified by the all plugins' "after" and "before"
  * attributes. */
-static std::list<Edge<struct plugin *>*> *get_edges(void)
+static std::list<Edge<Plugin *>*> *get_edges(void)
 {
-  std::list<Edge<struct plugin *>*> *edges = NULL;
+  std::list<Edge<Plugin *>*> *edges = NULL;
 
-  for (std::list<struct plugin *>::iterator it = plugins.begin();
+  for (std::list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
-    struct plugin *p = *it;
+    Plugin *p = *it;
     /* p must come after these */
     struct List *predecessors = get_dependency(p, "after");
     /* p must come before these */
     struct List *successors = get_dependency(p, "before");
 
     list_for_each(successors, item) {
-      struct plugin *successor = (struct plugin *)get_plugin((char *)item->data);
+      Plugin *successor = (Plugin *)get_plugin((char *)item->data);
 
       if (successor != NULL) {
-        Edge<struct plugin *> *edge = new Edge<struct plugin *>;
+        Edge<Plugin *> *edge = new Edge<Plugin *>;
         edge->predecessor = p;
         edge->successor = successor;
         edges->push_back(edge);
@@ -429,10 +429,10 @@ static std::list<Edge<struct plugin *>*> *get_edges(void)
     }
 
     list_for_each(predecessors, item) {
-      struct plugin *predecessor = (struct plugin *)get_plugin((char *)item->data);
+      Plugin *predecessor = (Plugin *)get_plugin((char *)item->data);
 
       if (predecessor != NULL) {
-        Edge<struct plugin *> *edge = new Edge<struct plugin *>;
+        Edge<Plugin *> *edge = new Edge<Plugin *>;
         edge->predecessor = predecessor;
         edge->successor = p;
         edges->push_back(edge);
@@ -445,13 +445,13 @@ static std::list<Edge<struct plugin *>*> *get_edges(void)
 
 static bool sort_plugins(void)
 {
-  std::list<Edge<struct plugin *>*> *edges = get_edges();
+  std::list<Edge<Plugin *>*> *edges = get_edges();
   bool result = tsort(plugins, *edges);
 
   if (!result) {
     fprintf(stderr, "vlock-plugins: circular dependencies detected:\n");
 
-    for (std::list<Edge<struct plugin *>*>::iterator it = edges->begin();
+    for (std::list<Edge<Plugin *>*>::iterator it = edges->begin();
         it != edges->end(); it = edges->erase(it)) {
       fprintf(stderr, "\t%s\tmust come before\t%s\n", (*it)->predecessor->name, (*it)->successor->name);
       delete *it;
@@ -478,9 +478,9 @@ bool plugin_hook(const char *hook_name)
 
 static bool handle_vlock_start(int hook_index)
 {
-  for (std::list<struct plugin *>::iterator it = plugins.begin();
+  for (std::list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
-    struct plugin *p = *it;
+    Plugin *p = *it;
     vlock_hook_fn hook = p->hooks[hook_index];
 
     if (hook != NULL)
@@ -493,9 +493,9 @@ static bool handle_vlock_start(int hook_index)
 
 static bool handle_vlock_end(int hook_index)
 {
-  for (std::list<struct plugin *>::reverse_iterator it = plugins.rbegin();
+  for (std::list<Plugin *>::reverse_iterator it = plugins.rbegin();
       it != plugins.rend(); it--) {
-    struct plugin *p = *it;
+    Plugin *p = *it;
     vlock_hook_fn hook = p->hooks[hook_index];
 
     if (hook != NULL)
@@ -511,9 +511,9 @@ static bool handle_vlock_save(int hook_index)
 {
   bool result = false;
 
-  for (std::list<struct plugin *>::iterator it = plugins.begin();
+  for (std::list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
-    struct plugin *p = *it;
+    Plugin *p = *it;
     vlock_hook_fn hook = p->hooks[hook_index];
 
     if (hook != NULL) {
@@ -533,9 +533,9 @@ static bool handle_vlock_save(int hook_index)
 
 static bool handle_vlock_save_abort(int hook_index)
 {
-  for (std::list<struct plugin *>::reverse_iterator it = plugins.rbegin();
+  for (std::list<Plugin *>::reverse_iterator it = plugins.rbegin();
       it != plugins.rend(); it--) {
-    struct plugin *p = *it;
+    Plugin *p = *it;
     vlock_hook_fn hook = p->hooks[hook_index];
 
     if (hook != NULL) {
