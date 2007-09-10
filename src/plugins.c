@@ -185,7 +185,8 @@ static struct plugin *__load_plugin(const char *name)
 
   p = open_module(name);
 
-  plugins = list_append(plugins, p);
+  if (p != NULL)
+    plugins = list_append(plugins, p);
 
   return p;
 }
