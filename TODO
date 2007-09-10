@@ -21,6 +21,7 @@ medium
 - abandon plugin based options
   - plugins only by name
   - hardcoded defaults for --new, --all and --disable-sysrq
+- use access() instead of uid changes to secure plugin loading
 
 low
 ---
