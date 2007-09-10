@@ -34,8 +34,10 @@ DESTDIR =
 
 # shell to run vlock.sh with (only bash is known to work)
 BOURNE_SHELL = /usr/bin/env bash
-# c compiler
+# C compiler
 CC = gcc
+# C++ compiler
+CXX = g++
 # gnu install
 INSTALL = install
 # linker
@@ -43,8 +45,10 @@ LD = ld
 
 ### compiler and linker settings ###
 
-# c compiler flags
+# C compiler flags
 CFLAGS = -O2 -Wall -W -pedantic -std=gnu99
+# C++ compiler flags
+CXXFLAGS = -O2 -Wall -W -pedantic
 # linker flags
 LDFLAGS = 
 # linker flags needed for dlopen and friends
