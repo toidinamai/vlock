@@ -121,9 +121,7 @@ bool is_loaded(const char *name)
   return get_plugin(name) != NULL;
 }
 
-/* Open the plugin in file with the given name.  Returns the new plugin or NULL
- * on error. */
-static struct plugin *open_module(const char *name)
+static struct *allocate_plugin(void)
 {
   struct plugin *new;
 
@@ -134,6 +132,18 @@ static struct plugin *open_module(const char *name)
   new->ctx = NULL;
   new->path = NULL;
   new->name = NULL;
+
+  return new;
+}
+
+/* Open the module with the given name.  Returns new plugin or NULL
+ * on error. */
+static struct plugin *open_module(const char *name)
+{
+  struct plugin *new = allocate_plugin();
+
+  if (new == NULL)
+    return NULL;
 
   /* format the plugin path */
   if (asprintf(&new->path, "%s/%s.so", VLOCK_MODULE_DIR, name) < 0)
