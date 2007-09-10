@@ -120,7 +120,7 @@ static int __get_index(const char *a[], size_t l, const char *s) {
 static struct plugin *get_plugin(const char *name)
 {
   list_for_each(plugins, item) {
-    struct plugin *p = item->data;
+    struct plugin *p = (struct plugin *)item->data;
 
     if (strcmp(p->name, name) == 0)
       return p;
@@ -140,7 +140,7 @@ static struct plugin *allocate_plugin(void)
   struct plugin *new_;
 
   /* allocate a new plugin object */
-  if ((new_ = malloc((sizeof *new_))) == NULL)
+  if ((new_ = (struct plugin *)malloc((sizeof *new_))) == NULL)
     return NULL;
 
   new_->ctx = NULL;
@@ -181,7 +181,7 @@ static struct plugin *open_module(const char *name)
 
   /* load dependencies */
   for (size_t i = 0; i < ARRAY_SIZE(new_->dependencies); i++) {
-    const char *(*dependency)[] = dlsym(new_->dl_handle, dependency_names[i]);
+    const char *(*dependency)[] = (const char* (*)[])dlsym(new_->dl_handle, dependency_names[i]);
     new_->dependencies[i] = NULL;
 
     for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++)
@@ -282,7 +282,7 @@ bool load_plugin(const char *name)
 /* Unload the given plugin and remove from the plugins list. */
 static void unload_plugin(struct List *item)
 {
-  struct plugin *p = item->data;
+  struct plugin *p = (struct plugin*)item->data;
   plugins = list_delete_link(plugins, item);
   if (p->dl_handle != NULL)
     (void) dlclose(p->dl_handle);
@@ -314,10 +314,10 @@ bool resolve_dependencies(void)
    * that are required by the plugins loaded here because they are appended to
    * the end of the list */
   list_for_each(plugins, item) {
-    struct plugin *p = item->data;
+    struct plugin *p = (struct plugin*)item->data;
 
     list_for_each(get_dependency(p, "requires"), dependency_item) {
-      struct plugin *d = __load_plugin(dependency_item->data);
+      struct plugin *d = (struct plugin *)__load_plugin((char *)dependency_item->data);
 
       if (d == NULL)
         goto err;
@@ -328,10 +328,10 @@ bool resolve_dependencies(void)
 
   /* fail if a plugins that is needed is not loaded */
   list_for_each(plugins, item) {
-    struct plugin *p = item->data;
+    struct plugin *p = (struct plugin *)item->data;
 
     list_for_each(get_dependency(p, "needs"), dependency_item) {
-      char *dependency_name = dependency_item->data;
+      char *dependency_name = (char *)dependency_item->data;
       struct plugin *d = get_plugin(dependency_name);
 
       if (d == NULL) {
@@ -346,12 +346,12 @@ bool resolve_dependencies(void)
 
   /* unload plugins whose prerequisites are not present */
   for (struct List *item = list_first(plugins); item != NULL;) {
-    struct plugin *p = item->data;
+    struct plugin *p = (struct plugin *)item->data;
     struct List *tmp = item;
     item = list_next(item);
 
     list_for_each(get_dependency(p, "depends"), dependency_item) {
-      char *dependency_name = dependency_item->data;
+      char *dependency_name = (char *)dependency_item->data;
       struct plugin *d = get_plugin(dependency_name);
 
       if (d != NULL)
@@ -372,9 +372,9 @@ bool resolve_dependencies(void)
 
   /* fail if conflicting plugins are loaded */
   list_for_each(plugins, item) {
-    struct plugin *p = item->data;
+    struct plugin *p = (struct plugin *)item->data;
     list_for_each(get_dependency(p, "conflicts"), dependency_item) {
-      char *dependency_name = dependency_item->data;
+      char *dependency_name = (char *)dependency_item->data;
 
       if (get_plugin(dependency_name) != NULL) {
         fprintf(stderr,
@@ -404,17 +404,17 @@ static struct List *get_edges(void)
   struct List *edges = NULL;
 
   list_for_each(plugins, item) {
-    struct plugin *p = item->data;
+    struct plugin *p = (struct plugin *)item->data;
     /* p must come after these */
     struct List *predecessors = get_dependency(p, "after");
     /* p must come before these */
     struct List *successors = get_dependency(p, "before");
 
     list_for_each(successors, item) {
-      struct plugin *successor = get_plugin(item->data);
+      struct plugin *successor = (struct plugin *)get_plugin((char *)item->data);
 
       if (successor != NULL) {
-        struct Edge *edge = malloc(sizeof *edge);
+        struct Edge *edge = (struct Edge *)malloc(sizeof *edge);
         edge->predecessor = p;
         edge->successor = successor;
         edges = list_append(edges, edge);
@@ -422,10 +422,10 @@ static struct List *get_edges(void)
     }
 
     list_for_each(predecessors, item) {
-      struct plugin *predecessor = get_plugin(item->data);
+      struct plugin *predecessor = (struct plugin *)get_plugin((char *)item->data);
 
       if (predecessor != NULL) {
-        struct Edge *edge = malloc(sizeof *edge);
+        struct Edge *edge = (struct Edge *)malloc(sizeof *edge);
         edge->predecessor = predecessor;
         edge->successor = p;
         edges = list_append(edges, edge);
@@ -451,9 +451,9 @@ static bool sort_plugins(void)
     fprintf(stderr, "vlock-plugins: circular dependencies detected:\n");
 
     list_for_each(edges, item) {
-      struct Edge *edge = item->data;
-      struct plugin *p = edge->predecessor;
-      struct plugin *s = edge->successor;
+      struct Edge *edge = (struct Edge *)item->data;
+      struct plugin *p = (struct plugin *)edge->predecessor;
+      struct plugin *s = (struct plugin *)edge->successor;
       fprintf(stderr, "\t%s\tmust come before\t%s\n", p->name, s->name);
       free(edge);
     }
@@ -480,7 +480,7 @@ bool plugin_hook(const char *hook_name)
 static bool handle_vlock_start(int hook_index)
 {
   list_for_each(plugins, item) {
-    struct plugin *p = item->data;
+    struct plugin *p = (struct plugin *)item->data;
     vlock_hook_fn hook = p->hooks[hook_index];
 
     if (hook != NULL)
@@ -494,7 +494,7 @@ static bool handle_vlock_start(int hook_index)
 static bool handle_vlock_end(int hook_index)
 {
   list_reverse_for_each(plugins, item) {
-    struct plugin *p = item->data;
+    struct plugin *p = (struct plugin *)item->data;
     vlock_hook_fn hook = p->hooks[hook_index];
 
     if (hook != NULL)
@@ -511,7 +511,7 @@ static bool handle_vlock_save(int hook_index)
   bool result = false;
 
   list_for_each(plugins, item) {
-    struct plugin *p = item->data;
+    struct plugin *p = (struct plugin *)item->data;
     vlock_hook_fn hook = p->hooks[hook_index];
 
     if (hook != NULL) {
@@ -532,7 +532,7 @@ static bool handle_vlock_save(int hook_index)
 static bool handle_vlock_save_abort(int hook_index)
 {
   list_reverse_for_each(plugins, item) {
-    struct plugin *p = item->data;
+    struct plugin *p = (struct plugin *)item->data;
     vlock_hook_fn hook = p->hooks[hook_index];
 
     if (hook != NULL) {
