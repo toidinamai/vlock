@@ -56,6 +56,7 @@ vlock: vlock.sh config.mk Makefile
 	mv -f $@.tmp $@
 
 override CFLAGS += -Isrc -DPREFIX="\"$(PREFIX)\""
+override CXXFLAGS += -Isrc -DPREFIX="\"$(PREFIX)\""
 
 vlock-main: vlock-main.o prompt.o auth-$(AUTH_METHOD).o
 
