@@ -27,10 +27,15 @@
 #include "tsort.h"
 #include "list.h"
 
+#undef ARRAY_SIZE
 #define ARRAY_SIZE(x) ((sizeof (x) / sizeof (x[0])))
 
 /* hard coded paths */
 #define VLOCK_MODULE_DIR PREFIX "/lib/vlock/modules"
+#define VLOCK_SCRIPT_DIR PREFIX "/lib/vlock/scripts"
+
+/* function type for hooks */
+typedef bool (*vlock_hook_fn)(void **);
 
 /* dependency names */
 const char *dependency_names[] = {
@@ -62,8 +67,17 @@ bool (*hook_handlers[])(int) = {
   handle_vlock_save_abort,
 };
 
-/* function type for hooks */
-typedef bool (*vlock_hook_fn)(void **);
+static bool script_vlock_start(void **ctx);
+static bool script_vlock_end(void **ctx);
+static bool script_vlock_save(void **ctx);
+static bool script_vlock_save_abort(void **ctx);
+
+vlock_hook_fn script_hooks[] = {
+  script_vlock_start,
+  script_vlock_end,
+  script_vlock_save,
+  script_vlock_save_abort,
+};
 
 /* vlock plugin */
 struct plugin {
@@ -121,7 +135,7 @@ bool is_loaded(const char *name)
   return get_plugin(name) != NULL;
 }
 
-static struct *allocate_plugin(void)
+static struct plugin *allocate_plugin(void)
 {
   struct plugin *new;
 
@@ -184,6 +198,60 @@ err:
   return NULL;
 }
 
+#define SCRIPT_DEPENDENCY_ERROR ((struct List *) -1)
+
+static struct List *get_script_dependency(const char *path, const char *name)
+{
+  return SCRIPT_DEPENDENCY_ERROR;
+}
+
+/* Open the script with the given name.  Returns new plugin or NULL
+ * on error. */
+static struct plugin *open_script(const char *name)
+{
+  struct plugin *new = allocate_plugin();
+
+  if (new == NULL)
+    return NULL;
+
+  new->dl_handle = NULL;
+
+  /* format the plugin path */
+  if (asprintf(&new->path, "%s/%s", VLOCK_SCRIPT_DIR, name) < 0)
+    goto err;
+
+  /* remember the name */
+  if (asprintf(&new->name, "%s", name) < 0)
+    goto err;
+
+  /* load dependencies */
+  for (size_t i = 0; i < ARRAY_SIZE(new->dependencies); i++) {
+    new->dependencies[i] = get_script_dependency(new->path, dependency_names[i]);
+
+    if (new->dependencies[i] == SCRIPT_DEPENDENCY_ERROR) {
+      do {
+        list_for_each(new->dependencies[i], item)
+          free(item->data);
+        list_free(new->dependencies[i]);
+        i--;
+      } while (i > 0);
+
+      goto err;
+    }
+  }
+
+  /* set hooks */
+  for (size_t i = 0; i < ARRAY_SIZE(new->hooks); i++)
+    new->hooks[i] = script_hooks[i];
+
+err:
+  free(new->path);
+  free(new->name);
+  free(new);
+
+  return NULL;
+}
+
 /* Same as open_plugin except that an old plugin is returned if there
  * already is one with the given name. */
 static struct plugin *__load_plugin(const char *name)
@@ -194,6 +262,9 @@ static struct plugin *__load_plugin(const char *name)
     return p;
 
   p = open_module(name);
+
+  if (p == NULL)
+    p = open_script(name);
 
   if (p != NULL)
     plugins = list_append(plugins, p);
@@ -213,7 +284,8 @@ static void unload_plugin(struct List *item)
 {
   struct plugin *p = item->data;
   plugins = list_delete_link(plugins, item);
-  (void) dlclose(p->dl_handle);
+  if (p->dl_handle != NULL)
+    (void) dlclose(p->dl_handle);
   free(p->path);
   free(p->name);
 
@@ -474,5 +546,25 @@ static bool handle_vlock_save_abort(int hook_index)
     }
   }
 
+  return true;
+}
+
+static bool script_vlock_start(void **ctx)
+{
+  return true;
+}
+
+static bool script_vlock_end(void **ctx)
+{
+  return true;
+}
+
+static bool script_vlock_save(void **ctx)
+{
+  return true;
+}
+
+static bool script_vlock_save_abort(void **ctx)
+{
   return true;
 }
