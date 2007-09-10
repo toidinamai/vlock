@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct List;
 
 /* For the given digraph, generate a topological sort of the nodes.
@@ -13,3 +17,7 @@ struct Edge {
   void *predecessor;
   void *successor;
 };
+
+#ifdef __cplusplus
+}
+#endif
