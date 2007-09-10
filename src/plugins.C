@@ -11,7 +11,7 @@
  *
  */
 
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(_GNU_SOURCE)
 /* for asprintf() */
 #define _GNU_SOURCE
 #endif
