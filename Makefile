@@ -82,7 +82,7 @@ endif
 
 ifeq ($(USE_PLUGINS),y)
 vlock-main: plugins.o list.o tsort.o
-vlock-main : override LDFLAGS += $(DL_LIB)
+vlock-main : override LDFLAGS += $(DL_LIB) -lstdc++
 vlock-main.o : override CFLAGS += -DUSE_PLUGINS
 endif
 
