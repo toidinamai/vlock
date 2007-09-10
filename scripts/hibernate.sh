@@ -20,10 +20,26 @@ hooks() {
   done
 }
 
-if [ $# -eq 1 ] || [ "$2" = "hooks" ] ; then
-  hooks
-else
-  echo "requires=all"
-  echo "conflicts=new"
-  echo "before=all"
+if [ $# -ne 1 ] ; then
+  echo >&2 "Usage: $0 <command>"
+  exit 1
 fi
+
+case "$1" in
+  hooks)
+    hooks
+  ;;
+  requires)
+    echo "all"
+  ;;
+  conflicts)
+    echo "new"
+  ;;
+  before)
+    echo "all"
+  ;;
+  *)
+    echo >&2 "$0: invalid command"
+    exit 1
+  ;;
+esac
