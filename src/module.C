@@ -54,5 +54,10 @@ Module::~Module()
 
 bool Module::call_hook(string name)
 {
-  return true;
+  vlock_hook_fn hook = hooks[name];
+
+  if (hook == NULL)
+    return true;
+  else
+    return hook(&ctx);
 }
