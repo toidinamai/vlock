@@ -37,31 +37,29 @@
 
 using namespace std;
 
-// helper macro
-#undef ARRAY_SIZE
-#define ARRAY_SIZE(x) ((sizeof (x) / sizeof (x[0])))
-
 /* dependency names */
-static const char *_dependency_names[] = {
-  "after",
-  "before",
-  "requires",
-  "needs",
-  "depends",
-  "conflicts",
-};
+vector<string> dependency_names;
 
-vector<string> dependency_names(_dependency_names, _dependency_names + ARRAY_SIZE(_dependency_names));
+void __attribute__((constructor)) init_dependency_names(void)
+{
+  dependency_names.push_back("after");
+  dependency_names.push_back("before");
+  dependency_names.push_back("requires");
+  dependency_names.push_back("needs");
+  dependency_names.push_back("depends");
+  dependency_names.push_back("conflicts");
+}
 
 /* hook names */
-static const char *_hook_names[] = {
-  "vlock_start",
-  "vlock_end",
-  "vlock_save",
-  "vlock_save_abort",
-};
+vector<string> hook_names;
 
-vector<string> hook_names(_hook_names, _hook_names + ARRAY_SIZE(_hook_names));
+void __attribute__((constructor)) init_hook_names(void)
+{
+  hook_names.push_back("vlock_start");
+  hook_names.push_back("vlock_end");
+  hook_names.push_back("vlock_save");
+  hook_names.push_back("vlock_save_abort");
+}
 
 typedef bool (*hook_handler)(string);
 static map<string, hook_handler> hook_handlers;
