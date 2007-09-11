@@ -31,6 +31,7 @@
 #include "vlock.h"
 #include "plugins.h"
 #include "tsort.h"
+#include "plugin.h"
 
 using namespace std;
 
@@ -40,9 +41,6 @@ using namespace std;
 /* hard coded paths */
 #define VLOCK_MODULE_DIR PREFIX "/lib/vlock/modules"
 #define VLOCK_SCRIPT_DIR PREFIX "/lib/vlock/scripts"
-
-/* function type for hooks */
-typedef bool (*vlock_hook_fn)(void **);
 
 /* dependency names */
 const char *dependency_names[] = {
@@ -86,42 +84,15 @@ vlock_hook_fn script_hooks[] = {
   script_vlock_save_abort,
 };
 
-/* vlock plugin */
-class Plugin
-{
-public:
-  /* name of the plugin */
-  string name;
-
-  /* plugin hook context */
-  void *ctx;
-
-  /* dependencies */
-  list<string> dependencies[ARRAY_SIZE(dependency_names)];
-
-  /* plugin hook functions */
-  vlock_hook_fn hooks[ARRAY_SIZE(hook_names)];
-
-  // constructor
-  Plugin(string name)
-  {
-    this->name = name;
-    this->ctx = NULL;
-  }
-
-  // destuctor
-  ~Plugin()
-  {
-  }
-
-  bool operator== (Plugin *p)
-  {
-    return p->name == this->name;
-  }
-};
-
 /* the list of plugins */
 list<Plugin *> plugins;
+
+// constructor
+Plugin::Plugin(string name)
+{
+  this->name = name;
+  this->ctx = NULL;
+}
 
 class Module : public Plugin
 {
