@@ -8,6 +8,8 @@ using std::list;
 template<class T> struct Edge {
   T predecessor;
   T successor;
+
+  Edge(T p, T s) { predecessor = p; successor = s; }
 };
 
 /* For the given digraph, generate a topological sort of the nodes.
