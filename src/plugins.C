@@ -30,6 +30,8 @@
 #include "tsort.h"
 #include "list.h"
 
+using std::list;
+
 #undef ARRAY_SIZE
 #define ARRAY_SIZE(x) ((sizeof (x) / sizeof (x[0])))
 
@@ -103,7 +105,7 @@ struct Plugin {
 };
 
 /* the list of plugins */
-std::list<Plugin *> plugins;
+list<Plugin *> plugins;
 
 static int __get_index(const char *a[], size_t l, const char *s) {
   for (size_t i = 0; i < l; i++)
@@ -122,7 +124,7 @@ static int __get_index(const char *a[], size_t l, const char *s) {
  * with the given name or NULL if none could be found. */
 static Plugin *get_plugin(const char *name)
 {
-  for (std::list<Plugin*>::iterator it = plugins.begin();
+  for (list<Plugin*>::iterator it = plugins.begin();
       it != plugins.end(); it++)
     if (strcmp((*it)->name, name) == 0)
       return *it;
@@ -315,7 +317,7 @@ bool resolve_dependencies(void)
   /* load plugins that are required, this automagically takes care of plugins
    * that are required by the plugins loaded here because they are appended to
    * the end of the list */
-  for (std::list<Plugin *>::iterator it = plugins.begin();
+  for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
     list_for_each(get_dependency(*it, "requires"), dependency_item) {
       Plugin *d = (Plugin *)__load_plugin((char *)dependency_item->data);
@@ -328,7 +330,7 @@ bool resolve_dependencies(void)
   }
 
   /* fail if a plugins that is needed is not loaded */
-  for (std::list<Plugin *>::iterator it = plugins.begin();
+  for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
     list_for_each(get_dependency(*it, "needs"), dependency_item) {
       char *dependency_name = (char *)dependency_item->data;
@@ -345,7 +347,7 @@ bool resolve_dependencies(void)
   }
 
   /* unload plugins whose prerequisites are not present */
-  for (std::list<Plugin *>::iterator it = plugins.begin();
+  for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end();) {
     bool dependencies_present = true;
 
@@ -377,7 +379,7 @@ bool resolve_dependencies(void)
   list_free(required_plugins);
 
   /* fail if conflicting plugins are loaded */
-  for (std::list<Plugin *>::iterator it = plugins.begin();
+  for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
     list_for_each(get_dependency(*it, "conflicts"), dependency_item) {
       char *dependency_name = (char *)dependency_item->data;
@@ -405,11 +407,11 @@ err:
 
 /* Get all edges as specified by the all plugins' "after" and "before"
  * attributes. */
-static std::list<Edge<Plugin *>*> *get_edges(void)
+static list<Edge<Plugin *>*> *get_edges(void)
 {
-  std::list<Edge<Plugin *>*> *edges = new std::list<Edge<Plugin *>*>;
+  list<Edge<Plugin *>*> *edges = new list<Edge<Plugin *>*>;
 
-  for (std::list<Plugin *>::iterator it = plugins.begin();
+  for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
     Plugin *p = *it;
     /* p must come after these */
@@ -445,13 +447,13 @@ static std::list<Edge<Plugin *>*> *get_edges(void)
 
 static bool sort_plugins(void)
 {
-  std::list<Edge<Plugin *>*> *edges = get_edges();
+  list<Edge<Plugin *>*> *edges = get_edges();
   bool result = tsort(plugins, *edges);
 
   if (!result) {
     fprintf(stderr, "vlock-plugins: circular dependencies detected:\n");
 
-    for (std::list<Edge<Plugin *>*>::iterator it = edges->begin();
+    for (list<Edge<Plugin *>*>::iterator it = edges->begin();
         it != edges->end(); it = edges->erase(it)) {
       fprintf(stderr, "\t%s\tmust come before\t%s\n", (*it)->predecessor->name, (*it)->successor->name);
       delete *it;
@@ -478,7 +480,7 @@ bool plugin_hook(const char *hook_name)
 
 static bool handle_vlock_start(int hook_index)
 {
-  for (std::list<Plugin *>::iterator it = plugins.begin();
+  for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
     Plugin *p = *it;
     vlock_hook_fn hook = p->hooks[hook_index];
@@ -493,7 +495,7 @@ static bool handle_vlock_start(int hook_index)
 
 static bool handle_vlock_end(int hook_index)
 {
-  for (std::list<Plugin *>::reverse_iterator it = plugins.rbegin();
+  for (list<Plugin *>::reverse_iterator it = plugins.rbegin();
       it != plugins.rend(); it--) {
     Plugin *p = *it;
     vlock_hook_fn hook = p->hooks[hook_index];
@@ -511,7 +513,7 @@ static bool handle_vlock_save(int hook_index)
 {
   bool result = false;
 
-  for (std::list<Plugin *>::iterator it = plugins.begin();
+  for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
     Plugin *p = *it;
     vlock_hook_fn hook = p->hooks[hook_index];
@@ -533,7 +535,7 @@ static bool handle_vlock_save(int hook_index)
 
 static bool handle_vlock_save_abort(int hook_index)
 {
-  for (std::list<Plugin *>::reverse_iterator it = plugins.rbegin();
+  for (list<Plugin *>::reverse_iterator it = plugins.rbegin();
       it != plugins.rend(); it--) {
     Plugin *p = *it;
     vlock_hook_fn hook = p->hooks[hook_index];
