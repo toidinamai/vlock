@@ -24,13 +24,15 @@
 
 #include <list>
 #include <iterator>
+#include <string>
+#include <algorithm>
+#include <functional>
 
 #include "vlock.h"
 #include "plugins.h"
 #include "tsort.h"
-#include "list.h"
 
-using std::list;
+using namespace std;
 
 #undef ARRAY_SIZE
 #define ARRAY_SIZE(x) ((sizeof (x) / sizeof (x[0])))
@@ -85,27 +87,102 @@ vlock_hook_fn script_hooks[] = {
 };
 
 /* vlock plugin */
-struct Plugin {
+class Plugin
+{
+public:
   /* name of the plugin */
-  char *name;
-  /* path to the shared object file */
-  char *path;
+  string name;
 
   /* plugin hook context */
   void *ctx;
 
-  /* dl handle */
-  void *dl_handle;
-
   /* dependencies */
-  struct List *dependencies[ARRAY_SIZE(dependency_names)];
+  list<string> dependencies[ARRAY_SIZE(dependency_names)];
 
   /* plugin hook functions */
   vlock_hook_fn hooks[ARRAY_SIZE(hook_names)];
+
+  // constructor
+  Plugin(string name)
+  {
+    this->name = name;
+    this->ctx = NULL;
+  }
+
+  // destuctor
+  ~Plugin()
+  {
+  }
+
+  bool operator== (Plugin *p)
+  {
+    return p->name == this->name;
+  }
 };
 
 /* the list of plugins */
 list<Plugin *> plugins;
+
+class Module : public Plugin
+{
+public:
+  /* path to the shared object file */
+  string path;
+
+  /* dl handle */
+  void *dl_handle;
+
+  Module(string name) : Plugin(name)
+  {
+    char *path;
+
+    /* format the plugin path */
+    if (asprintf(&path, "%s/%s.so", VLOCK_MODULE_DIR, name.c_str()) < 0)
+      throw std::bad_alloc();
+
+    /* load the plugin */
+    dl_handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
+
+    if (dl_handle == NULL)
+      throw new string(dlerror());
+
+    /* load the hooks, unimplemented hooks are NULL */
+    for (size_t i = 0; i < ARRAY_SIZE(hooks); i++)
+      *(void **) (&hooks[i]) = dlsym(dl_handle, hook_names[i]);
+
+    /* load dependencies */
+    for (size_t i = 0; i < ARRAY_SIZE(dependencies); i++) {
+      const char *(*dependency)[] = (const char* (*)[])dlsym(dl_handle, dependency_names[i]);
+
+      for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++)
+        dependencies[i].push_back((*dependency)[j]);
+    }
+
+  }
+
+  ~Module()
+  {
+    if (dl_handle != NULL)
+      (void) dlclose(dl_handle);
+  }
+};
+
+class Script : public Plugin
+{
+public:
+  Script(string name) : Plugin(name)
+  {
+    char *path;
+
+    /* format the plugin path */
+    if (asprintf(&path, "%s/%s", VLOCK_SCRIPT_DIR, name.c_str()) < 0)
+      throw std::bad_alloc();
+
+    /* set hooks */
+    for (size_t i = 0; i < ARRAY_SIZE(hooks); i++)
+      hooks[i] = script_hooks[i];
+  }
+};
 
 static int __get_index(const char *a[], size_t l, const char *s) {
   for (size_t i = 0; i < l; i++)
@@ -120,159 +197,62 @@ static int __get_index(const char *a[], size_t l, const char *s) {
 #define get_dependency(p, d) \
   ((p)->dependencies[get_index(dependency_names, (d))])
 
+struct name_matches : public unary_function<Plugin, bool>
+{
+  string name;
+  name_matches(string name) { this->name = name; }
+  bool operator() (Plugin *p) { return p->name == name; }
+};
+
 /* Get the plugin with the given name.  Returns the first plugin
  * with the given name or NULL if none could be found. */
-static Plugin *get_plugin(const char *name)
+static Plugin *get_plugin(string name)
 {
-  for (list<Plugin*>::iterator it = plugins.begin();
-      it != plugins.end(); it++)
-    if (strcmp((*it)->name, name) == 0)
-      return *it;
+  list<Plugin *>::iterator r = find_if(plugins.begin(), plugins.end(), name_matches(name));
 
-  return NULL;
+  if (r != plugins.end())
+    return *r;
+  else
+    return NULL;
 }
 
 /* Check if the given plugin is loaded. */
 bool is_loaded(const char *name)
 {
-  return get_plugin(name) != NULL;
+  list<Plugin *>::iterator r = find_if(plugins.begin(), plugins.end(), name_matches(name));
+
+  return (r != plugins.end());
 }
 
-static Plugin *allocate_plugin(void)
-{
-  Plugin *new_;
-
-  /* allocate a new plugin object */
-  if ((new_ = (Plugin *)malloc((sizeof *new_))) == NULL)
-    return NULL;
-
-  new_->ctx = NULL;
-  new_->path = NULL;
-  new_->name = NULL;
-
-  return new_;
-}
-
-/* Open the module with the given name.  Returns new plugin or NULL
- * on error. */
-static Plugin *open_module(const char *name)
-{
-  Plugin *new_ = allocate_plugin();
-
-  if (new_ == NULL)
-    return NULL;
-
-  /* format the plugin path */
-  if (asprintf(&new_->path, "%s/%s.so", VLOCK_MODULE_DIR, name) < 0)
-    goto err;
-
-  /* remember the name */
-  if (asprintf(&new_->name, "%s", name) < 0)
-    goto err;
-
-  /* load the plugin */
-  new_->dl_handle = dlopen(new_->path, RTLD_NOW | RTLD_LOCAL);
-
-  if (new_->dl_handle == NULL) {
-    fprintf(stderr, "vlock-plugins: %s\n", dlerror());
-    goto err;
-  }
-
-  /* load the hooks, unimplemented hooks are NULL */
-  for (size_t i = 0; i < ARRAY_SIZE(new_->hooks); i++)
-    *(void **) (&new_->hooks[i]) = dlsym(new_->dl_handle, hook_names[i]);
-
-  /* load dependencies */
-  for (size_t i = 0; i < ARRAY_SIZE(new_->dependencies); i++) {
-    const char *(*dependency)[] = (const char* (*)[])dlsym(new_->dl_handle, dependency_names[i]);
-    new_->dependencies[i] = NULL;
-
-    for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++)
-      new_->dependencies[i] = list_append(new_->dependencies[i], strdup((*dependency)[j]));
-  }
-
-  return new_;
-
-err:
-  free(new_->path);
-  free(new_->name);
-  free(new_);
-
-  return NULL;
-}
-
-#define SCRIPT_DEPENDENCY_ERROR ((struct List *) -1)
-
-static struct List *get_script_dependency(const char *path, const char *name)
-{
-  return SCRIPT_DEPENDENCY_ERROR;
-}
-
-/* Open the script with the given name.  Returns new plugin or NULL
- * on error. */
-static Plugin *open_script(const char *name)
-{
-  Plugin *new_ = allocate_plugin();
-
-  if (new_ == NULL)
-    return NULL;
-
-  new_->dl_handle = NULL;
-
-  /* format the plugin path */
-  if (asprintf(&new_->path, "%s/%s", VLOCK_SCRIPT_DIR, name) < 0)
-    goto err;
-
-  /* remember the name */
-  if (asprintf(&new_->name, "%s", name) < 0)
-    goto err;
-
-  /* load dependencies */
-  for (size_t i = 0; i < ARRAY_SIZE(new_->dependencies); i++) {
-    new_->dependencies[i] = get_script_dependency(new_->path, dependency_names[i]);
-
-    if (new_->dependencies[i] == SCRIPT_DEPENDENCY_ERROR) {
-      do {
-        list_for_each(new_->dependencies[i], item)
-          free(item->data);
-        list_free(new_->dependencies[i]);
-        i--;
-      } while (i > 0);
-
-      goto err;
-    }
-  }
-
-  /* set hooks */
-  for (size_t i = 0; i < ARRAY_SIZE(new_->hooks); i++)
-    new_->hooks[i] = script_hooks[i];
-
-err:
-  free(new_->path);
-  free(new_->name);
-  free(new_);
-
-  return NULL;
-}
+// #define SCRIPT_DEPENDENCY_ERROR ((struct List *) -1)
+// 
+// static struct List *get_script_dependency(const char *path, const char *name)
+// {
+//   return SCRIPT_DEPENDENCY_ERROR;
+// }
 
 /* Same as open_plugin except that an old plugin is returned if there
  * already is one with the given name. */
-static Plugin *__load_plugin(const char *name)
+static Plugin *__load_plugin(string name)
 {
-  Plugin *p = get_plugin(name);
+  list<Plugin *>::iterator r = find_if(plugins.begin(), plugins.end(), name_matches(name));
 
-  if (p != NULL)
-    return p;
+  if (r != plugins.end()) {
+    return *r;
+  } else {
+    Plugin *p;
 
-  p = open_module(name);
+    try {
+      p = new Module(name);
+    }
+    catch (...) {
+      p = new Script(name);
+    }
 
-  if (p == NULL)
-    p = open_script(name);
-
-  if (p != NULL)
     plugins.push_back(p);
 
-  return p;
+    return p;
+  }
 }
 
 /* Same as __load_plugin except that true is returned on success and false on
@@ -282,28 +262,13 @@ bool load_plugin(const char *name)
   return __load_plugin(name) != NULL;
 }
 
-/* Unload the given plugin and remove from the plugins list. */
-static void unload_plugin(Plugin *p)
-{
-  if (p->dl_handle != NULL)
-    (void) dlclose(p->dl_handle);
-  free(p->path);
-  free(p->name);
-
-  for (size_t i = 0; i < ARRAY_SIZE(p->dependencies); i++)
-    list_for_each(p->dependencies[i], dependency_item)
-      free(dependency_item->data);
-
-  free(p);
-}
-
 /* Unload all plugins */
 void unload_plugins(void)
 {
   while (!plugins.empty()) {
     Plugin *p = plugins.front();
     plugins.pop_front();
-    unload_plugin(p);
+    delete p;
   }
 }
 
@@ -312,37 +277,38 @@ static bool sort_plugins(void);
 
 bool resolve_dependencies(void)
 {
-  struct List *required_plugins = NULL;
+  list<Plugin *> required_plugins;
 
   /* load plugins that are required, this automagically takes care of plugins
    * that are required by the plugins loaded here because they are appended to
    * the end of the list */
   for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
-    list_for_each(get_dependency(*it, "requires"), dependency_item) {
-      Plugin *d = (Plugin *)__load_plugin((char *)dependency_item->data);
+    for(list<string>::iterator it2 = get_dependency(*it, "requires").begin();
+        it2 != get_dependency(*it, "requires").end(); it2++) {
+      Plugin *d = __load_plugin(*it2);
 
       if (d == NULL)
         goto err;
 
-      required_plugins = list_append(required_plugins, d);
+      required_plugins.push_back(d);
     }
   }
 
   /* fail if a plugins that is needed is not loaded */
   for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
-    list_for_each(get_dependency(*it, "needs"), dependency_item) {
-      char *dependency_name = (char *)dependency_item->data;
-      Plugin *d = get_plugin(dependency_name);
+    for(list<string>::iterator it2 = get_dependency(*it, "needs").begin();
+        it2 != get_dependency(*it, "needs").end(); it2++) {
+      Plugin *d = get_plugin(*it2);
 
       if (d == NULL) {
         fprintf(stderr, "vlock-plugins: %s does not work without %s\n",
-                (*it)->name, dependency_name);
+                (*it)->name.c_str(), (*it2).c_str());
         goto err;
       }
 
-      required_plugins = list_append(required_plugins, d);
+      required_plugins.push_back(d);
     }
   }
 
@@ -351,18 +317,18 @@ bool resolve_dependencies(void)
       it != plugins.end();) {
     bool dependencies_present = true;
 
-    list_for_each(get_dependency(*it, "depends"), dependency_item) {
-      char *dependency_name = (char *)dependency_item->data;
-      Plugin *d = get_plugin(dependency_name);
+    for(list<string>::iterator it2 = get_dependency(*it, "depends").begin();
+        it2 != get_dependency(*it, "depends").end(); it2++) {
+      Plugin *d = get_plugin(*it2);
 
       if (d != NULL)
         continue;
 
       dependencies_present = false;
 
-      if (list_find(required_plugins, *it) != NULL) {
+      if (find(required_plugins.begin(), required_plugins.end(), *it) != required_plugins.end()) {
         fprintf(stderr, "vlock-plugins: %s does not work without %s\n",
-                (*it)->name, dependency_name);
+                (*it)->name.c_str(), (*it2).c_str());
         goto err;
       }
     }
@@ -372,22 +338,21 @@ bool resolve_dependencies(void)
     } else {
       Plugin *p = *it;
       it = plugins.erase(it);
-      unload_plugin(p);
+      delete p;
     }
   }
 
-  list_free(required_plugins);
+  required_plugins.clear();
 
   /* fail if conflicting plugins are loaded */
   for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
-    list_for_each(get_dependency(*it, "conflicts"), dependency_item) {
-      char *dependency_name = (char *)dependency_item->data;
-
-      if (get_plugin(dependency_name) != NULL) {
+    for (list<string>::iterator it2 = get_dependency(*it, "conflicts").begin();
+        it2 != get_dependency(*it, "depends").end(); it2++) {
+      if (find_if(plugins.begin(), plugins.end(), name_matches(*it2)) != plugins.end()) {
         fprintf(stderr,
                 "vlock-plugins: %s and %s cannot be loaded at the same time\n",
-                (*it)->name, dependency_name);
+                (*it)->name.c_str(), (*it2).c_str());
         return false;
       }
     }
@@ -396,7 +361,6 @@ bool resolve_dependencies(void)
   return sort_plugins();
 
 err:
-  list_free(required_plugins);
   return false;
 }
 
@@ -415,30 +379,25 @@ static list<Edge<Plugin *>*> *get_edges(void)
       it != plugins.end(); it++) {
     Plugin *p = *it;
     /* p must come after these */
-    struct List *predecessors = get_dependency(p, "after");
+    list<string> predecessors = get_dependency(p, "after");
     /* p must come before these */
-    struct List *successors = get_dependency(p, "before");
+    list<string> successors = get_dependency(p, "before");
 
-    list_for_each(successors, item) {
-      Plugin *successor = (Plugin *)get_plugin((char *)item->data);
+    for (list<string>::iterator it = successors.begin();
+        it != successors.end(); it++) {
+      list<Plugin *>::iterator r = find_if(plugins.begin(), plugins.end(), name_matches(*it));
 
-      if (successor != NULL) {
-        Edge<Plugin *> *edge = new Edge<Plugin *>;
-        edge->predecessor = p;
-        edge->successor = successor;
-        edges->push_back(edge);
+      if (r != plugins.end()) {
+        edges->push_back(new Edge<Plugin *>(p, *r));
       }
     }
 
-    list_for_each(predecessors, item) {
-      Plugin *predecessor = (Plugin *)get_plugin((char *)item->data);
+    for (list<string>::iterator it = predecessors.begin();
+        it != predecessors.end(); it++) {
+      list<Plugin *>::iterator r = find_if(plugins.begin(), plugins.end(), name_matches(*it));
 
-      if (predecessor != NULL) {
-        Edge<Plugin *> *edge = new Edge<Plugin *>;
-        edge->predecessor = predecessor;
-        edge->successor = p;
-        edges->push_back(edge);
-      }
+      if (r != plugins.end())
+        edges->push_back(new Edge<Plugin *>(*r, p));
     }
   }
 
@@ -455,7 +414,7 @@ static bool sort_plugins(void)
 
     for (list<Edge<Plugin *>*>::iterator it = edges->begin();
         it != edges->end(); it = edges->erase(it)) {
-      fprintf(stderr, "\t%s\tmust come before\t%s\n", (*it)->predecessor->name, (*it)->successor->name);
+      fprintf(stderr, "\t%s\tmust come before\t%s\n", (*it)->predecessor->name.c_str(), (*it)->successor->name.c_str());
       delete *it;
     }
   }
