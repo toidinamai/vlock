@@ -32,14 +32,12 @@
 #include "tsort.h"
 #include "plugin.h"
 #include "module.h"
+#include "script.h"
 
 using namespace std;
 
 #undef ARRAY_SIZE
 #define ARRAY_SIZE(x) ((sizeof (x) / sizeof (x[0])))
-
-/* hard coded paths */
-#define VLOCK_SCRIPT_DIR PREFIX "/lib/vlock/scripts"
 
 /* dependency names */
 const char *dependency_names[] = {
@@ -71,18 +69,6 @@ bool (*hook_handlers[])(int) = {
   handle_vlock_save_abort,
 };
 
-static bool script_vlock_start(void **ctx);
-static bool script_vlock_end(void **ctx);
-static bool script_vlock_save(void **ctx);
-static bool script_vlock_save_abort(void **ctx);
-
-vlock_hook_fn script_hooks[] = {
-  script_vlock_start,
-  script_vlock_end,
-  script_vlock_save,
-  script_vlock_save_abort,
-};
-
 /* the list of plugins */
 list<Plugin *> plugins;
 
@@ -92,23 +78,6 @@ Plugin::Plugin(string name)
   this->name = name;
   this->ctx = NULL;
 }
-
-class Script : public Plugin
-{
-public:
-  Script(string name) : Plugin(name)
-  {
-    char *path;
-
-    /* format the plugin path */
-    if (asprintf(&path, "%s/%s", VLOCK_SCRIPT_DIR, name.c_str()) < 0)
-      throw std::bad_alloc();
-
-    /* set hooks */
-    for (size_t i = 0; i < ARRAY_SIZE(hooks); i++)
-      hooks[i] = script_hooks[i];
-  }
-};
 
 static int __get_index(const char *a[], size_t l, const char *s) {
   for (size_t i = 0; i < l; i++)
