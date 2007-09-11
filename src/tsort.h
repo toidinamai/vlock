@@ -17,14 +17,14 @@ template<class T> struct Edge {
  * Sorts the list and deletes all edges.  If there are circles found in the
  * graph or there are edges that have no corresponding nodes the erroneous
  * edges are left. */
-template<class T> bool tsort(list<T>& nodes, list<Edge<T>*>& edges);
+template<class T> bool tsort(list<T>& nodes, list<Edge<T> >& edges);
 
 
 /* Check if the given node has no incoming edges. */
 template <class T>
-bool is_zero(T& node, list<Edge<T>*>& edges)
+bool is_zero(T& node, list<Edge<T> >& edges)
 {
-  for (typename list<Edge<T>*>::iterator it = edges.begin();
+  for (typename list<Edge<T> >::iterator it = edges.begin();
       it != edges.end(); it++)
     if ((*it)->successor == node)
       return false;
@@ -34,11 +34,11 @@ bool is_zero(T& node, list<Edge<T>*>& edges)
 
 /* Get all nodes (plugins) with no incoming edges. */
 template <class T>
-static list<T> *get_zeros(list<T>& nodes, list<Edge<T>*>& edges)
+static list<T> *get_zeros(list<T>& nodes, list<Edge<T> >& edges)
 {
   list<T> *zeros = new list<T>(nodes);
 
-  for (typename list<Edge<T>*>::iterator it = edges.begin();
+  for (typename list<Edge<T> >::iterator it = edges.begin();
       !zeros->empty() && it != edges.end(); it++)
     zeros->remove((*it)->successor);
 
@@ -54,7 +54,7 @@ static list<T> *get_zeros(list<T>& nodes, list<Edge<T>*>& edges)
  * Algorithm:
  * http://en.wikipedia.org/w/index.php?title=Topological_sorting&oldid=153157450#Algorithms
  */
-template<class T> bool tsort(list<T>& nodes, list<Edge<T>*>& edges)
+template<class T> bool tsort(list<T>& nodes, list<Edge<T> >& edges)
 {
   list<T> *sorted_nodes = new list<T>;
   list<T> *zeros = get_zeros(nodes, edges);
@@ -66,18 +66,17 @@ template<class T> bool tsort(list<T>& nodes, list<Edge<T>*>& edges)
 
     sorted_nodes->push_back(zero);
 
-    for (typename list<Edge<T>*>::iterator it = edges.begin();
+    for (typename list<Edge<T> >::iterator it = edges.begin();
         it != edges.end();) {
       if ((*it)->predecessor != zero) {
         it++;
         continue;
       } else {
+        Edge<T> tmp = *it;
         edges.remove(*it);
 
-        if (is_zero((*it)->successor, edges))
+        if (is_zero(tmp->successor, edges))
           zeros->push_back((*it)->successor);
-
-        delete *it;
       }
     }
   }
