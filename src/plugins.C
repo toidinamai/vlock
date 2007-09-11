@@ -407,7 +407,7 @@ err:
  * attributes. */
 static std::list<Edge<Plugin *>*> *get_edges(void)
 {
-  std::list<Edge<Plugin *>*> *edges = NULL;
+  std::list<Edge<Plugin *>*> *edges = new std::list<Edge<Plugin *>*>;
 
   for (std::list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
