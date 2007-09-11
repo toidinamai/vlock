@@ -40,3 +40,7 @@ Module::~Module()
   if (dl_handle != NULL)
     (void) dlclose(dl_handle);
 }
+
+void Module::call_hook(string name)
+{
+}

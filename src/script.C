@@ -11,3 +11,7 @@ Script::Script(string name) : Plugin(name)
   if (asprintf(&path, "%s/%s", VLOCK_SCRIPT_DIR, name.c_str()) < 0)
     throw std::bad_alloc();
 }
+
+void Script::call_hook(string name)
+{
+}

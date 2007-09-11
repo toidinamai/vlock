@@ -12,4 +12,6 @@ public:
 
   Module(string name);
   ~Module();
+
+  void call_hook(string name);
 };

@@ -30,6 +30,8 @@ public:
 
   // constructor
   Plugin(string name);
+
+  virtual void call_hook(string name) = 0;
 };
 
 extern const char *hook_names[];
