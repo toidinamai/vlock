@@ -91,6 +91,7 @@ Plugin::~Plugin()
 {
 }
 
+// predicate to find plugins
 struct name_matches : public unary_function<Plugin, bool>
 {
   string name;
@@ -315,7 +316,7 @@ static bool sort_plugins(void)
 /* Call the given plugin hook. */
 bool plugin_hook(const char *hook_name)
 {
-  hook_handler h = hook_handlers["hook_name"];
+  hook_handler h = hook_handlers[hook_name];
 
   if (h == NULL) {
     fprintf(stderr, "vlock-plugins: unknown hook '%s'\n", hook_name);
