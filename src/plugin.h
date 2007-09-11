@@ -2,6 +2,8 @@
 #define _PLUGIN_H
 
 #include <list>
+#include <map>
+#include <vector>
 #include <string>
 
 #undef ARRAY_SIZE
@@ -9,8 +11,8 @@
 
 using namespace std;
 
-/* function type for hooks */
-typedef bool (*vlock_hook_fn)(void **);
+extern vector<string> dependency_names;
+extern vector<string> hook_names;
 
 /* vlock plugin */
 class Plugin
@@ -19,22 +21,15 @@ public:
   /* name of the plugin */
   string name;
 
-  /* plugin hook context */
-  void *ctx;
-
   /* dependencies */
-  list<string> dependencies[6];
-
-  /* plugin hook functions */
-  vlock_hook_fn hooks[4];
+  map<string, list<string> > dependencies;
 
   // constructor
   Plugin(string name);
+  virtual ~Plugin();
 
-  virtual void call_hook(string name) = 0;
+  // hook
+  virtual bool call_hook(string name) = 0;
 };
-
-extern const char *hook_names[];
-extern const char *dependency_names[];
 
 #endif // _PLUGIN_H

@@ -2,14 +2,23 @@
 #include <module.h>
 #include <dlfcn.h>
 
+#include <vector>
+#include <iterator>
+
 #include "plugin.h"
 
 /* hard coded paths */
 #define VLOCK_MODULE_DIR PREFIX "/lib/vlock/modules"
 
+// outsmart gcc to shut up warnings about conversions from void pointer to
+// function pointer
+typedef vlock_hook_fn (*hook_dlsym_t)(void *, const char *);
+
 Module::Module(string name) : Plugin(name)
 {
   char *path;
+
+  this->ctx = NULL;
 
   /* format the plugin path */
   if (asprintf(&path, "%s/%s.so", VLOCK_MODULE_DIR, name.c_str()) < 0)
@@ -22,15 +31,17 @@ Module::Module(string name) : Plugin(name)
     throw new string(dlerror());
 
   /* load the hooks, unimplemented hooks are NULL */
-  for (size_t i = 0; i < ARRAY_SIZE(hooks); i++)
-    *(void **) (&hooks[i]) = dlsym(dl_handle, hook_names[i]);
+  for (vector<string>::iterator it = hook_names.begin();
+      it != hook_names.end(); it++)
+    hooks[*it] = ((hook_dlsym_t)dlsym)(dl_handle, (*it).c_str());
 
   /* load dependencies */
-  for (size_t i = 0; i < ARRAY_SIZE(dependencies); i++) {
-    const char *(*dependency)[] = (const char* (*)[])dlsym(dl_handle, dependency_names[i]);
+  for (vector<string>::iterator it = dependency_names.begin();
+      it != dependency_names.end(); it++) {
+    const char *(*dependency)[] = (const char* (*)[])dlsym(dl_handle, (*it).c_str());
 
     for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++)
-      dependencies[i].push_back((*dependency)[j]);
+      dependencies[*it].push_back((*dependency)[j]);
   }
 
 }
@@ -41,6 +52,7 @@ Module::~Module()
     (void) dlclose(dl_handle);
 }
 
-void Module::call_hook(string name)
+bool Module::call_hook(string name)
 {
+  return true;
 }

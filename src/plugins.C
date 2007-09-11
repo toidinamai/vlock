@@ -22,6 +22,7 @@
 #include <assert.h>
 
 #include <list>
+#include <vector>
 #include <iterator>
 #include <string>
 #include <algorithm>
@@ -36,11 +37,12 @@
 
 using namespace std;
 
+// helper macro
 #undef ARRAY_SIZE
 #define ARRAY_SIZE(x) ((sizeof (x) / sizeof (x[0])))
 
 /* dependency names */
-const char *dependency_names[] = {
+static const char *_dependency_names[] = {
   "after",
   "before",
   "requires",
@@ -49,25 +51,33 @@ const char *dependency_names[] = {
   "conflicts",
 };
 
+vector<string> dependency_names(_dependency_names, _dependency_names + ARRAY_SIZE(_dependency_names));
+
 /* hook names */
-const char *hook_names[] = {
+static const char *_hook_names[] = {
   "vlock_start",
   "vlock_end",
   "vlock_save",
   "vlock_save_abort",
 };
 
-static bool handle_vlock_start(int hook_index);
-static bool handle_vlock_end(int hook_index);
-static bool handle_vlock_save(int hook_index);
-static bool handle_vlock_save_abort(int hook_index);
+vector<string> hook_names(_hook_names, _hook_names + ARRAY_SIZE(_hook_names));
 
-bool (*hook_handlers[])(int) = {
-  handle_vlock_start,
-  handle_vlock_end,
-  handle_vlock_save,
-  handle_vlock_save_abort,
-};
+typedef bool (*hook_handler)(string);
+static map<string, hook_handler> hook_handlers;
+
+static bool handle_vlock_start(string hook_name);
+static bool handle_vlock_end(string hook_name);
+static bool handle_vlock_save(string hook_name);
+static bool handle_vlock_save_abort(string hook_name);
+
+static void __attribute__((constructor)) init_hook_handlers(void)
+{
+  hook_handlers["vlock_start"] = handle_vlock_start;
+  hook_handlers["vlock_end"] = handle_vlock_end;
+  hook_handlers["vlock_save"] = handle_vlock_save;
+  hook_handlers["vlock_save_abort"] = handle_vlock_save_abort;
+}
 
 /* the list of plugins */
 list<Plugin *> plugins;
@@ -76,21 +86,12 @@ list<Plugin *> plugins;
 Plugin::Plugin(string name)
 {
   this->name = name;
-  this->ctx = NULL;
 }
 
-static int __get_index(const char *a[], size_t l, const char *s) {
-  for (size_t i = 0; i < l; i++)
-    if (strcmp(a[i], s) == 0)
-      return i;
-
-  return -1;
+// destructor
+Plugin::~Plugin()
+{
 }
-
-#define get_index(a, s) __get_index(a, ARRAY_SIZE(a), s)
-
-#define get_dependency(p, d) \
-  ((p)->dependencies[get_index(dependency_names, (d))])
 
 struct name_matches : public unary_function<Plugin, bool>
 {
@@ -118,13 +119,6 @@ bool is_loaded(const char *name)
 
   return (r != plugins.end());
 }
-
-// #define SCRIPT_DEPENDENCY_ERROR ((struct List *) -1)
-// 
-// static struct List *get_script_dependency(const char *path, const char *name)
-// {
-//   return SCRIPT_DEPENDENCY_ERROR;
-// }
 
 /* Same as open_plugin except that an old plugin is returned if there
  * already is one with the given name. */
@@ -179,8 +173,8 @@ bool resolve_dependencies(void)
    * the end of the list */
   for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
-    for(list<string>::iterator it2 = get_dependency(*it, "requires").begin();
-        it2 != get_dependency(*it, "requires").end(); it2++) {
+    for(list<string>::iterator it2 = (*it)->dependencies["requires"].begin();
+        it2 != (*it)->dependencies["requires"].end(); it2++) {
       Plugin *d = __load_plugin(*it2);
 
       if (d == NULL)
@@ -193,8 +187,8 @@ bool resolve_dependencies(void)
   /* fail if a plugins that is needed is not loaded */
   for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
-    for(list<string>::iterator it2 = get_dependency(*it, "needs").begin();
-        it2 != get_dependency(*it, "needs").end(); it2++) {
+    for(list<string>::iterator it2 = (*it)->dependencies["needs"].begin();
+        it2 != (*it)->dependencies["needs"].end(); it2++) {
       Plugin *d = get_plugin(*it2);
 
       if (d == NULL) {
@@ -212,8 +206,8 @@ bool resolve_dependencies(void)
       it != plugins.end();) {
     bool dependencies_present = true;
 
-    for(list<string>::iterator it2 = get_dependency(*it, "depends").begin();
-        it2 != get_dependency(*it, "depends").end(); it2++) {
+    for(list<string>::iterator it2 = (*it)->dependencies["depends"].begin();
+        it2 != (*it)->dependencies["depends"].end(); it2++) {
       Plugin *d = get_plugin(*it2);
 
       if (d != NULL)
@@ -242,8 +236,8 @@ bool resolve_dependencies(void)
   /* fail if conflicting plugins are loaded */
   for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
-    for (list<string>::iterator it2 = get_dependency(*it, "conflicts").begin();
-        it2 != get_dependency(*it, "depends").end(); it2++) {
+    for(list<string>::iterator it2 = (*it)->dependencies["conflicts"].begin();
+        it2 != (*it)->dependencies["conflicts"].end(); it2++) {
       if (find_if(plugins.begin(), plugins.end(), name_matches(*it2)) != plugins.end()) {
         fprintf(stderr,
                 "vlock-plugins: %s and %s cannot be loaded at the same time\n",
@@ -274,9 +268,9 @@ static list<Edge<Plugin *>*> *get_edges(void)
       it != plugins.end(); it++) {
     Plugin *p = *it;
     /* p must come after these */
-    list<string> predecessors = get_dependency(p, "after");
+    list<string> predecessors = p->dependencies["after"];
     /* p must come before these */
-    list<string> successors = get_dependency(p, "before");
+    list<string> successors = p->dependencies["before"];
 
     for (list<string>::iterator it = successors.begin();
         it != successors.end(); it++) {
@@ -319,89 +313,66 @@ static bool sort_plugins(void)
   return result;
 }
 
+
 /* Call the given plugin hook. */
 bool plugin_hook(const char *hook_name)
 {
-  int hook_index = get_index(hook_names, hook_name);
+  hook_handler h = hook_handlers["hook_name"];
 
-  if (hook_index < 0) {
+  if (h == NULL) {
     fprintf(stderr, "vlock-plugins: unknown hook '%s'\n", hook_name);
     return false;
   } else {
-    return hook_handlers[hook_index] (hook_index);
+    return h(hook_name);
   }
 }
 
-static bool handle_vlock_start(int hook_index)
+static bool handle_vlock_start(string hook_name)
 {
   for (list<Plugin *>::iterator it = plugins.begin();
-      it != plugins.end(); it++) {
-    Plugin *p = *it;
-    vlock_hook_fn hook = p->hooks[hook_index];
-
-    if (hook != NULL)
-      if (!hook(&p->ctx))
-        return false;
-  }
+      it != plugins.end(); it++)
+    if (!(*it)->call_hook(hook_name))
+      return false;
 
   return true;
 }
 
-static bool handle_vlock_end(int hook_index)
+static bool handle_vlock_end(string hook_name)
 {
   for (list<Plugin *>::reverse_iterator it = plugins.rbegin();
-      it != plugins.rend(); it--) {
-    Plugin *p = *it;
-    vlock_hook_fn hook = p->hooks[hook_index];
-
-    if (hook != NULL)
-      (void) hook(&p->ctx);
-  }
+      it != plugins.rend(); it--)
+    (void) (*it)->call_hook(hook_name);
 
   return true;
 }
 
 /* Return true if at least one hook was called and all hooks were successful.
  * Does not continue after the first failing hook. */
-static bool handle_vlock_save(int hook_index)
+static bool handle_vlock_save(string hook_name)
 {
   bool result = false;
 
   for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
-    Plugin *p = *it;
-    vlock_hook_fn hook = p->hooks[hook_index];
+    result = (*it)->call_hook(hook_name);
 
-    if (hook != NULL) {
-      result = hook(&p->ctx);
-
-      if (!result) {
-        /* don't call again */
-        p->hooks[hook_index] = NULL;
-        result = false;
-        break;
-      }
+    if (!result) {
+      /* don't call again */
+      // XXX: call vlock_save_abort, vlock_end, remove plugin
+      break;
     }
   }
 
   return result;
 }
 
-static bool handle_vlock_save_abort(int hook_index)
+static bool handle_vlock_save_abort(string hook_name)
 {
   for (list<Plugin *>::reverse_iterator it = plugins.rbegin();
       it != plugins.rend(); it--) {
-    Plugin *p = *it;
-    vlock_hook_fn hook = p->hooks[hook_index];
-
-    if (hook != NULL) {
-      int vlock_save_index = get_index(hook_names, "vlock_save");
-
-      if (!hook(&p->ctx) || p->hooks[vlock_save_index] == NULL) {
-        /* don't call again */
-        p->hooks[hook_index] = NULL;
-        p->hooks[vlock_save_index] = NULL;
-      }
+    if ((*it)->call_hook(hook_name)) {
+      /* don't call again */
+      // XXX: call vlock_end, remove plugin
     }
   }
 

@@ -12,6 +12,7 @@ Script::Script(string name) : Plugin(name)
     throw std::bad_alloc();
 }
 
-void Script::call_hook(string name)
+bool Script::call_hook(string name)
 {
+  return true;
 }
