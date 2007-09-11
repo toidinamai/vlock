@@ -80,10 +80,8 @@ template<class T> bool tsort(std::list<T>& nodes, std::list<Edge<T>*>& edges)
 
   result = edges.empty();
 
-  if (result) {
-    nodes.clear();
-    nodes.insert(nodes.begin(), sorted_nodes->begin(), sorted_nodes->end());
-  }
+  if (result)
+    nodes.assign(sorted_nodes->begin(), sorted_nodes->end());
 
   delete sorted_nodes;
   return result;
