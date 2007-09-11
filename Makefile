@@ -71,7 +71,8 @@ auth-pam.o: auth-pam.c vlock.h
 auth-shadow.o: auth-shadow.c vlock.h
 prompt.o: prompt.c vlock.h
 vlock-main.o: vlock-main.c vlock.h
-plugins.o: plugins.C tsort.h list.h plugins.h vlock.h
+plugins.o: plugins.C tsort.h list.h plugin.h plugins.h vlock.h
+module.o: module.C module.h plugin.h
 
 ifneq ($(USE_ROOT_PASS),y)
 vlock-main.o : override CFLAGS += -DNO_ROOT_PASS
@@ -86,7 +87,7 @@ vlock-main : override LDFLAGS += $(CRYPT_LIB)
 endif
 
 ifeq ($(USE_PLUGINS),y)
-vlock-main: plugins.o list.o
+vlock-main: plugins.o module.o
 vlock-main : override LDFLAGS += $(DL_LIB) -lstdc++
 vlock-main.o : override CFLAGS += -DUSE_PLUGINS
 endif

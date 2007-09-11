@@ -1,5 +1,11 @@
+#ifndef _PLUGIN_H
+#define _PLUGIN_H
+
 #include <list>
 #include <string>
+
+#undef ARRAY_SIZE
+#define ARRAY_SIZE(x) ((sizeof (x) / sizeof (x[0])))
 
 using namespace std;
 
@@ -26,3 +32,7 @@ public:
   Plugin(string name);
 };
 
+extern const char *hook_names[];
+extern const char *dependency_names[];
+
+#endif // _PLUGIN_H

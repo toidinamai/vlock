@@ -18,7 +18,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <dlfcn.h>
 #include <string.h>
 #include <assert.h>
 
@@ -32,6 +31,7 @@
 #include "plugins.h"
 #include "tsort.h"
 #include "plugin.h"
+#include "module.h"
 
 using namespace std;
 
@@ -39,7 +39,6 @@ using namespace std;
 #define ARRAY_SIZE(x) ((sizeof (x) / sizeof (x[0])))
 
 /* hard coded paths */
-#define VLOCK_MODULE_DIR PREFIX "/lib/vlock/modules"
 #define VLOCK_SCRIPT_DIR PREFIX "/lib/vlock/scripts"
 
 /* dependency names */
@@ -93,50 +92,6 @@ Plugin::Plugin(string name)
   this->name = name;
   this->ctx = NULL;
 }
-
-class Module : public Plugin
-{
-public:
-  /* path to the shared object file */
-  string path;
-
-  /* dl handle */
-  void *dl_handle;
-
-  Module(string name) : Plugin(name)
-  {
-    char *path;
-
-    /* format the plugin path */
-    if (asprintf(&path, "%s/%s.so", VLOCK_MODULE_DIR, name.c_str()) < 0)
-      throw std::bad_alloc();
-
-    /* load the plugin */
-    dl_handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
-
-    if (dl_handle == NULL)
-      throw new string(dlerror());
-
-    /* load the hooks, unimplemented hooks are NULL */
-    for (size_t i = 0; i < ARRAY_SIZE(hooks); i++)
-      *(void **) (&hooks[i]) = dlsym(dl_handle, hook_names[i]);
-
-    /* load dependencies */
-    for (size_t i = 0; i < ARRAY_SIZE(dependencies); i++) {
-      const char *(*dependency)[] = (const char* (*)[])dlsym(dl_handle, dependency_names[i]);
-
-      for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++)
-        dependencies[i].push_back((*dependency)[j]);
-    }
-
-  }
-
-  ~Module()
-  {
-    if (dl_handle != NULL)
-      (void) dlclose(dl_handle);
-  }
-};
 
 class Script : public Plugin
 {
