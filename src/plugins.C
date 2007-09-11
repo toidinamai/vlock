@@ -407,23 +407,3 @@ static bool handle_vlock_save_abort(int hook_index)
 
   return true;
 }
-
-static bool script_vlock_start(void **ctx)
-{
-  return true;
-}
-
-static bool script_vlock_end(void **ctx)
-{
-  return true;
-}
-
-static bool script_vlock_save(void **ctx)
-{
-  return true;
-}
-
-static bool script_vlock_save_abort(void **ctx)
-{
-  return true;
-}
