@@ -36,3 +36,8 @@ Plugin::Plugin(string name)
 Plugin::~Plugin()
 {
 }
+
+PluginException::PluginException(string reason)
+{
+  this->reason = reason;
+}

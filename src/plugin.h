@@ -11,6 +11,13 @@ using namespace std;
 extern vector<string> dependency_names;
 extern vector<string> hook_names;
 
+struct PluginException
+{
+  string reason;
+
+  PluginException(string reason);
+};
+
 /* vlock plugin */
 class Plugin
 {
