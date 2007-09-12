@@ -10,11 +10,6 @@ template<class T> struct Edge {
   T successor;
 
   Edge(T p, T s) { predecessor = p; successor = s; }
-
-  bool operator== (Edge other)
-  {
-    return predecessor == other.predecessor && successor == other.successor;
-  }
 };
 
 /* For the given digraph, generate a topological sort of the nodes.
@@ -75,10 +70,9 @@ template<class T> bool tsort(list<T>& nodes, list<Edge<T> >& edges)
         it != edges.end();) {
       if ((*it).predecessor != zero) {
         it++;
-        continue;
       } else {
         Edge<T> tmp = *it;
-        edges.remove(tmp);
+        it = edges.erase(it);
 
         if (is_zero(tmp.successor, edges))
           zeros->push_back(tmp.successor);
