@@ -7,7 +7,7 @@
 
 #include "plugin.h"
 
-/* hard coded paths */
+/* hard coded module path */
 #define VLOCK_MODULE_DIR PREFIX "/lib/vlock/modules"
 
 // outsmart gcc to shut up warnings about conversions from void pointer to
@@ -45,7 +45,6 @@ Module::Module(string name) : Plugin(name)
     for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++)
       dependencies[*it].push_back((*dependency)[j]);
   }
-
 }
 
 Module::~Module()
