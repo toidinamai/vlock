@@ -37,30 +37,6 @@
 
 using namespace std;
 
-/* dependency names */
-vector<string> dependency_names;
-
-void __attribute__((constructor)) init_dependency_names(void)
-{
-  dependency_names.push_back("after");
-  dependency_names.push_back("before");
-  dependency_names.push_back("requires");
-  dependency_names.push_back("needs");
-  dependency_names.push_back("depends");
-  dependency_names.push_back("conflicts");
-}
-
-/* hook names */
-vector<string> hook_names;
-
-void __attribute__((constructor)) init_hook_names(void)
-{
-  hook_names.push_back("vlock_start");
-  hook_names.push_back("vlock_end");
-  hook_names.push_back("vlock_save");
-  hook_names.push_back("vlock_save_abort");
-}
-
 typedef bool (*hook_handler)(string);
 static map<string, hook_handler> hook_handlers;
 
@@ -79,17 +55,6 @@ static void __attribute__((constructor)) init_hook_handlers(void)
 
 /* the list of plugins */
 list<Plugin *> plugins;
-
-// constructor
-Plugin::Plugin(string name)
-{
-  this->name = name;
-}
-
-// destructor
-Plugin::~Plugin()
-{
-}
 
 // predicate to find plugins
 struct name_matches : public unary_function<Plugin, bool>

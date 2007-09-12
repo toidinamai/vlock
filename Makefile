@@ -74,6 +74,7 @@ vlock-main.o: vlock-main.c vlock.h
 plugins.o: plugins.cpp tsort.h list.h plugin.h plugins.h vlock.h
 module.o: module.cpp module.h plugin.h
 script.o: script.cpp script.h plugin.h
+plugin.o: plugin.cpp plugin.h
 
 ifneq ($(USE_ROOT_PASS),y)
 vlock-main.o : override CFLAGS += -DNO_ROOT_PASS
@@ -88,7 +89,7 @@ vlock-main : override LDFLAGS += $(CRYPT_LIB)
 endif
 
 ifeq ($(USE_PLUGINS),y)
-vlock-main: plugins.o module.o script.o
+vlock-main: plugins.o plugin.o module.o script.o
 vlock-main : override LDFLAGS += $(DL_LIB) -lstdc++
 vlock-main.o : override CFLAGS += -DUSE_PLUGINS
 endif
