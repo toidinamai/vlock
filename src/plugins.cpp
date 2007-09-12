@@ -259,9 +259,9 @@ err:
 
 /* Get all edges as specified by the all plugins' "after" and "before"
  * attributes. */
-static list<Edge<Plugin *>*> *get_edges(void)
+static list<Edge<Plugin *> > *get_edges(void)
 {
-  list<Edge<Plugin *>*> *edges = new list<Edge<Plugin *>*>;
+  list<Edge<Plugin *> > *edges = new list<Edge<Plugin *> >;
 
   for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
@@ -276,7 +276,7 @@ static list<Edge<Plugin *>*> *get_edges(void)
       list<Plugin *>::iterator r = find_if(plugins.begin(), plugins.end(), name_matches(*it));
 
       if (r != plugins.end()) {
-        edges->push_back(new Edge<Plugin *>(p, *r));
+        edges->push_back(Edge<Plugin *>(p, *r));
       }
     }
 
@@ -285,7 +285,7 @@ static list<Edge<Plugin *>*> *get_edges(void)
       list<Plugin *>::iterator r = find_if(plugins.begin(), plugins.end(), name_matches(*it));
 
       if (r != plugins.end())
-        edges->push_back(new Edge<Plugin *>(*r, p));
+        edges->push_back(Edge<Plugin *>(*r, p));
     }
   }
 
@@ -294,16 +294,15 @@ static list<Edge<Plugin *>*> *get_edges(void)
 
 static bool sort_plugins(void)
 {
-  list<Edge<Plugin *>*> *edges = get_edges();
+  list<Edge<Plugin *> > *edges = get_edges();
   bool result = tsort(plugins, *edges);
 
   if (!result) {
     fprintf(stderr, "vlock-plugins: circular dependencies detected:\n");
 
-    for (list<Edge<Plugin *>*>::iterator it = edges->begin();
+    for (list<Edge<Plugin *> >::iterator it = edges->begin();
         it != edges->end(); it = edges->erase(it)) {
-      fprintf(stderr, "\t%s\tmust come before\t%s\n", (*it)->predecessor->name.c_str(), (*it)->successor->name.c_str());
-      delete *it;
+      fprintf(stderr, "\t%s\tmust come before\t%s\n", (*it).predecessor->name.c_str(), (*it).successor->name.c_str());
     }
   }
 

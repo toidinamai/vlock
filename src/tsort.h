@@ -10,6 +10,11 @@ template<class T> struct Edge {
   T successor;
 
   Edge(T p, T s) { predecessor = p; successor = s; }
+
+  bool operator== (Edge other)
+  {
+    return predecessor == other.predecessor && successor == other.successor;
+  }
 };
 
 /* For the given digraph, generate a topological sort of the nodes.
@@ -26,7 +31,7 @@ bool is_zero(T& node, list<Edge<T> >& edges)
 {
   for (typename list<Edge<T> >::iterator it = edges.begin();
       it != edges.end(); it++)
-    if ((*it)->successor == node)
+    if ((*it).successor == node)
       return false;
 
   return true;
@@ -40,7 +45,7 @@ static list<T> *get_zeros(list<T>& nodes, list<Edge<T> >& edges)
 
   for (typename list<Edge<T> >::iterator it = edges.begin();
       !zeros->empty() && it != edges.end(); it++)
-    zeros->remove((*it)->successor);
+    zeros->remove((*it).successor);
 
   return zeros;
 }
@@ -68,15 +73,15 @@ template<class T> bool tsort(list<T>& nodes, list<Edge<T> >& edges)
 
     for (typename list<Edge<T> >::iterator it = edges.begin();
         it != edges.end();) {
-      if ((*it)->predecessor != zero) {
+      if ((*it).predecessor != zero) {
         it++;
         continue;
       } else {
         Edge<T> tmp = *it;
-        edges.remove(*it);
+        edges.remove(tmp);
 
-        if (is_zero(tmp->successor, edges))
-          zeros->push_back((*it)->successor);
+        if (is_zero(tmp.successor, edges))
+          zeros->push_back(tmp.successor);
       }
     }
   }
