@@ -27,6 +27,8 @@ Module::Module(string name) : Plugin(name)
   /* load the plugin */
   dl_handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
 
+  free(path);
+
   if (dl_handle == NULL)
     throw new string(dlerror());
 
