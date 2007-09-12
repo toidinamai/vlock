@@ -6,9 +6,6 @@
 #include <vector>
 #include <string>
 
-#undef ARRAY_SIZE
-#define ARRAY_SIZE(x) ((sizeof (x) / sizeof (x[0])))
-
 using namespace std;
 
 extern vector<string> dependency_names;
