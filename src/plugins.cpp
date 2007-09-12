@@ -97,9 +97,14 @@ static Plugin *__load_plugin(string name)
 
     try {
       p = new Module(name);
-    }
-    catch (...) {
-      p = new Script(name);
+    } catch (PluginException e1) {
+      try {
+        p = new Script(name);
+      } catch (PluginException e2) {
+        fprintf(stderr, "vlock-plugins: %s\n", e1.reason.c_str());
+        fprintf(stderr, "vlock-plugins: %s\n", e2.reason.c_str());
+        return NULL;
+      }
     }
 
     plugins.push_back(p);
