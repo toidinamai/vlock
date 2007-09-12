@@ -60,22 +60,30 @@ template<class T> bool tsort(list<T>& nodes, list<Edge<T> >& edges)
   list<T> *zeros = get_zeros(nodes, edges);
   bool result;
 
+  // while there are zeros left
   while (!zeros->empty()) {
+    // take the first zero
     T zero = zeros->front();
+    // remove it from the list
     zeros->pop_front();
-
+    // and add it to the list of sorted nodes
     sorted_nodes->push_back(zero);
 
+    // look at all edges
     for (typename list<Edge<T> >::iterator it = edges.begin();
         it != edges.end();) {
-      if ((*it).predecessor != zero) {
-        it++;
-      } else {
+      // where this zero is the predecessor
+      if ((*it).predecessor == zero) {
         Edge<T> tmp = *it;
+        // delete those edges
         it = edges.erase(it);
 
+        // if the successor of the edge now is a zero
         if (is_zero(tmp.successor, edges))
+          // add it to the list
           zeros->push_back(tmp.successor);
+      } else {
+        it++;
       }
     }
   }
