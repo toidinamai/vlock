@@ -30,7 +30,7 @@ Module::Module(string name) : Plugin(name)
   free(path);
 
   if (dl_handle == NULL)
-    throw PluginException(string(dlerror()));
+    throw PluginException(dlerror());
 
   /* load the hooks, unimplemented hooks are NULL */
   for (vector<string>::iterator it = hook_names.begin();
