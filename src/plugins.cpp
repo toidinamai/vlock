@@ -338,7 +338,7 @@ static bool handle_vlock_start(string hook_name)
 static bool handle_vlock_end(string hook_name)
 {
   for (list<Plugin *>::reverse_iterator it = plugins.rbegin();
-      it != plugins.rend(); it--)
+      it != plugins.rend(); it++)
     (void) (*it)->call_hook(hook_name);
 
   return true;
@@ -367,7 +367,7 @@ static bool handle_vlock_save(string hook_name)
 static bool handle_vlock_save_abort(string hook_name)
 {
   for (list<Plugin *>::reverse_iterator it = plugins.rbegin();
-      it != plugins.rend(); it--) {
+      it != plugins.rend(); it++) {
     if ((*it)->call_hook(hook_name)) {
       /* don't call again */
       // XXX: call vlock_end, remove plugin
