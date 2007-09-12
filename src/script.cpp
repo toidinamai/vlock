@@ -131,8 +131,10 @@ static void get_dependency(const char *path, const char *name, list<string> depe
     if (select(pipe_fds[0]+1, &read_fds, NULL, NULL, &timeout) != 1)
       goto err;
 
-    if ((len = read(pipe_fds[0], buffer, sizeof buffer - 1)) < 0)
-      goto err;
+    len = read(pipe_fds[0], buffer, sizeof buffer - 1);
+
+    if (len <= 0)
+      break;
 
     buffer[len] = '\0';
     data += buffer;
@@ -149,9 +151,12 @@ static void get_dependency(const char *path, const char *name, list<string> depe
       dependency.push_back(data.substr(pos1, pos2-1));
     }
 
+  (void) close(pipe_fds[1]);
+  return;
+
 err:
-    (void) close(pipe_fds[1]);
-    throw PluginException("getting dependencies failed");
+  (void) close(pipe_fds[1]);
+  throw PluginException("getting dependencies failed");
 }
 
 static pid_t launch_script(const char *path, int pipe_fd)
