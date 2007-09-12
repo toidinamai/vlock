@@ -60,7 +60,7 @@ char *prompt(const char *msg, const struct timespec *timeout)
 {
   char buffer[PROMPT_BUFFER_SIZE];
   char *result;
-  int len;
+  ssize_t len;
   struct termios term;
   struct timeval *timeout_val = NULL;
   tcflag_t lflag;
