@@ -38,10 +38,12 @@ static struct termios term;
  * stdin.  If charset is NULL wait for any character.  Returns 0 when the
  * timeout occurs. */
 static char wait_for_character(const char *charset, struct timespec *timeout) {
+  struct termios term;
   tcflag_t lflag;
   char c;
 
   /* switch off line buffering */
+  (void) tcgetattr(STDIN_FILENO, &term);
   lflag = term.c_lflag;
   term.c_lflag &= ~ICANON;
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
