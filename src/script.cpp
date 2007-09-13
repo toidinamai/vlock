@@ -38,8 +38,6 @@ Script::Script(string name) : Plugin(name)
   pid = launch_script(path, pipe_fds[0]);
 
   free(path);
-
-  throw PluginException("No way!");
 }
 
 Script::~Script()
