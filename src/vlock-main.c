@@ -27,36 +27,11 @@
 
 #include "prompt.h"
 #include "auth.h"
+#include "util.h"
 
 #ifdef USE_PLUGINS
 #include "plugins.h"
 #endif
-
-/* Parse the given string (interpreted as seconds) into a
- * timespec.  On error NULL is returned.  The caller is responsible
- * to free the result.   The string may be NULL, in which case NULL
- * is returned, too. */
-static struct timespec *parse_seconds(const char *s)
-{
-  if (s == NULL) {
-    return NULL;
-  } else {
-    char *n;
-    struct timespec *t = calloc(sizeof *t, 1);
-
-    if (t == NULL)
-      return NULL;
-
-    t->tv_sec = strtol(s, &n, 10);
-
-    if (*n != '\0' || t->tv_sec <= 0) {
-      free(t);
-      t = NULL;
-    }
-
-    return t;
-  }
-}
 
 /* Lock the current terminal until proper authentication is received. */
 int main(int argc, char *const argv[])

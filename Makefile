@@ -81,7 +81,7 @@ override CFLAGS += -g -O0
 override CXXFLAGS += -g -O0
 endif
 
-vlock-main: vlock-main.o prompt.o auth-$(AUTH_METHOD).o
+vlock-main: vlock-main.o prompt.o auth-$(AUTH_METHOD).o util.o
 
 .INTERMEDIATE: vlock-main.o
 
@@ -93,6 +93,7 @@ plugins.o: plugins.cpp tsort.h plugin.h plugins.h
 module.o: module.cpp module.h plugin.h
 script.o: script.cpp script.h plugin.h
 plugin.o: plugin.cpp plugin.h
+util.o: util.c util.h
 
 ifneq ($(USE_ROOT_PASS),y)
 vlock-main.o : override CFLAGS += -DNO_ROOT_PASS
