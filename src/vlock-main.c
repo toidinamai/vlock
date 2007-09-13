@@ -38,9 +38,9 @@
  * is returned, too. */
 static struct timespec *parse_seconds(const char *s)
 {
-  if (s == NULL)
+  if (s == NULL) {
     return NULL;
-  else {
+  } else {
     char *n;
     struct timespec *t = calloc(sizeof *t, 1);
 
