@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/wait.h>
 
 #include "script.h"
 
@@ -173,4 +174,17 @@ static pid_t launch_script(const char *path, int pipe_fd)
 
 static void ensure_death(pid_t pid)
 {
+  int status;
+
+  if (waitpid(pid, &status, WNOHANG) == pid)
+    return;
+
+  (void) kill(pid, SIGTERM);
+
+  if (waitpid(pid, &status, WNOHANG) == pid)
+    return;
+
+  (void) kill(pid, SIGKILL);
+
+  (void) waitpid(pid, &status, WNOHANG);
 }
