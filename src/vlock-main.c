@@ -34,39 +34,6 @@
 
 static struct termios term;
 
-/* Read a single character from the stdin.  If the timeout is reached
- * 0 is returned. */
-static char read_character(struct timespec *timeout)
-{
-  char c = 0;
-  struct timeval *timeout_val = NULL;
-  fd_set readfds;
-
-  if (timeout != NULL) {
-    timeout_val = calloc(sizeof *timeout_val, 1);
-
-    if (timeout_val != NULL) {
-      timeout_val->tv_sec = timeout->tv_sec;
-      timeout_val->tv_usec = timeout->tv_nsec / 1000;
-    }
-  }
-
-  /* Initialize file descriptor set. */
-  FD_ZERO(&readfds);
-  FD_SET(STDIN_FILENO, &readfds);
-
-  /* Wait for a character. */
-  if (select(STDIN_FILENO + 1, &readfds, NULL, NULL, timeout_val) != 1)
-    goto out;
-
-  /* Read the character. */
-  (void) read(STDIN_FILENO, &c, 1);
-
-out:
-  free(timeout_val);
-  return c;
-}
-
 /* Wait for any of the characters in the given character set to be read from
  * stdin.  If charset is NULL wait for any character.  Returns 0 when the
  * timeout occurs. */
