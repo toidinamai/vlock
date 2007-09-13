@@ -9,13 +9,9 @@ medium
 ------
 
 - make it possible to use vlock-all without USE_PLUGINS
-- do not depend on bash when not using plugins
 - do not require key press when no plugin with a vlock_save_abort
   hook is active
 - exit properly on SIGTERM
-- abandon plugin based options
-  - plugins only by name
-  - hardcoded defaults for --new, --all and --disable-sysrq
 - use access() instead of uid changes to secure plugin loading
 - generate error on invalid script
 
