@@ -21,7 +21,10 @@
 #include <algorithm>
 #include <functional>
 
+extern "C" {
+// exported functions
 #include "plugins.h"
+}
 
 #include "tsort.h"
 

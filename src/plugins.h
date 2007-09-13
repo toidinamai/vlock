@@ -11,10 +11,6 @@
  *
  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Load the named plugin.  Returns true if loading was successful and false
  * otherwise. */
 bool load_plugin(const char *name);
@@ -32,7 +28,3 @@ void unload_plugins(void);
 
 /* Call the given plugin hook. */
 bool plugin_hook(const char *hook);
-
-#ifdef __cplusplus
-}
-#endif
