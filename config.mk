@@ -33,7 +33,7 @@ DESTDIR =
 ### programs ###
 
 # shell to run vlock.sh with (only bash is known to work)
-BOURNE_SHELL = /usr/bin/env bash
+BOURNE_SHELL = /bin/sh
 # C compiler
 CC = gcc
 # C++ compiler
