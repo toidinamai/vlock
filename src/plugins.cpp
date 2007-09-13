@@ -45,7 +45,7 @@ static void __attribute__((constructor)) init_hook_handlers(void)
 }
 
 /* the list of plugins */
-list<Plugin *> plugins;
+static list<Plugin *> plugins;
 
 // predicate to find plugins
 struct name_matches : public unary_function<Plugin, bool>
