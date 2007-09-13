@@ -50,10 +50,10 @@ Script::~Script()
   ensure_death(pid);
 }
 
-bool Script::call_hook(string name)
+void Script::call_hook(string name)
 {
   ssize_t length = name.length() + 1;
-  bool result;
+  ssize_t wlength;
   struct sigaction act;
   struct sigaction oldact;
 
@@ -63,12 +63,13 @@ bool Script::call_hook(string name)
   act.sa_handler = SIG_IGN;
   (void) sigaction(SIGPIPE, &act, &oldact);
 
-  result = (write(fd, (name + "\n").data(), length) == length);
+  wlength = write(fd, (name + "\n").data(), length);
 
   // restore SIGPIPE handler
   (void) sigaction(SIGPIPE, &oldact, NULL);
 
-  return result;
+  if (wlength != length)
+    throw PluginException("error calling hook '" + name + "' for script '" + this->name + "'");
 }
 
 bool close_all_fds(void)

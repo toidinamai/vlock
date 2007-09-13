@@ -53,12 +53,13 @@ Module::~Module()
     (void) dlclose(dl_handle);
 }
 
-bool Module::call_hook(string name)
+void Module::call_hook(string name)
 {
   vlock_hook_fn hook = hooks[name];
 
   if (hook == NULL)
-    return true;
-  else
-    return hook(&ctx);
+    return;
+
+  if (!hook(&ctx))
+    throw PluginException("error calling hook '" + name + "' for module '" + this->name + "'");
 }

@@ -38,13 +38,13 @@ using std::list;
 using std::map;
 using std::unary_function;
 
-typedef bool (*hook_handler)(string);
+typedef void (*hook_handler)(string);
 static map<string, hook_handler> hook_handlers;
 
-static bool handle_vlock_start(string hook_name);
-static bool handle_vlock_end(string hook_name);
-static bool handle_vlock_save(string hook_name);
-static bool handle_vlock_save_abort(string hook_name);
+static void handle_vlock_start(string hook_name);
+static void handle_vlock_end(string hook_name);
+static void handle_vlock_save(string hook_name);
+static void handle_vlock_save_abort(string hook_name);
 
 static void __attribute__((constructor)) init_hook_handlers(void)
 {
@@ -292,58 +292,59 @@ bool plugin_hook(const char *hook_name)
     fprintf(stderr, "vlock-plugins: unknown hook '%s'\n", hook_name);
     return false;
   } else {
-    return h(hook_name);
+    try {
+      h(hook_name);
+      return true;
+    } catch (PluginException e) {
+      fprintf(stderr, "vlock-plugins: %s\n", e.reason.c_str());
+      return false;
+    }
   }
 }
 
-static bool handle_vlock_start(string hook_name)
+static void handle_vlock_start(string hook_name)
 {
   for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++)
-    if (!(*it)->call_hook(hook_name))
-      return false;
-
-  return true;
+    (*it)->call_hook(hook_name);
 }
 
-static bool handle_vlock_end(string hook_name)
+static void handle_vlock_end(string hook_name)
 {
   for (list<Plugin *>::reverse_iterator it = plugins.rbegin();
-      it != plugins.rend(); it++)
-    (void) (*it)->call_hook(hook_name);
-
-  return true;
+      it != plugins.rend(); it++) {
+    try {
+      (void) (*it)->call_hook(hook_name);
+    } catch (PluginException) {
+      // ignore
+    }
+  }
 }
 
 /* Return true if at least one hook was called and all hooks were successful.
  * Does not continue after the first failing hook. */
-static bool handle_vlock_save(string hook_name)
+static void handle_vlock_save(string hook_name)
 {
-  bool result = false;
-
   for (list<Plugin *>::iterator it = plugins.begin();
       it != plugins.end(); it++) {
-    result = (*it)->call_hook(hook_name);
-
-    if (!result) {
+    try {
+      (*it)->call_hook(hook_name);
+    } catch (PluginException) {
       /* don't call again */
       // XXX: call vlock_save_abort, vlock_end, remove plugin
-      break;
     }
   }
-
-  return result;
 }
 
-static bool handle_vlock_save_abort(string hook_name)
+static void handle_vlock_save_abort(string hook_name)
 {
   for (list<Plugin *>::reverse_iterator it = plugins.rbegin();
       it != plugins.rend(); it++) {
-    if ((*it)->call_hook(hook_name)) {
+    try {
+      (*it)->call_hook(hook_name);
+    } catch (PluginException) {
       /* don't call again */
       // XXX: call vlock_end, remove plugin
     }
   }
-
-  return true;
 }

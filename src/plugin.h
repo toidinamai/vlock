@@ -36,7 +36,7 @@ public:
   virtual ~Plugin();
 
   // hook
-  virtual bool call_hook(string name) = 0;
+  virtual void call_hook(string name) = 0;
 };
 
 #endif // _PLUGIN_H

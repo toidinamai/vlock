@@ -23,5 +23,5 @@ public:
   Module(string name);
   ~Module();
 
-  bool call_hook(string name);
+  void call_hook(string name);
 };

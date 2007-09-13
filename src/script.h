@@ -14,5 +14,5 @@ public:
   Script(string name);
   ~Script();
 
-  bool call_hook(string name);
+  void call_hook(string name);
 };
