@@ -13,20 +13,27 @@
 
 #include <stdio.h>
 
-#include <list>
-#include <vector>
-#include <iterator>
 #include <string>
+#include <vector>
+#include <list>
+#include <map>
+#include <iterator>
 #include <algorithm>
 #include <functional>
 
 #include "plugins.h"
+
 #include "tsort.h"
+
 #include "plugin.h"
 #include "module.h"
 #include "script.h"
 
-using namespace std;
+using std::string;
+using std::vector;
+using std::list;
+using std::map;
+using std::unary_function;
 
 typedef bool (*hook_handler)(string);
 static map<string, hook_handler> hook_handlers;

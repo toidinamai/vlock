@@ -1,12 +1,15 @@
 #ifndef _PLUGIN_H
 #define _PLUGIN_H
 
+#include <string>
+#include <vector>
 #include <list>
 #include <map>
-#include <vector>
-#include <string>
 
-using namespace std;
+using std::string;
+using std::vector;
+using std::list;
+using std::map;
 
 extern vector<string> dependency_names;
 extern vector<string> hook_names;
