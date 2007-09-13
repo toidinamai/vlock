@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <signal.h>
 
 #include "script.h"
 
@@ -15,12 +16,6 @@
 static void get_dependency(const char *path, const char *name, list<string>& dependency);
 static pid_t launch_script(const char *path, int pipe_fd);
 static void ensure_death(pid_t pid);
-
-// XXX: ugly HACK
-void __attribute__((constructor)) block_sigpipe(void)
-{
-  signal(SIGPIPE, SIG_IGN);
-}
 
 Script::Script(string name) : Plugin(name)
 {
@@ -58,8 +53,22 @@ Script::~Script()
 bool Script::call_hook(string name)
 {
   ssize_t length = name.length() + 1;
+  bool result;
+  struct sigaction act;
+  struct sigaction oldact;
 
-  return (write(fd, (name + "\n").data(), length) == length);
+  // ignore SIGPIPE
+  (void) sigemptyset(&(act.sa_mask));
+  act.sa_flags = SA_RESTART;
+  act.sa_handler = SIG_IGN;
+  (void) sigaction(SIGPIPE, &act, &oldact);
+
+  result = (write(fd, (name + "\n").data(), length) == length);
+
+  // restore SIGPIPE handler
+  (void) sigaction(SIGPIPE, &oldact, NULL);
+
+  return result;
 }
 
 bool close_all_fds(void)
