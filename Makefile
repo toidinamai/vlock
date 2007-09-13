@@ -89,7 +89,7 @@ auth-pam.o: auth-pam.c vlock.h
 auth-shadow.o: auth-shadow.c vlock.h
 prompt.o: prompt.c vlock.h
 vlock-main.o: vlock-main.c vlock.h
-plugins.o: plugins.cpp tsort.h list.h plugin.h plugins.h vlock.h
+plugins.o: plugins.cpp tsort.h plugin.h plugins.h vlock.h
 module.o: module.cpp module.h plugin.h
 script.o: script.cpp script.h plugin.h
 plugin.o: plugin.cpp plugin.h
