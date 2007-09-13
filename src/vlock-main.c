@@ -32,8 +32,6 @@
 #include "plugins.h"
 #endif
 
-static struct termios term;
-
 /* Parse the given string (interpreted as seconds) into a
  * timespec.  On error NULL is returned.  The caller is responsible
  * to free the result.   The string may be NULL, in which case NULL
@@ -63,6 +61,7 @@ static struct timespec *parse_seconds(const char *s)
 /* Lock the current terminal until proper authentication is received. */
 int main(int argc, char *const argv[])
 {
+  struct termios term;
   int exit_status = 0;
   char user[40];
   char *vlock_message;
