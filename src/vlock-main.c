@@ -197,8 +197,10 @@ int main(int argc, char *const argv[])
   /* regain privileges after loading plugins */
   seteuid(euid);
 
-  if (!resolve_dependencies())
+  if (!resolve_dependencies()) {
+    fprintf(stderr, "vlock-main: plugin dependency error\n");
     exit(111);
+  }
 #endif
 
   /* get the vlock message from the environment */
@@ -223,6 +225,7 @@ int main(int argc, char *const argv[])
 
 #ifdef USE_PLUGINS
   if (!plugin_hook("vlock_start")) {
+    fprintf(stderr, "vlock-main: error in 'vlock_start' hook\n");
     exit_status = 111;
     goto out;
   }
