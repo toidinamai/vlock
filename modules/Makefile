@@ -1,29 +1,29 @@
 include ../config.mk
 include ../system.mk
 
-PLUGINS += $(EXTRA_PLUGINS)
+MODULES += $(EXTRA_MODULES)
 
 .PHONY: all
-all: $(PLUGINS)
+all: $(MODULES)
 
 .PHONY: install
-install: $(addprefix install-, $(PLUGINS))
+install: $(addprefix install-, $(MODULES))
 
-PLUGIN_GROUP = $(ROOT_GROUP)
-PLUGIN_MODE = 0755
+MODULE_GROUP = $(ROOT_GROUP)
+MODULE_MODE = 0755
 
-install-new.so : PLUGIN_GROUP=$(VLOCK_GROUP)
-install-new.so : PLUGIN_MODE=$(VLOCK_PLUGIN_MODE)
-install-nosysrq.so : PLUGIN_GROUP=$(VLOCK_GROUP)
-install-nosysrq.so : PLUGIN_MODE=$(VLOCK_PLUGIN_MODE)
+install-new.so : MODULE_GROUP=$(VLOCK_GROUP)
+install-new.so : MODULE_MODE=$(VLOCK_MODULE_MODE)
+install-nosysrq.so : MODULE_GROUP=$(VLOCK_GROUP)
+install-nosysrq.so : MODULE_MODE=$(VLOCK_MODULE_MODE)
 
 .PHONY: install-%
-install-% : PLUGIN_SCRIPT=$(<:.so=.sh)
+install-% : MODULE_SCRIPT=$(<:.so=.sh)
 install-%: %
 	$(MKDIR_P) $(DESTDIR)$(PREFIX)/lib/vlock/modules
-	$(INSTALL) -m $(PLUGIN_MODE) -o root -g $(PLUGIN_GROUP) $< $(DESTDIR)$(PREFIX)/lib/vlock/modules/$<
-	[ ! -e $(PLUGIN_SCRIPT) ] || \
-	  $(INSTALL) -m 0644 -o root -g $(ROOT_GROUP) $(PLUGIN_SCRIPT) $(DESTDIR)$(PREFIX)/lib/vlock/modules/$(PLUGIN_SCRIPT)
+	$(INSTALL) -m $(MODULE_MODE) -o root -g $(MODULE_GROUP) $< $(DESTDIR)$(PREFIX)/lib/vlock/modules/$<
+	[ ! -e $(MODULE_SCRIPT) ] || \
+	  $(INSTALL) -m 0644 -o root -g $(ROOT_GROUP) $(MODULE_SCRIPT) $(DESTDIR)$(PREFIX)/lib/vlock/modules/$(MODULE_SCRIPT)
 
 %.so : LDFLAGS += -shared
 %.so: %.o

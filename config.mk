@@ -11,8 +11,8 @@ USE_ROOT_PASS = y
 # enable plugins for vlock-main
 USE_PLUGINS = y
 # which plugins should be build, default is architecture dependent
-# PLUGINS = 
-EXTRA_PLUGINS =
+# MODULES = 
+EXTRA_MODULES =
 
 # root's group, default is architecture dependent
 ROOT_GROUP =
@@ -21,7 +21,7 @@ ROOT_GROUP =
 VLOCK_GROUP =
 # mode to install privileged plugins with, defaults to 0750 if VLOCK_GROUP
 # is unset and 0755 otherwise
-VLOCK_PLUGIN_MODE =
+VLOCK_MODULE_MODE =
 
 ### paths ###
 

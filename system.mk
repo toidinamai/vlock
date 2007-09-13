@@ -8,19 +8,19 @@ endif
 
 ifndef VLOCK_GROUP
 VLOCK_GROUP = $(ROOT_GROUP)
-ifndef VLOCK_PLUGIN_MODE
-VLOCK_PLUGIN_MODE = 0755
+ifndef VLOCK_MODULE_MODE
+VLOCK_MODULE_MODE = 0755
 endif
-else # VLOCK_PLUGIN_GROUP is defined
-ifndef VLOCK_PLUGIN_MODE
-VLOCK_PLUGIN_MODE = 0750
+else # VLOCK_MODULE_GROUP is defined
+ifndef VLOCK_MODULE_MODE
+VLOCK_MODULE_MODE = 0750
 endif
 endif
 
-ifeq ($(origin PLUGINS),undefined)
+ifeq ($(origin MODULES),undefined)
 ifeq ($(UNAME),Linux)
-PLUGINS = all.so new.so nosysrq.so
+MODULES = all.so new.so nosysrq.so
 else ifneq (,$(findstring FreeBSD,$(UNAME)))
-PLUGINS = all.so new.so
+MODULES = all.so new.so
 endif
 endif
