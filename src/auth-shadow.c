@@ -36,16 +36,16 @@ bool auth(const char *user, struct timespec *timeout)
 {
   char *pwd;
   char *cryptpw;
-  char *msg = NULL;
+  char *msg;
   struct spwd *spw;
   int result = false;
 
   /* format the prompt */
   if (asprintf(&msg, "%s's Password: ", user) < 0)
-    goto out;
+    return false;
 
   if ((pwd = prompt_echo_off(msg, timeout)) == NULL)
-    goto out;
+    goto out_pwd;
 
   /* get the shadow password */
   if ((spw = getspnam(user)) == NULL)
@@ -68,12 +68,12 @@ out_shadow:
   /* deallocate shadow resources */
   endspent();
 
-out:
-  /* free the prompt */
-  free(msg);
-
   /* free the password */
   free(pwd);
+
+out_pwd:
+  /* free the prompt */
+  free(msg);
 
   return result;
 }
