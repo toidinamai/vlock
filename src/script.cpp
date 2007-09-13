@@ -12,7 +12,7 @@
 /* hard coded paths */
 #define VLOCK_SCRIPT_DIR PREFIX "/lib/vlock/scripts"
 
-static void get_dependency(const char *path, const char *name, list<string> dependency);
+static void get_dependency(const char *path, const char *name, list<string>& dependency);
 static pid_t launch_script(const char *path, int pipe_fd);
 static void ensure_death(pid_t pid);
 
@@ -74,7 +74,7 @@ bool close_all_fds(void)
   return true;
 }
 
-static void get_dependency(const char *path, const char *name, list<string> dependency)
+static void get_dependency(const char *path, const char *name, list<string>& dependency)
 {
   int pipe_fds[2];
   pid_t pid;
