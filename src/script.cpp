@@ -233,6 +233,7 @@ static void ensure_death(pid_t pid)
     return;
 
   (void) kill(pid, SIGKILL);
+  (void) kill(pid, SIGCONT);
 
-  (void) waitpid(pid, &status, WNOHANG);
+  (void) waitpid(pid, &status, 0);
 }
