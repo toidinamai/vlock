@@ -5,7 +5,7 @@ set -e
 hooks() {
   light_status=$(awk '/^status:/ {print $2}' /proc/acpi/ibm/light)
 
-  if [ "${light_status}" != "off" ] ; then
+  if [ "${light_status}" != "on" ] ; then
     exit
   fi
 
