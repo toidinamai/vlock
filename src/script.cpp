@@ -60,7 +60,7 @@ bool close_all_fds(void)
   if (getrlimit(RLIMIT_NOFILE, &r) < 0)
     return false;
 
-  // close all file descriptors
+  // close all file descriptors except stdio
   for (unsigned int i = 0; i < r.rlim_cur; i++) {
     switch (i) {
       case STDIN_FILENO:
