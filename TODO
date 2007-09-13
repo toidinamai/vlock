@@ -13,11 +13,6 @@ medium
 - do not require key press when no plugin with a vlock_save_abort
   hook is active
 - exit properly on SIGTERM
-- src/script_plugins.c:
-  - provide own versions of hooks
-  - execute scripts on a pipe
-    - write name of hook to be executed
-    - remove on exit
 - abandon plugin based options
   - plugins only by name
   - hardcoded defaults for --new, --all and --disable-sysrq
