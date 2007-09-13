@@ -109,6 +109,7 @@ ifeq ($(USE_PLUGINS),y)
 vlock-main: plugins.o plugin.o module.o script.o
 vlock-main : override LDFLAGS += $(DL_LIB) -lstdc++
 vlock-main.o : override CFLAGS += -DUSE_PLUGINS
+vlock-main.o: plugins.h
 endif
 
 .PHONY: clean
