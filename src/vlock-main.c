@@ -23,7 +23,6 @@
 #include <signal.h>
 #include <errno.h>
 #include <time.h>
-#include <sys/select.h>
 
 #include "prompt.h"
 #include "auth.h"
