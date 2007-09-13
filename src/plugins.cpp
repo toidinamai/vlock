@@ -28,7 +28,6 @@
 #include <algorithm>
 #include <functional>
 
-#include "vlock.h"
 #include "plugins.h"
 #include "tsort.h"
 #include "plugin.h"

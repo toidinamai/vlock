@@ -49,7 +49,7 @@
 #include <sys/select.h>
 #include <errno.h>
 
-#include "vlock.h"
+#include "prompt.h"
 
 #define PROMPT_BUFFER_SIZE 512
 

@@ -25,7 +25,6 @@
 #include <time.h>
 #include <sys/select.h>
 
-#include "vlock.h"
 #include "prompt.h"
 #include "auth.h"
 
