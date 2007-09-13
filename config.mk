@@ -13,6 +13,8 @@ USE_PLUGINS = y
 # which plugins should be build, default is architecture dependent
 # MODULES = 
 EXTRA_MODULES =
+# which scripts should be installed
+SCRIPTS =
 
 # root's group, default is architecture dependent
 ROOT_GROUP =
