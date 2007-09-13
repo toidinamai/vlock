@@ -52,7 +52,7 @@ install-modules:
 
 .PHONY: install-scripts
 install-scripts:
-	@$(MAKE) -C modules scripts
+	@$(MAKE) -C scripts install
 
 .PHONY: install-man
 install-man:
