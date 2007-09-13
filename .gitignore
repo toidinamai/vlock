@@ -2,8 +2,3 @@
 *.so
 vlock
 vlock-main
-vlock-new
-vlock-all
-vlock-nosysrq
-vlock.man
-vlock.1.html
