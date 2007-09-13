@@ -204,3 +204,35 @@ out:
   free(timeout_val);
   return c;
 }
+
+/* Wait for any of the characters in the given character set to be read from
+ * stdin.  If charset is NULL wait for any character.  Returns 0 when the
+ * timeout occurs. */
+char wait_for_character(const char *charset, struct timespec *timeout)
+{
+  struct termios term;
+  tcflag_t lflag;
+  char c;
+
+  /* switch off line buffering */
+  (void) tcgetattr(STDIN_FILENO, &term);
+  lflag = term.c_lflag;
+  term.c_lflag &= ~ICANON;
+  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
+
+  for (;;) {
+    c = read_character(timeout);
+
+    if (c == 0 || charset == NULL)
+      break;
+    else if (strchr(charset, c) != NULL)
+      break;
+  }
+
+  /* restore line buffering */
+  term.c_lflag = lflag;
+  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
+
+  return c;
+}
+
