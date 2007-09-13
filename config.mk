@@ -42,6 +42,8 @@ CXX = g++
 INSTALL = install
 # linker
 LD = ld
+# mkdir
+MKDIR_P = mkdir -p
 
 ### compiler and linker settings ###
 

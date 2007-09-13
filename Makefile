@@ -31,8 +31,10 @@ endif
 
 .PHONY: install-programs
 install-programs: $(PROGRAMS)
-	$(INSTALL) -D -m 755 -o root -g $(ROOT_GROUP) vlock $(DESTDIR)$(PREFIX)/bin/vlock
-	$(INSTALL) -D -m 4711 -o root -g $(ROOT_GROUP) vlock-main $(DESTDIR)$(PREFIX)/sbin/vlock-main
+	$(MKDIR_P) $(DESTDIR)$(PREFIX)/bin
+	$(INSTALL) -m 755 -o root -g $(ROOT_GROUP) vlock $(DESTDIR)$(PREFIX)/bin/vlock
+	$(MKDIR_P) $(DESTDIR)$(PREFIX)/sbin
+	$(INSTALL) -m 4711 -o root -g $(ROOT_GROUP) vlock-main $(DESTDIR)$(PREFIX)/sbin/vlock-main
 
 .PHONY: install-plugins
 install-plugins:
@@ -40,8 +42,10 @@ install-plugins:
 
 .PHONY: install-man
 install-man:
-	$(INSTALL) -D -m 644 -o root -g $(ROOT_GROUP) man/vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
-	$(INSTALL) -D -m 644 -o root -g $(ROOT_GROUP) man/vlock-main.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-main.8
+	$(MKDIR_P) $(DESTDIR)$(PREFIX)/share/man/man1
+	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
+	$(MKDIR_P) $(DESTDIR)$(PREFIX)/share/man/man8
+	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock-main.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-main.8
 
 
 ### build rules ###
