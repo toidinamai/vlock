@@ -27,6 +27,7 @@
 
 #include "vlock.h"
 #include "prompt.h"
+#include "auth.h"
 
 #ifdef USE_PLUGINS
 #include "plugins.h"

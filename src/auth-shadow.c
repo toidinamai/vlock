@@ -29,7 +29,7 @@
 
 #include <shadow.h>
 
-#include "vlock.h"
+#include "auth.h"
 #include "prompt.h"
 
 bool auth(const char *user, struct timespec *timeout)

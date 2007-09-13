@@ -48,7 +48,7 @@
 
 #include <security/pam_appl.h>
 
-#include "vlock.h"
+#include "auth.h"
 #include "prompt.h"
 
 static int conversation(int num_msg, const struct pam_message **msg, struct

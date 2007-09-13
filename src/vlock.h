@@ -9,15 +9,3 @@
  * the author.
  *
  */
-
-#include <stdbool.h>
-
-/* forward declaration */
-struct timespec;
-
-/* Try to authenticate the user.  When the user is successfully authenticated
- * this function returns true.  When the authentication fails for whatever
- * reason the function returns false.  The timeout is passed to the prompt
- * functions below if they are called.
- */
-bool auth(const char *user, struct timespec *timeout);
