@@ -33,47 +33,18 @@ VLOCK_MAIN="%PREFIX%/sbin/vlock-main"
 VLOCK_PLUGIN_DIR="%PREFIX%/lib/vlock/modules"
 VLOCK_VERSION="%VLOCK_VERSION%"
 
-# global arrays for plugin settings
-declare -a plugin_name plugin_short_option plugin_long_option plugin_help
-
-load_plugins() {
-  local plugin_file long_option short_option help i=0
-
-  for plugin_file in "${VLOCK_PLUGIN_DIR}"/*.sh ; do
-    # clear the variables that should be set by the plugin file
-    unset short_option long_option help
-
-    # load the plugin file
-    . "${plugin_file}"
-
-    # remember the plugin in the global arrays
-    # strip the VLOCK_PLUGIN_DIR start and the ".sh" end
-    plugin_name[$i]="${plugin_file:${#VLOCK_PLUGIN_DIR}+1:${#plugin_file}-${#VLOCK_PLUGIN_DIR}-4}"
-    plugin_short_option[$i]="${short_option}"
-    plugin_long_option[$i]="${long_option}"
-    plugin_help[$i]="${help}"
-
-    : $((i++))
-  done
-}
-
-print_plugin_help() {
-  local help
-
-  for help in "${plugin_help[@]}" ; do
-    if [ -n "${help}" ] ; then
-      echo >&2 "${help}"
-    fi
-  done
-}
-
 print_help() {
   echo >&2 "vlock: locks virtual consoles, saving your current session."
   echo >&2 "Usage: vlock [options]"
   echo >&2 "       Where [options] are any of:"
   echo >&2 "-c or --current: lock only this virtual console, allowing user to"
   echo >&2 "       switch to other virtual consoles."
-  print_plugin_help
+  echo >&2 "-a or --all: lock all virtual consoles by preventing other users"
+  echo >&2 "       from switching virtual consoles."
+  echo >&2 "-n or --new: allocate a new virtual console before locking,"
+  echo >&2 "       implies --all."
+  echo >&2 "-s or --disable-sysrq: disable SysRq while consoles are locked to"
+  echo >&2 "       prevent killing vlock with SAK, implies --all."
   echo >&2 "-t <seconds> or --timeout <seconds>: run screen locking plugins"
   echo >&2 "       after the given amount of time."
   echo >&2 "-v or --version: Print the version number of vlock and exit."
@@ -81,26 +52,10 @@ print_help() {
 }
 
 main() {
-  local options long_options short_options
-  local opt
-  declare -a plugins
+  local options long_options short_options plugins
 
-  short_options="ct:vh"
-  long_options="current,timeout:,version,help"
-
-  load_plugins
-
-  for opt in "${plugin_short_option[@]}" ; do
-    if [ -n "${opt}" ] ; then
-      short_options="${short_options}${opt}"
-    fi
-  done
-
-  for opt in "${plugin_long_option[@]}" ; do
-    if [ -n "${opt}" ] ; then
-      long_options="${long_options},${opt}"
-    fi
-  done
+  short_options="acnst:vh"
+  long_options="all,current,new,disable-sysrq,timeout:,version,help"
 
   # test for gnu getopt
   ( getopt -T >/dev/null )
@@ -122,13 +77,20 @@ main() {
 
   while : ; do
     case "$1" in
-      --)
-        # option list end
+      -a|--all)
+        plugins="${plugins} all"
         shift
-        break
         ;;
       -c|--current)
         unset plugins
+        shift
+        ;;
+      -n|--new)
+        plugins="${plugins} new"
+        shift
+        ;;
+      -s|--disable-sysrq)
+        plugins="${plugins} nosysrq"
         shift
         ;;
       -t|--timeout)
@@ -144,40 +106,14 @@ main() {
         echo "vlock version ${VLOCK_VERSION}" >&2
         exit
         ;;
-      *) 
-        local plugin="" i=0
-
-        # find the plugin this option belongs to
-
-        # try short options first
-        for opt in "${plugin_short_option[@]}" ; do
-          if [ -n "${opt}" ] && [ "$1" = "-$opt" ] ; then
-            plugin="${plugin_name[$i]}"
-            break
-          fi
-          : $((i++))
-        done
-
-        if [ -z "${plugin}" ] ; then
-          i=0
-
-          # now try long options
-          for opt in "${plugin_long_option[@]}" ; do
-            if [ -n "${opt}" ] && [ "$1" = "--${opt}" ] ; then
-              plugin="${plugin_name[$i]}"
-              break
-            fi
-          : $((i++))
-          done
-        fi
-
-        if [ -n "${plugin}" ] ; then
-          plugins[${#plugins[@]}]="${plugin}"
-          shift
-        else
-          echo "getopt error: unknown option '$1'" >&2
-          exit 1
-        fi
+      --)
+        # option list end
+        shift
+        break
+        ;;
+      *)
+        echo >&2 "getopt error: $1"
+        exit 1
         ;;
     esac
   done
@@ -186,7 +122,7 @@ main() {
   export VLOCK_TIMEOUT VLOCK_PROMPT_TIMEOUT
   export VLOCK_MESSAGE VLOCK_ALL_MESSAGE VLOCK_CURRENT_MESSAGE
 
-  exec "${VLOCK_MAIN}" "${plugins[@]}" "${VLOCK_PLUGINS[@]}" "$@"
+  exec "${VLOCK_MAIN}" ${plugins} ${VLOCK_PLUGINS} "$@"
 }
 
 main "$@"
