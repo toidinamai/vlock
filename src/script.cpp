@@ -16,6 +16,12 @@ static void get_dependency(const char *path, const char *name, list<string>& dep
 static pid_t launch_script(const char *path, int pipe_fd);
 static void ensure_death(pid_t pid);
 
+// XXX: ugly HACK
+void __attribute__((constructor)) block_sigpipe(void)
+{
+  signal(SIGPIPE, SIG_IGN);
+}
+
 Script::Script(string name) : Plugin(name)
 {
   char *path;
@@ -51,8 +57,9 @@ Script::~Script()
 
 bool Script::call_hook(string name)
 {
-  (void) name;
-  return true;
+  ssize_t length = name.length() + 1;
+
+  return (write(fd, (name + "\n").data(), length) == length);
 }
 
 bool close_all_fds(void)
