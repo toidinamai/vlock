@@ -17,8 +17,11 @@ all: plugins
 endif
 
 .PHONY: plugins
-plugins:
-	@$(MAKE) -C plugins
+plugins: modules
+
+.PHONY: modules
+modules:
+	@$(MAKE) -C modules
 
 ### installation rules ###
 
@@ -37,8 +40,11 @@ install-programs: $(PROGRAMS)
 	$(INSTALL) -m 4711 -o root -g $(ROOT_GROUP) vlock-main $(DESTDIR)$(PREFIX)/sbin/vlock-main
 
 .PHONY: install-plugins
-install-plugins:
-	@$(MAKE) -C plugins install
+install-plugins: install-modules
+
+.PHONY: install-modules
+install-modules:
+	@$(MAKE) -C modules install
 
 .PHONY: install-man
 install-man:
@@ -101,4 +107,4 @@ endif
 .PHONY: clean
 clean:
 	$(RM) $(PROGRAMS) $(wildcard *.o)
-	@$(MAKE) -C plugins clean
+	@$(MAKE) -C modules clean
