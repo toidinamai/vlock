@@ -49,6 +49,7 @@
 #include <security/pam_appl.h>
 
 #include "vlock.h"
+#include "prompt.h"
 
 static int conversation(int num_msg, const struct pam_message **msg, struct
                         pam_response **resp, void *appdata_ptr)

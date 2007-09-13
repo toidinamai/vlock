@@ -26,6 +26,7 @@
 #include <sys/select.h>
 
 #include "vlock.h"
+#include "prompt.h"
 
 #ifdef USE_PLUGINS
 #include "plugins.h"

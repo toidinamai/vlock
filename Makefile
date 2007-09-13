@@ -85,9 +85,9 @@ vlock-main: vlock-main.o prompt.o auth-$(AUTH_METHOD).o
 
 .INTERMEDIATE: vlock-main.o
 
-auth-pam.o: auth-pam.c vlock.h
-auth-shadow.o: auth-shadow.c vlock.h
-prompt.o: prompt.c vlock.h
+auth-pam.o: auth-pam.c prompt.h
+auth-shadow.o: auth-shadow.c prompt.h
+prompt.o: prompt.c prompt.h
 vlock-main.o: vlock-main.c vlock.h
 plugins.o: plugins.cpp tsort.h plugin.h plugins.h vlock.h
 module.o: module.cpp module.h plugin.h
