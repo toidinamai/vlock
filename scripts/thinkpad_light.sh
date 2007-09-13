@@ -12,10 +12,10 @@ hooks() {
   while read hook_name ; do
     case "${hook_name}" in
       vlock_save)
-        echo off > /proc/acpi/ibm/light
+        echo off | sudo tee /proc/acpi/ibm/light >/dev/null
       ;;
       vlock_save_abort)
-        echo on > /proc/acpi/ibm/light
+        echo on | sudo tee /proc/acpi/ibm/light >/dev/null
       ;;
     esac
   done
