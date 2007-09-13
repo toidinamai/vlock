@@ -90,6 +90,7 @@ static void get_dependency(const char *path, const char *name, list<string> depe
   pid = fork();
 
   if (pid == 0) {
+    // child
     int nullfd = open("/dev/null", O_RDWR);
 
     if (nullfd < 0)
@@ -167,9 +168,39 @@ out:
 
 static pid_t launch_script(const char *path, int pipe_fd)
 {
-  close(pipe_fd);
-  (void) path;
-  return 0;
+  pid_t pid = fork();
+
+  if (pid == 0) {
+    // child
+    int nullfd = open("/dev/null", O_RDWR);
+
+    if (nullfd < 0)
+      _exit(1);
+
+    // redirect stdio
+    (void) dup2(pipe_fd, STDIN_FILENO);
+    (void) dup2(nullfd, STDOUT_FILENO);
+    (void) dup2(nullfd, STDERR_FILENO);
+
+    // close all other file descriptors
+    if (!close_all_fds())
+      _exit(1);
+
+    // drop privileges
+    setgid(getgid());
+    setuid(getuid());
+
+    (void) execl(path, path, "hooks", NULL);
+
+    _exit(1);
+  }
+
+  (void) close(pipe_fd);
+
+  if (pid > 0)
+    return pid;
+  else
+    throw PluginException("fork() failed");
 }
 
 static void ensure_death(pid_t pid)
