@@ -35,6 +35,9 @@ Script::Script(string name) : Plugin(name)
 
   fd = pipe_fds[1];
 
+  // set non-blocking mode
+  (void) fcntl(fd, F_SETFL, O_NONBLOCK);
+
   pid = launch_script(path, pipe_fds[0]);
 
   free(path);
