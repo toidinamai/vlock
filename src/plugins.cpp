@@ -11,15 +11,7 @@
  *
  */
 
-#if !defined(__FreeBSD__) && !defined(_GNU_SOURCE)
-/* for asprintf() */
-#define _GNU_SOURCE
-#endif
-
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
 
 #include <list>
 #include <vector>
