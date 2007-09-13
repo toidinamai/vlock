@@ -83,8 +83,6 @@ endif
 
 vlock-main: vlock-main.o prompt.o auth-$(AUTH_METHOD).o util.o
 
-.INTERMEDIATE: vlock-main.o
-
 auth-pam.o: auth-pam.c prompt.h auth.h
 auth-shadow.o: auth-shadow.c prompt.h auth.h
 prompt.o: prompt.c prompt.h
