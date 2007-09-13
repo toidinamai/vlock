@@ -13,6 +13,7 @@
 
 static void get_dependency(const char *path, const char *name, list<string> dependency);
 static pid_t launch_script(const char *path, int pipe_fd);
+static void ensure_death(pid_t pid);
 
 Script::Script(string name) : Plugin(name)
 {
@@ -42,8 +43,8 @@ Script::Script(string name) : Plugin(name)
 
 Script::~Script()
 {
-  close(fd);
-  // XXX: waitpid, kill(pid, SIGTERM), waitpdid, kill(pid, SIGKILL)
+  (void) close(fd);
+  ensure_death(pid);
 }
 
 bool Script::call_hook(string name)
@@ -77,12 +78,15 @@ bool close_all_fds(void)
 static void get_dependency(const char *path, const char *name, list<string> dependency)
 {
   int pipe_fds[2];
-  pid_t pid = fork();
+  pid_t pid;
   timeval timeout;
   string data;
+  string errmsg;
 
   if (pipe(pipe_fds) < 0)
     throw PluginException("pipe() failed");
+
+  pid = fork();
 
   if (pid == 0) {
     int nullfd = open("/dev/null", O_RDWR);
@@ -110,11 +114,10 @@ static void get_dependency(const char *path, const char *name, list<string> depe
 
   (void) close(pipe_fds[1]);
 
-  if (pid < 0)
-    goto err;
-
-  // if (fcntl(pipe_fds[0], F_SETFD, O_NONBLOCK) < 0)
-  //   goto err;
+  if (pid < 0) {
+    (void) close(pipe_fds[0]);
+    throw PluginException("fork() failed");
+  }
 
   for (;;) {
     char buffer[LINE_MAX];
@@ -128,8 +131,10 @@ static void get_dependency(const char *path, const char *name, list<string> depe
     timeout.tv_sec = 1;
     timeout.tv_usec = 0;
 
-    if (select(pipe_fds[0]+1, &read_fds, NULL, NULL, &timeout) != 1)
-      goto err;
+    if (select(pipe_fds[0]+1, &read_fds, NULL, NULL, &timeout) != 1) {
+      errmsg = errmsg + "timeout while reading dependency '" + name + "' from '" + path + "'";
+      goto out;
+    }
 
     len = read(pipe_fds[0], buffer, sizeof buffer - 1);
 
@@ -139,28 +144,33 @@ static void get_dependency(const char *path, const char *name, list<string> depe
     buffer[len] = '\0';
     data += buffer;
 
-    if (data.length() > LINE_MAX)
-      goto err;
+    if (data.length() > LINE_MAX) {
+      errmsg = errmsg + "too much data while reading dependency '" + name + "' from '" + path + "'";
+      goto out;
+    }
   }
 
   for (size_t pos1 = 0, pos2 = data.find('\n', pos1);
       pos1 < data.length();
       pos1 = pos2+1, pos2 = data.find('\n', pos1))
-    if ((pos2 - pos1) > 1) {
-      fprintf(stderr, "found dependency '%s'\n", data.substr(pos1, pos2-1).c_str());
-      dependency.push_back(data.substr(pos1, pos2-1));
-    }
+    if ((pos2 - pos1) > 1)
+      dependency.push_back(data.substr(pos1, pos2 - pos1));
 
-  (void) close(pipe_fds[1]);
-  return;
+out:
+  (void) close(pipe_fds[0]);
+  ensure_death(pid);
 
-err:
-  (void) close(pipe_fds[1]);
-  throw PluginException("getting dependencies failed");
+  if (errmsg.length() == 0)
+    throw PluginException(errmsg);
 }
 
 static pid_t launch_script(const char *path, int pipe_fd)
 {
+  close(pipe_fd);
   (void) path;
   return 0;
+}
+
+static void ensure_death(pid_t pid)
+{
 }
