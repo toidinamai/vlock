@@ -16,3 +16,11 @@ ifndef VLOCK_PLUGIN_MODE
 VLOCK_PLUGIN_MODE = 0750
 endif
 endif
+
+ifeq ($(origin PLUGINS),undefined)
+ifeq ($(UNAME),Linux)
+PLUGINS = all.so new.so nosysrq.so
+else ifneq (,$(findstring FreeBSD,$(UNAME)))
+PLUGINS = all.so new.so
+endif
+endif

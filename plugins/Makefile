@@ -1,14 +1,6 @@
 include ../config.mk
 include ../system.mk
 
-ifeq ($(origin PLUGINS),undefined)
-ifeq ($(UNAME),Linux)
-PLUGINS = all.so new.so nosysrq.so
-else ifneq (,$(findstring FreeBSD,$(UNAME)))
-PLUGINS = all.so new.so
-endif
-endif
-
 PLUGINS += $(EXTRA_PLUGINS)
 
 .PHONY: all
