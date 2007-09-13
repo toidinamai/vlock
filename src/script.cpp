@@ -162,7 +162,7 @@ out:
   (void) close(pipe_fds[0]);
   ensure_death(pid);
 
-  if (errmsg.length() == 0)
+  if (errmsg.length() != 0)
     throw PluginException(errmsg);
 }
 
