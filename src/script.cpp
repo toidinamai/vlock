@@ -26,6 +26,9 @@ Script::Script(string name) : Plugin(name)
   if (snprintf(path, sizeof path, "%s/%s", VLOCK_SCRIPT_DIR, name.c_str()) < (ssize_t)sizeof path)
     throw PluginException("plugin '" + name + "' filename too long");
 
+  if (access(path, R_OK | X_OK) != 0)
+    throw PluginException(string("permission denied while trying to access '") + path + "'");
+
   /* load dependencies */
   for (vector<string>::iterator it = dependency_names.begin();
       it != dependency_names.end(); it++)

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <module.h>
 #include <dlfcn.h>
+#include <unistd.h>
 
 #include <vector>
 #include <iterator>
@@ -23,6 +24,9 @@ Module::Module(string name) : Plugin(name)
   /* format the plugin path */
   if (snprintf(path, sizeof path, "%s/%s.so", VLOCK_MODULE_DIR, name.c_str()) < (ssize_t)sizeof path)
     throw PluginException("plugin '" + name + "' filename too long");
+
+  if (access(path, R_OK | X_OK) != 0)
+    throw PluginException(string("permission denied while trying to access '") + path + "'");
 
   /* load the plugin */
   dl_handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
