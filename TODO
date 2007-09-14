@@ -15,6 +15,7 @@ medium
 - use access() instead of uid changes to secure plugin loading
 - generate error on invalid script
 - check Script for race conditions
+- second exception: PluginError -> termination
 
 low
 ---
