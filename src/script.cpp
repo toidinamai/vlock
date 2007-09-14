@@ -4,8 +4,9 @@
 #include <sys/select.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
+#include <sys/time.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <errno.h>
 
@@ -16,6 +17,7 @@
 
 static void get_dependency(const char *path, const char *name, list<string>& dependency);
 static pid_t launch_script(const char *path, int pipe_fd);
+static bool wait_for_death(pid_t pid, long sec, long usec);
 static void ensure_death(pid_t pid);
 
 Script::Script(string name) : Plugin(name)
@@ -49,7 +51,8 @@ Script::Script(string name) : Plugin(name)
 Script::~Script()
 {
   (void) close(fd);
-  ensure_death(pid);
+  if (!wait_for_death(pid, 0, 500000L))
+    ensure_death(pid);
 }
 
 void Script::call_hook(string name)
@@ -221,6 +224,50 @@ static pid_t launch_script(const char *path, int pipe_fd)
     return pid;
   else
     throw PluginException("fork() failed");
+}
+
+static void handle_alarm(int __attribute__((unused)) signum)
+{
+  // ignore
+}
+
+static bool wait_for_death(pid_t pid, long sec, long usec)
+{
+  int status;
+
+  if (sec > 0 || usec > 0) {
+    struct sigaction act, oldact;
+    struct itimerval timer, otimer;
+    bool result;
+
+    // ignore SIGALRM
+    sigemptyset(&act.sa_mask);
+    act.sa_handler = handle_alarm;
+    act.sa_flags = 0;
+    sigaction(SIGALRM, &act, &oldact);
+
+    // initialize timer
+    timer.it_interval.tv_sec = 0;
+    timer.it_interval.tv_usec = 0;
+    timer.it_value.tv_sec = 1;
+    timer.it_value.tv_usec = 500000L;
+
+    // set timer
+    setitimer(ITIMER_REAL, &timer, &otimer);
+
+    // wait until interupted by timer
+    result = (waitpid(pid, &status, 0) == pid);
+
+    // restore signal handler
+    sigaction(SIGALRM, &oldact, NULL);
+
+    // restore timer
+    setitimer(ITIMER_REAL, &otimer, NULL);
+
+    return result;
+  } else {
+    return (waitpid(pid, &status, WNOHANG) == pid);
+  }
 }
 
 static void ensure_death(pid_t pid)
