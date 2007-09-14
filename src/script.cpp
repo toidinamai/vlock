@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <errno.h>
 
 #include "script.h"
 
@@ -27,7 +28,7 @@ Script::Script(string name) : Plugin(name)
     throw PluginException("plugin '" + name + "' filename too long");
 
   if (access(path, R_OK | X_OK) != 0)
-    throw PluginException(string("permission denied while trying to access '") + path + "'");
+    throw PluginException(string(path) + ": " + strerror(errno));
 
   /* load dependencies */
   for (vector<string>::iterator it = dependency_names.begin();
