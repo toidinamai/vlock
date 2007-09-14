@@ -23,7 +23,7 @@ Script::Script(string name) : Plugin(name)
   int pipe_fds[2];
 
   /* format the plugin path */
-  if (snprintf(path, sizeof path, "%s/%s", VLOCK_SCRIPT_DIR, name.c_str()) < (ssize_t)sizeof path)
+  if (snprintf(path, sizeof path, "%s/%s", VLOCK_SCRIPT_DIR, name.c_str()) > (ssize_t)sizeof path)
     throw PluginException("plugin '" + name + "' filename too long");
 
   if (access(path, R_OK | X_OK) != 0)
