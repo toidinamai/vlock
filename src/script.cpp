@@ -279,7 +279,7 @@ static void ensure_death(pid_t pid)
 
   (void) kill(pid, SIGTERM);
 
-  if (waitpid(pid, &status, WNOHANG) == pid)
+  if (wait_for_death(pid, 0, 500000L))
     return;
 
   (void) kill(pid, SIGKILL);
