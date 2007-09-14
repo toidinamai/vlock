@@ -16,13 +16,13 @@ typedef vlock_hook_fn (*hook_dlsym_t)(void *, const char *);
 
 Module::Module(string name) : Plugin(name)
 {
-  char *path;
+  char path[FILENAME_MAX];
 
   this->ctx = NULL;
 
   /* format the plugin path */
-  if (asprintf(&path, "%s/%s.so", VLOCK_MODULE_DIR, name.c_str()) < 0)
-    throw std::bad_alloc();
+  if (snprintf(path, sizeof path, "%s/%s.so", VLOCK_MODULE_DIR, name.c_str()) < (ssize_t)sizeof path)
+    throw PluginException("plugin '" + name + "' filename too long");
 
   /* load the plugin */
   dl_handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);

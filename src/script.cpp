@@ -19,12 +19,12 @@ static void ensure_death(pid_t pid);
 
 Script::Script(string name) : Plugin(name)
 {
-  char *path;
+  char path[FILENAME_MAX];
   int pipe_fds[2];
 
   /* format the plugin path */
-  if (asprintf(&path, "%s/%s", VLOCK_SCRIPT_DIR, name.c_str()) < 0)
-    throw std::bad_alloc();
+  if (snprintf(path, sizeof path, "%s/%s", VLOCK_SCRIPT_DIR, name.c_str()) < (ssize_t)sizeof path)
+    throw PluginException("plugin '" + name + "' filename too long");
 
   /* load dependencies */
   for (vector<string>::iterator it = dependency_names.begin();
@@ -40,8 +40,6 @@ Script::Script(string name) : Plugin(name)
   (void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
   pid = launch_script(path, pipe_fds[0]);
-
-  free(path);
 }
 
 Script::~Script()
