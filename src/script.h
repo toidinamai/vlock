@@ -1,3 +1,3 @@
 struct plugin;
 
-struct plugin *open_script(const char *name);
+struct plugin *open_script(const char *name, char **error);
