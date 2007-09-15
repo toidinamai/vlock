@@ -32,6 +32,14 @@
 #include "plugins.h"
 #endif
 
+#define ensure_atexit(func) \
+  do { \
+    if (atexit(func) != 0) { \
+      fprintf(stderr, "vlock-main: Cannot register function '%s' with atexit().\n",  #func); \
+      abort(); \
+    } \
+  } while (0)
+
 char *get_user(void)
 {
   static char user[40];
@@ -55,7 +63,7 @@ char *get_user(void)
       else
         fprintf(stderr, "vlock-main: getpwuid() failed\n");
 
-      exit(111);
+      abort();
     }
 
     /* copy the username */
@@ -197,7 +205,6 @@ void call_end_hook(void)
 /* Lock the current terminal until proper authentication is received. */
 int main(int argc, char *const argv[])
 {
-  int exit_status = 0;
   char *user = get_user();
 
   block_signals();
@@ -206,35 +213,22 @@ int main(int argc, char *const argv[])
   for (int i = 1; i < argc; i++)
     load_plugin(argv[i]);
 
+  ensure_atexit(unload_plugins);
+
   resolve_dependencies();
 
-  atexit(unload_plugins);
-#endif
-
-#ifdef USE_PLUGINS
   if (!plugin_hook("vlock_start")) {
     fprintf(stderr, "vlock-main: error in 'vlock_start' hook\n");
-    exit_status = 111;
-    goto out;
+    abort();
   }
 
-  atexit(call_end_hook);
-#else
-  /* call vlock-new and vlock-all statically */
-#error "Not implemented."
+  ensure_atexit(call_end_hook);
 #endif
 
   secure_terminal();
-  atexit(restore_terminal);
+  ensure_atexit(restore_terminal);
 
   auth_loop(user);
 
-#ifdef USE_PLUGINS
-out:
-#else
-  /* call vlock-new and vlock-all statically */
-#error "Not implemented."
-#endif
-
-  exit(exit_status);
+  exit(0);
 }
