@@ -25,11 +25,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "util.h"
+
 #include "list.h"
 
 struct list *list_new(void)
 {
-  return NULL;
+  struct list *l = ensure_malloc(sizeof *l);
+  l->first = NULL;
+  l->last = NULL;
+  return l;
 }
 
 void list_free(struct list *l)
