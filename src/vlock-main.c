@@ -213,10 +213,21 @@ int main(int argc, char *const argv[])
 
   ensure_atexit(call_end_hook);
 #else /* !USE_PLUGINS */
-  if (argc == 2 && (strcmp(argv[1], "all") == 0))
-    lock_console_switch();
-  else if (argc > 1)
+  if (argc == 2 && (strcmp(argv[1], "all") == 0)) {
+    char *error = NULL;
+
+    if (!lock_console_switch(&error)) {
+      if (error != NULL) {
+        fprintf(stderr, "vlock-main: %s\n", error);
+        free(error);
+        abort();
+      } else {
+        fatal_error("vlock-main: could not disable console switching\n");
+      }
+    }
+  } else if (argc > 1) {
     fatal_error("vlock-main: plugin support disabled\n");
+  }
 
   ensure_atexit(unlock_console_switch);
 #endif

@@ -25,7 +25,17 @@
 
 bool vlock_start(void __attribute__((unused)) **ctx_ptr)
 {
-  lock_console_switch();
+  char *error = NULL;
+
+  if (!lock_console_switch(&error)) {
+    if (error != NULL) {
+      fprintf(stderr, "vlock-all: %s\n", error);
+      free(error);
+    } else {
+      fprintf(stderr, "vlock-all: could not disable console switching\n");
+    }
+  }
+
   return console_switch_locked;
 }
 
