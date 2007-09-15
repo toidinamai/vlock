@@ -215,6 +215,8 @@ int main(int argc, char *const argv[])
 #error "Not implemented."
 #endif
 
+  secure_terminal();
+
   auth_loop(user);
 
   restore_terminal();
