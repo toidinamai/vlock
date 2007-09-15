@@ -11,8 +11,12 @@
  *
  */
 
+struct timespec;
+
 /* Parse the given string (interpreted as seconds) into a
  * timespec.  On error NULL is returned.  The caller is responsible
  * to free the result.   The string may be NULL, in which case NULL
  * is returned, too. */
 struct timespec *parse_seconds(const char *s);
+
+void __attribute__((noreturn)) fatal_error(const char *format, ...);

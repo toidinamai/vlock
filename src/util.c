@@ -11,7 +11,10 @@
  */
 
 #include <stdlib.h>
+#include <stdarg.h>
 #include <time.h>
+
+#include "util.h"
 
 /* Parse the given string (interpreted as seconds) into a
  * timespec.  On error NULL is returned.  The caller is responsible
@@ -37,4 +40,13 @@ struct timespec *parse_seconds(const char *s)
 
     return t;
   }
+}
+
+void __attribute__((noreturn)) fatal_error(const char *format, ...)
+{
+  va_list ap;
+  va_start(ap, format);
+  fprintf(stderr, format, ap);
+  va_end(ap);
+  abort();
 }
