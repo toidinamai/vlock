@@ -27,3 +27,5 @@ void fatal_error(const char *format, ...)
     if (atexit(func) != 0) \
       fatal_error("vlock-main: Cannot register function '%s' with atexit().\n",  #func); \
   } while (0)
+
+void *ensure_malloc(size_t size);

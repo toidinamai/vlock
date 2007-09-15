@@ -51,3 +51,14 @@ void fatal_error(const char *format, ...)
   va_end(ap);
   abort();
 }
+
+
+void *ensure_malloc(size_t size)
+{
+  void *r = malloc(size);
+
+  if (r == NULL)
+    fatal_error("failed to allocate %d bytes\n", size);
+
+  return r;
+}
