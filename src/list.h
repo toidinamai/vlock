@@ -24,6 +24,8 @@ struct list
   struct list_item *last;
 };
 
+void list_append(struct list *l, void *data);
+
 #if 0
 /* Inspired by the doubly linked list code from glib:
  *

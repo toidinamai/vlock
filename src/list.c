@@ -27,6 +27,10 @@
 
 #include "list.h"
 
+void list_append(struct list *l, void *data)
+{
+}
+
 #if 0
 /* Like list_append() but returns the item that was added instead of the start
  * of the list. */
