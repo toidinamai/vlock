@@ -16,9 +16,6 @@
 /* Load the named plugin. */
 void load_plugin(const char *name);
 
-/* Check if the named plugin is loaded. */
-bool is_loaded(const char *name);
-
 /* Resolve all the dependencies between all plugins.  Returns false if there
  * was an error and true otherwise.  This function *must* be called after all
  * plugins were loaded. */

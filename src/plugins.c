@@ -46,11 +46,6 @@ void load_plugin(const char *name)
   list_append(plugins, p);
 }
 
-bool is_loaded(const char *name)
-{
-  return true;
-}
-
 void resolve_dependencies(void)
 {
 }
