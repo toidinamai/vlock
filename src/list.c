@@ -27,6 +27,15 @@
 
 #include "list.h"
 
+struct list *list_new(void)
+{
+  return NULL;
+}
+
+void list_free(struct list *l)
+{
+}
+
 void list_append(struct list *l, void *data)
 {
 }
