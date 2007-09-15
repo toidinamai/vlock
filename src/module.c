@@ -23,6 +23,8 @@ struct module_context
   void *dl_handle;
 };
 
+static void close_module(struct plugin *m);
+
 struct plugin *open_module(const char *name, char **error)
 {
   char *path;
@@ -49,6 +51,7 @@ struct plugin *open_module(const char *name, char **error)
   free(path);
 
   m->context = context;
+  m->close = close_module;
 
   return m;
 
@@ -59,4 +62,10 @@ path_error:
   free(context);
   __destroy_plugin(m);
   return NULL;
+}
+
+static void close_module(struct plugin *m)
+{
+  struct module_context *context = m->context;
+  dlclose(context->dl_handle);
 }
