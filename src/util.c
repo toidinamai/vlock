@@ -47,7 +47,7 @@ void fatal_error(const char *format, ...)
 {
   va_list ap;
   va_start(ap, format);
-  fprintf(stderr, format, ap);
+  (void) vfprintf(stderr, format, ap);
   va_end(ap);
   abort();
 }
