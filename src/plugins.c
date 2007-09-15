@@ -31,6 +31,9 @@ void load_plugin(const char *name)
     p = open_script(name, &e2);
 
   if (p == NULL) {
+    if (e1 == NULL && e2 == NULL) {
+      fatal_error("vlock-plugins: error loading plugin '%s'\n", name);
+
     if (e1 != NULL) {
       fprintf(stderr, "vlock-plugins: error loading module '%s': %s\n", name, e1);
       free(e1);
