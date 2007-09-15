@@ -70,6 +70,16 @@ char *get_user(void)
   return user;
 }
 
+void terminate(int signum)
+{
+  if (signum == SIGTERM)
+    fprintf(stderr, "vlock-main: Terminated!\n");
+  else if (signum == SIGABRT)
+    fprintf(stderr, "vlock-main: Aborted!\n");
+
+  exit(1);
+}
+
 void block_signals(void)
 {
   struct sigaction sa;
@@ -83,6 +93,11 @@ void block_signals(void)
   (void) sigaction(SIGINT, &sa, NULL);
   (void) sigaction(SIGQUIT, &sa, NULL);
   (void) sigaction(SIGTSTP, &sa, NULL);
+
+  sa.sa_flags = SA_RESETHAND;
+  sa.sa_handler = terminate;
+  (void) sigaction(SIGTERM, &sa, NULL);
+  (void) sigaction(SIGABRT, &sa, NULL);
 }
 
 /* Lock the current terminal until proper authentication is received. */
