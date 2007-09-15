@@ -39,7 +39,7 @@ bool vlock_start(void __attribute__((unused)) **ctx_ptr)
   return console_switch_locked;
 }
 
-bool vlock_end(void **ctx_ptr)
+bool vlock_end(void __attribute__((unused)) **ctx_ptr)
 {
   unlock_console_switch();
   return true;
