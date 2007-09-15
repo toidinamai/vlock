@@ -11,9 +11,6 @@
  *
  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* Inspired by the doubly linked list code from glib:
  *
@@ -82,7 +79,3 @@ void list_free(struct List *list);
 
 #define list_reverse_for_each(list, item) \
     for (struct List *item = list_last(plugins); item != NULL; item = list_previous(item))
-
-#ifdef __cplusplus
-}
-#endif
