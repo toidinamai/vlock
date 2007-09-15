@@ -159,11 +159,10 @@ static void auth_loop(const char *user)
     /* escape was pressed or the timeout occurred */
     if (c == '\033' || c == 0) {
 #ifdef USE_PLUGINS
-      if (plugin_hook("vlock_save"))
-        /* wait for any key to be pressed */
-        (void) wait_for_character(NULL, NULL);
-
-      (void) plugin_hook("vlock_save_abort");
+      plugin_hook("vlock_save");
+      /* wait for any key to be pressed */
+      (void) wait_for_character(NULL, NULL);
+      plugin_hook("vlock_save_abort");
 #endif
       continue;
     }
@@ -189,7 +188,7 @@ static void auth_loop(const char *user)
 #ifdef USE_PLUGINS
 static void call_end_hook(void)
 {
-  (void) plugin_hook("vlock_end");
+  plugin_hook("vlock_end");
 }
 #endif
 
@@ -205,12 +204,8 @@ int main(int argc, char *const argv[])
     load_plugin(argv[i]);
 
   ensure_atexit(unload_plugins);
-
   resolve_dependencies();
-
-  if (!plugin_hook("vlock_start"))
-    fatal_error("vlock-main: error in 'vlock_start' hook\n");
-
+  plugin_hook("vlock_start");
   ensure_atexit(call_end_hook);
 #else /* !USE_PLUGINS */
   if (argc == 2 && (strcmp(argv[1], "all") == 0)) {
