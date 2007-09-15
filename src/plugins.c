@@ -32,11 +32,11 @@ void load_plugin(const char *name)
 
   if (p == NULL) {
     if (e1 != NULL) {
-      fprintf(stderr, "vlock-plugins: %s\n", e1);
+      fprintf(stderr, "vlock-plugins: error loading module '%s': %s\n", name, e1);
       free(e1);
     }
     if (e2 != NULL) {
-      fprintf(stderr, "vlock-plugins: %s\n", e2);
+      fprintf(stderr, "vlock-plugins: error loading script '%s': %s\n", name, e2);
       free(e2);
     }
 
