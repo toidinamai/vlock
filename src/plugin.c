@@ -44,11 +44,24 @@ struct plugin *__allocate_plugin(const char *name)
   struct plugin *p = ensure_malloc(sizeof *p);
   p->name = name;
   p->dependencies = list_new();
+
+  list_for_each(dependency_names, name_item)
+    list_append(p->dependencies, list_new());
+
   return p;
 }
 
 void __destroy_plugin(struct plugin *p)
 {
+  list_for_each(dependency_list_item, p->dependencies) {
+    struct list *dependency_list = dependency_list_item->data;
+
+    list_for_each(dependency_item, dependency_list)
+      free(dependency_item->data);
+
+    list_free(dependency_list);
+  }
+
   list_free(p->dependencies);
   free(p);
 }
