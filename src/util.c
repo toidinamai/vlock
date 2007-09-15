@@ -12,6 +12,7 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <time.h>
 
 #include "util.h"
@@ -42,7 +43,7 @@ struct timespec *parse_seconds(const char *s)
   }
 }
 
-void __attribute__((noreturn)) fatal_error(const char *format, ...)
+void fatal_error(const char *format, ...)
 {
   va_list ap;
   va_start(ap, format);
