@@ -20,6 +20,8 @@ struct plugin
 
   bool (*call_hook)(struct plugin *p, const char *name);
   void (*destroy)(struct plugin *p);
+
+  void *context;
 };
 
 struct plugin *__allocate_plugin(const char *name);
