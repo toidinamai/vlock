@@ -1,3 +1,7 @@
+#if !defined(__FreeBSD__) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,7 +39,7 @@ static void acquire_vt(int __attribute__ ((__unused__)) signum)
 
 static struct vt_mode vtm;
 
-void lock_console_switch(void)
+bool lock_console_switch(char **error)
 {
   struct vt_mode lock_vtm;
   struct sigaction sa;
@@ -43,11 +47,11 @@ void lock_console_switch(void)
   /* Get the virtual console mode. */
   if (ioctl(STDIN_FILENO, VT_GETMODE, &vtm) < 0) {
     if (errno == ENOTTY || errno == EINVAL)
-      fprintf(stderr, "vlock-all: this terminal is not a virtual console\n");
+      *error = strdup("this terminal is not a virtual console\n");
     else
-      perror("vlock-all: could not get virtual console mode");
+      (void) asprintf(error, "could not get virtual console mode: %s", strerror(errno));
 
-    return;
+    return false;
   }
 
   /* Use a copy of the current virtual console mode. */
@@ -73,11 +77,12 @@ void lock_console_switch(void)
   /* set virtual console mode to be process governed
    * thus disabling console switching */
   if (ioctl(STDIN_FILENO, VT_SETMODE, &lock_vtm) < 0) {
-    perror("vlock-all: could not set virtual console mode");
-    return;
+    (void) asprintf(error, "could not set virtual console mode: %s", strerror(errno));
+    return false;
   }
 
   console_switch_locked = true;
+  return true;
 }
 
 void unlock_console_switch(void)

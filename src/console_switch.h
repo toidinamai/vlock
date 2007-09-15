@@ -2,5 +2,5 @@
 
 extern bool console_switch_locked;
 
-void lock_console_switch(void);
+bool lock_console_switch(char **error);
 void unlock_console_switch(void);
