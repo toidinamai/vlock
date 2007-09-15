@@ -187,6 +187,13 @@ void auth_loop(const char *user)
   free(prompt_timeout);
 }
 
+#ifdef USE_PLUGINS
+void call_end_hook(void)
+{
+  (void) plugin_hook("vlock_end");
+}
+#endif
+
 /* Lock the current terminal until proper authentication is received. */
 int main(int argc, char *const argv[])
 {
@@ -210,6 +217,8 @@ int main(int argc, char *const argv[])
     exit_status = 111;
     goto out;
   }
+
+  atexit(call_end_hook);
 #else
   /* call vlock-new and vlock-all statically */
 #error "Not implemented."
@@ -222,7 +231,6 @@ int main(int argc, char *const argv[])
 
 #ifdef USE_PLUGINS
 out:
-  (void) plugin_hook("vlock_end");
 #else
   /* call vlock-new and vlock-all statically */
 #error "Not implemented."
