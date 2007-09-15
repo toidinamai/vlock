@@ -19,7 +19,8 @@ struct timespec;
  * is returned, too. */
 struct timespec *parse_seconds(const char *s);
 
-void __attribute__((noreturn)) fatal_error(const char *format, ...);
+void fatal_error(const char *format, ...)
+  __attribute__((noreturn, format(printf, 1, 2)));
 
 #define ensure_atexit(func) \
   do { \
