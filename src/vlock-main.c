@@ -39,7 +39,7 @@
       fatal_error("vlock-main: Cannot register function '%s' with atexit().\n",  #func); \
   } while (0)
 
-char *get_user(void)
+static char *get_user(void)
 {
   static char user[40];
   /* get the user id */
@@ -71,7 +71,7 @@ char *get_user(void)
   return user;
 }
 
-void terminate(int signum)
+static void terminate(int signum)
 {
   if (signum == SIGTERM)
     fprintf(stderr, "vlock-main: Terminated!\n");
@@ -81,7 +81,7 @@ void terminate(int signum)
   exit(1);
 }
 
-void block_signals(void)
+static void block_signals(void)
 {
   struct sigaction sa;
 
@@ -104,7 +104,7 @@ void block_signals(void)
 static struct termios term;
 static tcflag_t lflag;
 
-void secure_terminal(void)
+static void secure_terminal(void)
 {
   /* disable terminal echoing and signals */
   (void) tcgetattr(STDIN_FILENO, &term);
@@ -113,14 +113,14 @@ void secure_terminal(void)
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
 
-void restore_terminal(void)
+static void restore_terminal(void)
 {
   /* restore the terminal */
   term.c_lflag = lflag;
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
 
-void auth_loop(const char *user)
+static void auth_loop(const char *user)
 {
   struct timespec *prompt_timeout;
   struct timespec *wait_timeout;
@@ -187,7 +187,7 @@ void auth_loop(const char *user)
 }
 
 #ifdef USE_PLUGINS
-void call_end_hook(void)
+static void call_end_hook(void)
 {
   (void) plugin_hook("vlock_end");
 }
