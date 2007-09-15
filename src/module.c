@@ -31,27 +31,19 @@ struct plugin *open_module(const char *name, char **error)
 
   if (asprintf(&path, "%s/%s.so", VLOCK_MODULE_DIR, name) < 0) {
     *error = strdup("filename too long");
-    free(context);
-    __destroy_plugin(m);
-    return NULL;
+    goto path_error;
   }
 
   if (access(path, R_OK) < 0) {
     (void) asprintf(error, "%s: %s", path, strerror(errno));
-    free(path);
-    free(context);
-    __destroy_plugin(m);
-    return NULL;
+    goto file_error;
   }
 
   context->dl_handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
 
   if (context->dl_handle == NULL) {
     *error = strdup(dlerror());
-    free(path);
-    free(context);
-    __destroy_plugin(m);
-    return NULL;
+    goto file_error;
   }
 
   free(path);
@@ -59,4 +51,12 @@ struct plugin *open_module(const char *name, char **error)
   m->context = context;
 
   return m;
+
+file_error:
+  free(path);
+
+path_error:
+  free(context);
+  __destroy_plugin(m);
+  return NULL;
 }
