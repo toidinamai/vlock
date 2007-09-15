@@ -99,24 +99,10 @@ int main(int argc, char *const argv[])
   block_signals();
 
 #ifdef USE_PLUGINS
-  for (int i = 1; i < argc; i++) {
-    errno = 0;
+  for (int i = 1; i < argc; i++)
+    load_plugin(argv[i]);
 
-    if (!load_plugin(argv[i])) {
-      if (errno)
-        fprintf(stderr, "vlock-main: error loading plugin '%s': %s\n",
-                argv[i], strerror(errno));
-      else
-        fprintf(stderr, "vlock-main: error loading plugin '%s'\n", argv[i]);
-
-      exit(111);
-    }
-  }
-
-  if (!resolve_dependencies()) {
-    fprintf(stderr, "vlock-main: plugin dependency error\n");
-    exit(111);
-  }
+  resolve_dependencies();
 #endif
 
   /* get the vlock message from the environment */

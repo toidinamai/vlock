@@ -16,14 +16,14 @@ static struct plugin *get_plugin(const char *name)
   return NULL;
 }
 
-bool load_plugin(const char *name)
+void load_plugin(const char *name)
 {
   char *e1 = NULL;
   char *e2 = NULL;
   struct plugin *p = get_plugin(name);
 
   if (p != NULL)
-    return true;
+    return;
 
   p = open_module(name, &e1);
 
@@ -40,12 +40,10 @@ bool load_plugin(const char *name)
       free(e2);
     }
 
-    return false;
+    abort();
   }
 
   list_append(plugins, p);
-
-  return true;
 }
 
 bool is_loaded(const char *name)
@@ -53,9 +51,8 @@ bool is_loaded(const char *name)
   return true;
 }
 
-bool resolve_dependencies(void)
+void resolve_dependencies(void)
 {
-  return true;
 }
 
 void unload_plugins(void)
