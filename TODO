@@ -16,6 +16,7 @@ medium
 - generate error on invalid script
 - check Script for race conditions
 - second exception: PluginError -> termination
+- design: non-recoverable errors print to stderr and abort()
 
 low
 ---
