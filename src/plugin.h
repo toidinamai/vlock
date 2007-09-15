@@ -13,7 +13,7 @@ extern struct list *hook_names;
 
 struct plugin
 {
-  const char *name;
+  char *name;
 
   // dependencies
   struct list *dependencies;

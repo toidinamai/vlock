@@ -31,7 +31,7 @@ size_t list_length(struct list *l);
 void list_append(struct list *l, void *data);
 
 #define list_for_each(list, item) \
-  for (struct list_item *item = list->first; item != NULL; item = item->next)
+  for (struct list_item *item = (list)->first; item != NULL; item = item->next)
 
 
 #if 0
