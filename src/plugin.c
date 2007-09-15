@@ -35,3 +35,11 @@ void __attribute__((destructor)) uninit_hook_names(void)
 {
   list_free(hook_names);
 }
+
+struct plugin *allocate_plugin(const char *name)
+{
+  struct plugin *p = ensure_malloc(sizeof *p);
+  p->name = name;
+  p->dependencies = list_new();
+  return p;
+}
