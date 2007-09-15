@@ -87,10 +87,12 @@ auth-pam.o: auth-pam.c prompt.h auth.h
 auth-shadow.o: auth-shadow.c prompt.h auth.h
 prompt.o: prompt.c prompt.h
 vlock-main.o: vlock-main.c auth.h prompt.h
-plugins.o: plugins.cpp tsort.h plugin.h plugins.h
-module.o: module.cpp module.h plugin.h
-script.o: script.cpp script.h plugin.h
-plugin.o: plugin.cpp plugin.h
+plugins.o: plugins.c tsort.h plugin.h plugins.h
+module.o: module.c module.h plugin.h
+script.o: script.c script.h plugin.h
+plugin.o: plugin.c plugin.h
+tsort.o: tsort.c tsort.h list.h
+list.o: list.c list.h
 util.o: util.c util.h
 
 ifneq ($(USE_ROOT_PASS),y)
@@ -106,7 +108,7 @@ vlock-main : override LDFLAGS += $(CRYPT_LIB)
 endif
 
 ifeq ($(USE_PLUGINS),y)
-vlock-main: plugins.o plugin.o module.o script.o
+vlock-main: plugins.o plugin.o module.o script.o tsort.o list.o
 vlock-main : override LDFLAGS += $(DL_LIB) -lstdc++
 vlock-main.o : override CFLAGS += -DUSE_PLUGINS
 vlock-main.o: plugins.h

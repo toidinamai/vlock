@@ -1,18 +1,3 @@
-#include <unistd.h>
-#include <string>
-#include "plugin.h"
+struct plugin;
 
-class Script : public Plugin
-{
-  // file descriptor for the child
-  int fd;
-
-  // pid of the child
-  pid_t pid;
-
-public:
-  Script(string name);
-  ~Script();
-
-  void call_hook(string name);
-};
+struct plugin *open_script(const char *name);
