@@ -17,7 +17,7 @@ static void __attribute__((constructor)) init_plugins(void)
   plugins = list_new();
 }
 
-static void __attribute__((constructor)) uninit_plugins(void)
+static void __attribute__((destructor)) uninit_plugins(void)
 {
   list_free(plugins);
 }
