@@ -32,31 +32,13 @@
 #include "plugins.h"
 #endif
 
-/* Lock the current terminal until proper authentication is received. */
-int main(int argc, char *const argv[])
+char *get_user(void)
 {
-  struct termios term;
-  int exit_status = 0;
-  char user[40];
-  char *vlock_message;
-  struct timespec *prompt_timeout;
-  struct timespec *timeout;
-  tcflag_t lflag;
-  struct sigaction sa;
+  static char user[40];
   /* get the user id */
   uid_t uid = getuid();
   /* get the user name from the environment */
   char *envuser = getenv("USER");
-
-  /* ignore some signals */
-  /* these signals shouldn't be delivered anyway, because
-   * terminal signals are disabled below */
-  (void) sigemptyset(&(sa.sa_mask));
-  sa.sa_flags = SA_RESTART;
-  sa.sa_handler = SIG_IGN;
-  (void) sigaction(SIGINT, &sa, NULL);
-  (void) sigaction(SIGQUIT, &sa, NULL);
-  (void) sigaction(SIGTSTP, &sa, NULL);
 
   if (uid > 0 || envuser == NULL) {
     struct passwd *pw;
@@ -84,6 +66,37 @@ int main(int argc, char *const argv[])
     strncpy(user, envuser, sizeof user - 1);
     user[sizeof user - 1] = '\0';
   }
+
+  return user;
+}
+
+void block_signals(void)
+{
+  struct sigaction sa;
+
+  /* ignore some signals */
+  /* these signals shouldn't be delivered anyway, because
+   * terminal signals are disabled below */
+  (void) sigemptyset(&(sa.sa_mask));
+  sa.sa_flags = SA_RESTART;
+  sa.sa_handler = SIG_IGN;
+  (void) sigaction(SIGINT, &sa, NULL);
+  (void) sigaction(SIGQUIT, &sa, NULL);
+  (void) sigaction(SIGTSTP, &sa, NULL);
+}
+
+/* Lock the current terminal until proper authentication is received. */
+int main(int argc, char *const argv[])
+{
+  struct termios term;
+  int exit_status = 0;
+  char *vlock_message;
+  struct timespec *prompt_timeout;
+  struct timespec *timeout;
+  tcflag_t lflag;
+  char *user = get_user();
+
+  block_signals();
 
 #ifdef USE_PLUGINS
   for (int i = 1; i < argc; i++) {
