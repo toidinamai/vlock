@@ -88,6 +88,10 @@ bool lock_console_switch(char **error)
 void unlock_console_switch(void)
 {
   /* restore virtual console mode */
-  if (ioctl(STDIN_FILENO, VT_SETMODE, &vtm) < 0)
-    perror("vlock-all: could not restore console mode");
+  if (console_switch_locked) {
+    if (ioctl(STDIN_FILENO, VT_SETMODE, &vtm) == 0)
+      console_switch_locked = false;
+    else
+      perror("vlock-all: could not restore console mode");
+  }
 }
