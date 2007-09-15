@@ -27,6 +27,7 @@
 #endif
 
 #include "vlock_plugin.h"
+#include "console_switch.h"
 
 /* This handler is called by a signal whenever a user tries to
  * switch away from this virtual console. */

@@ -17,6 +17,10 @@ install-new.so : MODULE_MODE=$(VLOCK_MODULE_MODE)
 install-nosysrq.so : MODULE_GROUP=$(VLOCK_GROUP)
 install-nosysrq.so : MODULE_MODE=$(VLOCK_MODULE_MODE)
 
+# pseudo plugin
+all.o : CFLAGS += -I../src
+all.o: all.c ../src/console_switch.h
+
 .PHONY: install-%
 install-% : MODULE_SCRIPT=$(<:.so=.sh)
 install-%: %
