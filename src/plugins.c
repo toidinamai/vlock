@@ -54,7 +54,6 @@ void unload_plugins(void)
 {
 }
 
-bool plugin_hook(const char *hook)
+void plugin_hook(const char *hook)
 {
-  return true;
 }
