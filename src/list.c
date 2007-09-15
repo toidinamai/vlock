@@ -27,6 +27,7 @@
 
 #include "list.h"
 
+#if 0
 /* Like list_append() but returns the item that was added instead of the start
  * of the list. */
 static struct List *__list_append(struct List *list, void *data)
@@ -157,3 +158,4 @@ void list_free(struct List *list)
   while (list != NULL)
     list = list_delete_link(list, list_first(list));
 }
+#endif

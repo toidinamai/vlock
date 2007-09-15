@@ -11,7 +11,20 @@
  *
  */
 
+struct list_item
+{
+  void *data;
+  struct list_item *next;
+  struct list_item *previous;
+};
 
+struct list
+{
+  struct list_item *first;
+  struct list_item *last;
+};
+
+#if 0
 /* Inspired by the doubly linked list code from glib:
  *
  * GLIB - Library of useful routines for C programming
@@ -79,3 +92,4 @@ void list_free(struct List *list);
 
 #define list_reverse_for_each(list, item) \
     for (struct List *item = list_last(plugins); item != NULL; item = list_previous(item))
+#endif
