@@ -216,10 +216,9 @@ int main(int argc, char *const argv[])
 #endif
 
   secure_terminal();
+  atexit(restore_terminal);
 
   auth_loop(user);
-
-  restore_terminal();
 
 #ifdef USE_PLUGINS
 out:
