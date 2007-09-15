@@ -5,23 +5,18 @@
 
 struct list;
 
-// array of dependency names
-extern const char *dependency_names[NR_DEPENDENCIES];
+// list of dependency names
+extern struct list *dependency_names;
 
-// array of hook names, terminated by NULL
-extern const char *hook_names[NR_HOOKS];
+// list of hook names
+extern struct list *hook_names;
 
 struct plugin
 {
   const char *name;
 
   // dependencies
-  struct list *after;
-  struct list *before;
-  struct list *requires;
-  struct list *needs;
-  struct list *depends;
-  struct list *conflicts;
+  struct list *dependencies;
 
   bool (*call_hook)(struct plugin *p, const char *name);
 };
