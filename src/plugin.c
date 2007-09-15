@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "list.h"
 
 #include "plugin.h"
@@ -54,4 +56,5 @@ void __destroy_plugin(struct plugin *p)
 void destroy_plugin(struct plugin *p)
 {
   p->close(p);
+  __destroy_plugin(p);
 }
