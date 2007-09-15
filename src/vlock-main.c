@@ -225,11 +225,11 @@ int main(int argc, char *const argv[])
         fatal_error("vlock-main: could not disable console switching\n");
       }
     }
+
+    ensure_atexit(unlock_console_switch);
   } else if (argc > 1) {
     fatal_error("vlock-main: plugin support disabled\n");
   }
-
-  ensure_atexit(unlock_console_switch);
 #endif
 
   secure_terminal();
