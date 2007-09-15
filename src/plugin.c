@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "list.h"
 
@@ -42,7 +43,7 @@ void __attribute__((destructor)) uninit_hook_names(void)
 struct plugin *__allocate_plugin(const char *name)
 {
   struct plugin *p = ensure_malloc(sizeof *p);
-  p->name = name;
+  p->name = strdup(name);
   p->dependencies = list_new();
 
   list_for_each(dependency_names, name_item)
@@ -53,16 +54,17 @@ struct plugin *__allocate_plugin(const char *name)
 
 void __destroy_plugin(struct plugin *p)
 {
-  list_for_each(dependency_list_item, p->dependencies) {
+  list_for_each(p->dependencies, dependency_list_item) {
     struct list *dependency_list = dependency_list_item->data;
 
-    list_for_each(dependency_item, dependency_list)
+    list_for_each(dependency_list, dependency_item)
       free(dependency_item->data);
 
     list_free(dependency_list);
   }
 
   list_free(p->dependencies);
+  free(p->name);
   free(p);
 }
 
