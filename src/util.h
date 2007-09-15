@@ -11,6 +11,8 @@
  *
  */
 
+#include <stddef.h>
+
 struct timespec;
 
 /* Parse the given string (interpreted as seconds) into a
