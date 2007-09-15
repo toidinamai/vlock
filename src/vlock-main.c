@@ -119,23 +119,11 @@ void restore_terminal(void)
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
 
-/* Lock the current terminal until proper authentication is received. */
-int main(int argc, char *const argv[])
+void auth_loop(const char *user)
 {
-  int exit_status = 0;
-  char *vlock_message;
   struct timespec *prompt_timeout;
   struct timespec *timeout;
-  char *user = get_user();
-
-  block_signals();
-
-#ifdef USE_PLUGINS
-  for (int i = 1; i < argc; i++)
-    load_plugin(argv[i]);
-
-  resolve_dependencies();
-#endif
+  char *vlock_message;
 
   /* get the vlock message from the environment */
   vlock_message = getenv("VLOCK_MESSAGE");
@@ -155,17 +143,6 @@ int main(int argc, char *const argv[])
   timeout = parse_seconds(getenv("VLOCK_TIMEOUT"));
 #else
   timeout = NULL;
-#endif
-
-#ifdef USE_PLUGINS
-  if (!plugin_hook("vlock_start")) {
-    fprintf(stderr, "vlock-main: error in 'vlock_start' hook\n");
-    exit_status = 111;
-    goto out;
-  }
-#else
-  /* call vlock-new and vlock-all statically */
-#error "Not implemented."
 #endif
 
   for (;;) {
@@ -205,6 +182,39 @@ int main(int argc, char *const argv[])
 #endif
   }
 
+  /* free some memory */
+  free(timeout);
+  free(prompt_timeout);
+}
+
+/* Lock the current terminal until proper authentication is received. */
+int main(int argc, char *const argv[])
+{
+  int exit_status = 0;
+  char *user = get_user();
+
+  block_signals();
+
+#ifdef USE_PLUGINS
+  for (int i = 1; i < argc; i++)
+    load_plugin(argv[i]);
+
+  resolve_dependencies();
+#endif
+
+#ifdef USE_PLUGINS
+  if (!plugin_hook("vlock_start")) {
+    fprintf(stderr, "vlock-main: error in 'vlock_start' hook\n");
+    exit_status = 111;
+    goto out;
+  }
+#else
+  /* call vlock-new and vlock-all statically */
+#error "Not implemented."
+#endif
+
+  auth_loop(user);
+
   restore_terminal();
 
 #ifdef USE_PLUGINS
@@ -215,10 +225,6 @@ out:
   /* call vlock-new and vlock-all statically */
 #error "Not implemented."
 #endif
-
-  /* free some memory */
-  free(timeout);
-  free(prompt_timeout);
 
   exit(exit_status);
 }
