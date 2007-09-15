@@ -200,6 +200,8 @@ int main(int argc, char *const argv[])
     load_plugin(argv[i]);
 
   resolve_dependencies();
+
+  atexit(unload_plugins);
 #endif
 
 #ifdef USE_PLUGINS
@@ -220,7 +222,6 @@ int main(int argc, char *const argv[])
 #ifdef USE_PLUGINS
 out:
   (void) plugin_hook("vlock_end");
-  unload_plugins();
 #else
   /* call vlock-new and vlock-all statically */
 #error "Not implemented."
