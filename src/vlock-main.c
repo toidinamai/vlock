@@ -122,7 +122,7 @@ void restore_terminal(void)
 void auth_loop(const char *user)
 {
   struct timespec *prompt_timeout;
-  struct timespec *timeout;
+  struct timespec *wait_timeout;
   char *vlock_message;
 
   /* get the vlock message from the environment */
@@ -140,9 +140,9 @@ void auth_loop(const char *user)
   /* get the timeouts from the environment */
   prompt_timeout = parse_seconds(getenv("VLOCK_PROMPT_TIMEOUT"));
 #ifdef USE_PLUGINS
-  timeout = parse_seconds(getenv("VLOCK_TIMEOUT"));
+  wait_timeout = parse_seconds(getenv("VLOCK_TIMEOUT"));
 #else
-  timeout = NULL;
+  wait_timeout = NULL;
 #endif
 
   for (;;) {
@@ -155,7 +155,7 @@ void auth_loop(const char *user)
     }
 
     /* wait for enter or escape to be pressed */
-    c = wait_for_character("\n\033", timeout);
+    c = wait_for_character("\n\033", wait_timeout);
 
     /* escape was pressed or the timeout occurred */
     if (c == '\033' || c == 0) {
@@ -183,7 +183,7 @@ void auth_loop(const char *user)
   }
 
   /* free some memory */
-  free(timeout);
+  free(wait_timeout);
   free(prompt_timeout);
 }
 
