@@ -34,10 +34,8 @@
 
 #define ensure_atexit(func) \
   do { \
-    if (atexit(func) != 0) { \
-      fprintf(stderr, "vlock-main: Cannot register function '%s' with atexit().\n",  #func); \
-      abort(); \
-    } \
+    if (atexit(func) != 0) \
+      fatal_error("vlock-main: Cannot register function '%s' with atexit().\n",  #func); \
   } while (0)
 
 char *get_user(void)
@@ -57,14 +55,8 @@ char *get_user(void)
     /* get the password entry */
     pw = getpwuid(uid);
 
-    if (pw == NULL) {
-      if (errno != 0)
-        perror("vlock-main: getpwuid() failed");
-      else
-        fprintf(stderr, "vlock-main: getpwuid() failed\n");
-
-      abort();
-    }
+    if (pw == NULL)
+      fatal_error("vlock-main: getpwuid() failed\n");
 
     /* copy the username */
     strncpy(user, pw->pw_name, sizeof user - 1);
@@ -217,10 +209,8 @@ int main(int argc, char *const argv[])
 
   resolve_dependencies();
 
-  if (!plugin_hook("vlock_start")) {
-    fprintf(stderr, "vlock-main: error in 'vlock_start' hook\n");
-    abort();
-  }
+  if (!plugin_hook("vlock_start"))
+    fatal_error("vlock-main: error in 'vlock_start' hook\n");
 
   ensure_atexit(call_end_hook);
 #endif
