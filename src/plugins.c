@@ -8,8 +8,20 @@
 #include "plugin.h"
 #include "module.h"
 #include "script.h"
+#include "util.h"
 
-static struct list *plugins;
+static struct list *plugins = NULL;
+
+static void __attribute__((constructor)) init_plugins(void)
+{
+  plugins = list_new();
+}
+
+static void __attribute__((constructor)) uninit_plugins(void)
+{
+  list_free(plugins);
+}
+
 
 static struct plugin *get_plugin(const char *name)
 {
