@@ -53,5 +53,5 @@ void __destroy_plugin(struct plugin *p)
 
 void destroy_plugin(struct plugin *p)
 {
-  p->destroy(p);
+  p->close(p);
 }

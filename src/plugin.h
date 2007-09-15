@@ -19,7 +19,7 @@ struct plugin
   struct list *dependencies;
 
   bool (*call_hook)(struct plugin *p, const char *name);
-  void (*destroy)(struct plugin *p);
+  void (*close)(struct plugin *p);
 
   void *context;
 };
@@ -27,4 +27,5 @@ struct plugin
 struct plugin *__allocate_plugin(const char *name);
 
 void __destroy_plugin(struct plugin *p);
+
 void destroy_plugin(struct plugin *p);
