@@ -54,7 +54,7 @@ static void __attribute__((constructor)) init_hook_handlers(void)
   hook_handlers["vlock_save_abort"] = handle_vlock_save_abort;
 }
 
-/* the list of plugins */
+// the list of plugins
 static list<Plugin *> plugins;
 
 // predicate to find plugins
@@ -77,7 +77,7 @@ static Plugin *get_plugin(string name)
     return NULL;
 }
 
-/* Check if the given plugin is loaded. */
+// Check if the given plugin is loaded.
 bool is_loaded(const char *name)
 {
   list<Plugin *>::iterator r = find_if(plugins.begin(), plugins.end(), name_matches(name));
@@ -85,8 +85,8 @@ bool is_loaded(const char *name)
   return (r != plugins.end());
 }
 
-/* Same as open_plugin except that an old plugin is returned if there
- * already is one with the given name. */
+// Return the named plugin.  Loads the plugin first if it isn't already loaded.
+// On error a diagnostic message is printed and NULL is returned.
 static Plugin *__load_plugin(string name)
 {
   list<Plugin *>::iterator r = find_if(plugins.begin(), plugins.end(), name_matches(name));
@@ -148,7 +148,7 @@ bool resolve_dependencies(void)
       Plugin *d = __load_plugin(*it2);
 
       if (d == NULL)
-        goto err;
+        return false;
 
       required_plugins.push_back(d);
     }
@@ -164,7 +164,7 @@ bool resolve_dependencies(void)
       if (d == NULL) {
         fprintf(stderr, "vlock-plugins: %s does not work without %s\n",
                 (*it)->name.c_str(), (*it2).c_str());
-        goto err;
+        return false;
       }
 
       required_plugins.push_back(d);
@@ -188,7 +188,7 @@ bool resolve_dependencies(void)
       if (find(required_plugins.begin(), required_plugins.end(), *it) != required_plugins.end()) {
         fprintf(stderr, "vlock-plugins: %s does not work without %s\n",
                 (*it)->name.c_str(), (*it2).c_str());
-        goto err;
+        return false;
       }
     }
 
@@ -218,9 +218,6 @@ bool resolve_dependencies(void)
   }
 
   return sort_plugins();
-
-err:
-  return false;
 }
 
 /* A plugin may declare which plugins it must come before or after.  All those
