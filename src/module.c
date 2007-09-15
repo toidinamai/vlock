@@ -63,6 +63,17 @@ struct plugin *open_module(const char *name, char **error)
   list_for_each(hook_names, name_item)
     *(void **) (&context->hooks[i++]) = dlsym(context->dl_handle, name_item->data);
 
+  struct list_item *dependency_list_item = m->dependencies->first;
+
+  list_for_each(dependency_names, name_item) {
+    const char *(*dependency)[] = dlsym(context->dl_handle, name_item->data);
+
+    for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++)
+      list_append(dependency_list_item->data, strdup((*dependency)[j]));
+
+    dependency_list_item = dependency_list_item->next;
+  }
+
   m->context = context;
   m->close = close_module;
 
