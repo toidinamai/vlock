@@ -40,6 +40,16 @@ void list_append(struct list *l, void *data)
 {
 }
 
+size_t list_length(struct list *l)
+{
+  size_t length = 0;
+
+  list_for_each(l, item)
+    length++;
+
+  return length;
+}
+
 #if 0
 /* Like list_append() but returns the item that was added instead of the start
  * of the list. */
