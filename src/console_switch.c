@@ -47,7 +47,7 @@ bool lock_console_switch(char **error)
   /* Get the virtual console mode. */
   if (ioctl(STDIN_FILENO, VT_GETMODE, &vtm) < 0) {
     if (errno == ENOTTY || errno == EINVAL)
-      *error = strdup("this terminal is not a virtual console\n");
+      *error = strdup("this terminal is not a virtual console");
     else
       (void) asprintf(error, "could not get virtual console mode: %s", strerror(errno));
 
@@ -88,6 +88,6 @@ bool lock_console_switch(char **error)
 void unlock_console_switch(void)
 {
   /* restore virtual console mode */
-  if (ioctl(STDIN_FILENO, VT_SETMODE, vtm) < 0)
+  if (ioctl(STDIN_FILENO, VT_SETMODE, &vtm) < 0)
     perror("vlock-all: could not restore console mode");
 }
