@@ -81,7 +81,7 @@ override CFLAGS += -g -O0
 override CXXFLAGS += -g -O0
 endif
 
-vlock-main: vlock-main.o prompt.o auth-$(AUTH_METHOD).o util.o
+vlock-main: vlock-main.o prompt.o auth-$(AUTH_METHOD).o console_switch.o util.o
 
 auth-pam.o: auth-pam.c prompt.h auth.h
 auth-shadow.o: auth-shadow.c prompt.h auth.h
@@ -93,6 +93,7 @@ script.o: script.c script.h plugin.h
 plugin.o: plugin.c plugin.h
 tsort.o: tsort.c tsort.h list.h
 list.o: list.c list.h
+console_switch.o: console_switch.c console_switch.h
 util.o: util.c util.h
 
 ifneq ($(USE_ROOT_PASS),y)
