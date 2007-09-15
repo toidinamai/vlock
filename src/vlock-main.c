@@ -100,15 +100,32 @@ void block_signals(void)
   (void) sigaction(SIGABRT, &sa, NULL);
 }
 
+static struct termios term;
+static tcflag_t lflag;
+
+void secure_terminal(void)
+{
+  /* disable terminal echoing and signals */
+  (void) tcgetattr(STDIN_FILENO, &term);
+  lflag = term.c_lflag;
+  term.c_lflag &= ~(ECHO | ISIG);
+  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
+}
+
+void restore_terminal(void)
+{
+  /* restore the terminal */
+  term.c_lflag = lflag;
+  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
+}
+
 /* Lock the current terminal until proper authentication is received. */
 int main(int argc, char *const argv[])
 {
-  struct termios term;
   int exit_status = 0;
   char *vlock_message;
   struct timespec *prompt_timeout;
   struct timespec *timeout;
-  tcflag_t lflag;
   char *user = get_user();
 
   block_signals();
@@ -151,12 +168,6 @@ int main(int argc, char *const argv[])
 #error "Not implemented."
 #endif
 
-  /* disable terminal echoing and signals */
-  (void) tcgetattr(STDIN_FILENO, &term);
-  lflag = term.c_lflag;
-  term.c_lflag &= ~(ECHO | ISIG);
-  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
-
   for (;;) {
     char c;
 
@@ -194,9 +205,7 @@ int main(int argc, char *const argv[])
 #endif
   }
 
-  /* restore the terminal */
-  term.c_lflag = lflag;
-  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
+  restore_terminal();
 
 #ifdef USE_PLUGINS
 out:
