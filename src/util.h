@@ -20,3 +20,9 @@ struct timespec;
 struct timespec *parse_seconds(const char *s);
 
 void __attribute__((noreturn)) fatal_error(const char *format, ...);
+
+#define ensure_atexit(func) \
+  do { \
+    if (atexit(func) != 0) \
+      fatal_error("vlock-main: Cannot register function '%s' with atexit().\n",  #func); \
+  } while (0)

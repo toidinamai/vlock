@@ -33,12 +33,6 @@
 #include "plugins.h"
 #endif
 
-#define ensure_atexit(func) \
-  do { \
-    if (atexit(func) != 0) \
-      fatal_error("vlock-main: Cannot register function '%s' with atexit().\n",  #func); \
-  } while (0)
-
 static char *get_user(void)
 {
   static char user[40];
