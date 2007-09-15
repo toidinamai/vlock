@@ -11,16 +11,22 @@
 
 #include <sys/types.h>
 
-#include "plugin.h"
+#include "list.h"
 #include "util.h"
+
+#include "plugin.h"
 
 #include "module.h"
 
 #define VLOCK_MODULE_DIR PREFIX "/lib/vlock/modules"
 
+typedef bool (*vlock_hook_fn)(void **);
+typedef vlock_hook_fn (*hook_dlsym_t)(void *, const char *);
+
 struct module_context
 {
   void *dl_handle;
+  vlock_hook_fn *hooks;
 };
 
 static void close_module(struct plugin *m);
@@ -49,6 +55,13 @@ struct plugin *open_module(const char *name, char **error)
   }
 
   free(path);
+
+  context->hooks = ensure_malloc(list_length(hook_names) * sizeof (vlock_hook_fn));
+
+  size_t i = 0;
+
+  list_for_each(hook_names, name_item)
+    *(void **) (&context->hooks[i++]) = dlsym(context->dl_handle, name_item->data);
 
   m->context = context;
   m->close = close_module;
