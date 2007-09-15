@@ -1,6 +1,7 @@
 #include "list.h"
 
 #include "plugin.h"
+#include "util.h"
 
 struct list *dependency_names;
 
@@ -36,10 +37,21 @@ void __attribute__((destructor)) uninit_hook_names(void)
   list_free(hook_names);
 }
 
-struct plugin *allocate_plugin(const char *name)
+struct plugin *__allocate_plugin(const char *name)
 {
   struct plugin *p = ensure_malloc(sizeof *p);
   p->name = name;
   p->dependencies = list_new();
   return p;
+}
+
+void __destroy_plugin(struct plugin *p)
+{
+  list_free(p->dependencies);
+  free(p);
+}
+
+void destroy_plugin(struct plugin *p)
+{
+  p->destroy(p);
 }
