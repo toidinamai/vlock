@@ -35,7 +35,7 @@ case "$1" in
   conflicts)
     echo "new"
   ;;
-  before)
+  preceeds)
     echo "all"
   ;;
   *)

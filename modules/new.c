@@ -27,7 +27,7 @@
 
 #include "vlock_plugin.h"
 
-const char *before[] = { "all", NULL };
+const char *preceeds[] = { "all", NULL };
 const char *requires[] = { "all", NULL };
 
 /* name of the virtual console device */
