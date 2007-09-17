@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "plugins.h"
 
@@ -36,6 +37,12 @@ static struct list *plugins;
 
 static struct plugin *get_plugin(const char *name)
 {
+  list_for_each(plugins, plugin_item) {
+    struct plugin *p = plugin_item->data;
+    if (strcmp(name, p->name) == 0)
+      return p;
+  }
+
   return NULL;
 }
 
