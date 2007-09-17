@@ -11,6 +11,9 @@
  *
  */
 
+#include <stdbool.h>
+#include <stddef.h>
+
 struct list_item
 {
   void *data;
@@ -24,9 +27,9 @@ struct list
   struct list_item *last;
 };
 
-typedef void (*list_free_item_function)(void *);
-
 struct list *list_new(void);
+
+typedef void (*list_free_item_function)(void *);
 void list_free(struct list *l, list_free_item_function free_item);
 
 size_t list_length(struct list *l);
@@ -39,6 +42,11 @@ struct list_item *list_delete_item(struct list *l, struct list_item *item);
 
 #define list_for_each_manual(list, item) \
   for (struct list_item *item = (list)->first; item != NULL; )
+
+static inline bool list_is_empty(struct list *l)
+{
+  return l->first == NULL;
+}
 
 #if 0
 /* Inspired by the doubly linked list code from glib:
