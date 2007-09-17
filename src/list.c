@@ -106,6 +106,23 @@ struct list_item *list_delete_item(struct list *l, struct list_item *item)
   return next;
 }
 
+void list_delete(struct list *l, void *data)
+{
+  struct list_item *item = list_find(l, data);
+
+  if (item != NULL)
+    (void) list_delete_item(l, item);
+}
+
+struct list_item *list_find(struct list *l, void *data)
+{
+  list_for_each(l, item)
+    if (item->data == data)
+      return item;
+
+  return NULL;
+}
+
 #if 0
 /* Like list_append() but returns the item that was added instead of the start
  * of the list. */

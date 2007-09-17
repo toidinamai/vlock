@@ -36,6 +36,9 @@ size_t list_length(struct list *l);
 void list_append(struct list *l, void *data);
 
 struct list_item *list_delete_item(struct list *l, struct list_item *item);
+void list_delete(struct list *l, void *data);
+
+struct list_item *list_find(struct list *l, void *data);
 
 #define list_for_each_from_increment(list, item, start, increment) \
   for (struct list_item *item = (start); item != NULL; (increment))
