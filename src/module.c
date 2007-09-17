@@ -20,22 +20,25 @@
 
 #define VLOCK_MODULE_DIR PREFIX "/lib/vlock/modules"
 
-typedef bool (*vlock_hook_fn)(void **);
-typedef vlock_hook_fn (*hook_dlsym_t)(void *, const char *);
+typedef bool (*module_hook_function)(void **);
 
 struct module_context
 {
   void *dl_handle;
-  vlock_hook_fn hooks[nr_hooks];
+  void *module_data;
+  module_hook_function hooks[nr_hooks];
 };
 
 static void close_module(struct plugin *m);
+static bool call_module_hook(struct plugin *m, const char *hook_name, char **error);
 
 struct plugin *open_module(const char *name, char **error)
 {
   char *path;
   struct plugin *m = __allocate_plugin(name);
   struct module_context *context = ensure_malloc(sizeof (struct module_context));
+
+  context->module_data = NULL;
 
   if (asprintf(&path, "%s/%s.so", VLOCK_MODULE_DIR, name) < 0) {
     *error = strdup("filename too long");
@@ -69,6 +72,7 @@ struct plugin *open_module(const char *name, char **error)
 
   m->context = context;
   m->close = close_module;
+  m->call_hook = call_module_hook;
 
   return m;
 
@@ -85,4 +89,22 @@ static void close_module(struct plugin *m)
 {
   struct module_context *context = m->context;
   dlclose(context->dl_handle);
+}
+
+static bool call_module_hook(struct plugin *m, const char *hook_name, char __attribute__((unused)) **error)
+{
+  bool result = true;
+
+  for (size_t i = 0; i < nr_hooks; i++)
+    if (strcmp(hooks[i].name, hook_name) == 0) {
+      struct module_context *context = m->context;
+      module_hook_function hook = context->hooks[i];
+      
+      if (hook != NULL)
+        result = context->hooks[i](&context->module_data);
+
+      break;
+    }
+
+  return result;
 }
