@@ -55,14 +55,14 @@ static struct plugin *get_plugin(const char *name)
   return NULL;
 }
 
-void load_plugin(const char *name)
+static struct plugin *__load_plugin(const char *name)
 {
   char *e1 = NULL;
   char *e2 = NULL;
   struct plugin *p = get_plugin(name);
 
   if (p != NULL)
-    return;
+    return p;
 
   p = open_module(name, &e1);
 
@@ -86,6 +86,12 @@ void load_plugin(const char *name)
   }
 
   list_append(plugins, p);
+  return p;
+}
+
+void load_plugin(const char *name)
+{
+  (void) __load_plugin(name);
 }
 
 static void __resolve_depedencies(void)
