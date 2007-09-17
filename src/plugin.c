@@ -26,7 +26,7 @@ void __destroy_plugin(struct plugin *p)
 {
 
   for (size_t i = 0; i < nr_dependencies; i++)
-    list_free(p->dependencies[i], (free_item_function)free_dependency_list);
+    list_free(p->dependencies[i], (list_free_item_function)free_dependency_list);
 
   free(p->name);
   free(p);
