@@ -25,4 +25,4 @@ void resolve_dependencies(void);
 void unload_plugins(void);
 
 /* Call the given plugin hook. */
-void plugin_hook(const char *hook);
+void plugin_hook(const char *hook_name);

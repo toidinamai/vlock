@@ -80,6 +80,22 @@ void unload_plugins(void)
 {
 }
 
-void plugin_hook(const char *hook)
+void plugin_hook(const char *hook_name)
+{
+}
+
+void handle_vlock_start(const char *hook_name)
+{
+}
+
+void handle_vlock_end(const char *hook_name)
+{
+}
+
+void handle_vlock_save(const char *hook_name)
+{
+}
+
+void handle_vlock_save_abort(const char *hook_name)
 {
 }
