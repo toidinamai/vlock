@@ -13,22 +13,22 @@
 #include "util.h"
 
 /* the list of plugins */
-static struct list *plugins = &(struct list ){ NULL, NULL };
+static struct list *plugins = &(struct list){ NULL, NULL };
 
 /****************/
 /* dependencies */
 /****************/
 
-#define AFTER 0
-#define BEFORE 1
+#define SUCCEEDS 0
+#define PRECEEDS 1
 #define REQUIRES 2
 #define NEEDS 3
 #define DEPENDS 4
 #define CONFLICTS 5
 
 const char *dependency_names[nr_dependencies] = {
-  "after",
-  "before",
+  "succeeds",
+  "preceeds",
   "requires",
   "needs",
   "depends",
@@ -253,19 +253,19 @@ static struct list *get_edges(void)
   list_for_each(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
     /* p must come after these */
-    list_for_each(p->dependencies[AFTER], successor_item) {
-      struct plugin *q = get_plugin(successor_item->data);
-
-      if (q != NULL)
-        list_append(edges, make_edge(p, q));
-    }
-
-    /* p must come before these */
-    list_for_each(p->dependencies[BEFORE], predecessor_item) {
+    list_for_each(p->dependencies[SUCCEEDS], predecessor_item) {
       struct plugin *q = get_plugin(predecessor_item->data);
 
       if (q != NULL)
         list_append(edges, make_edge(q, p));
+    }
+
+    /* p must come before these */
+    list_for_each(p->dependencies[PRECEEDS], successor_item) {
+      struct plugin *q = get_plugin(successor_item->data);
+
+      if (q != NULL)
+        list_append(edges, make_edge(p, q));
     }
   }
 
@@ -305,6 +305,5 @@ void handle_vlock_save(const char *hook_name)
 
 void handle_vlock_save_abort(const char *hook_name)
 {
-  (void) hook_name;
   (void) hook_name;
 }
