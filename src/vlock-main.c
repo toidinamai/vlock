@@ -38,14 +38,14 @@ static char *get_username(void)
   static char username[40];
   /* get the user id */
   uid_t uid = getuid();
-  /* get the user name from the environment */
-  char *envuser = getenv("USER");
+  char *tmp_username = NULL;
 
-  if (uid > 0 || envuser == NULL) {
+  if (uid == 0)
+    /* get the user name from the environment */
+    tmp_username = getenv("USER");
+
+  if (tmp_username == NULL) {
     struct passwd *pw;
-
-    /* clear errno */
-    errno = 0;
 
     /* get the password entry */
     pw = getpwuid(uid);
@@ -53,14 +53,12 @@ static char *get_username(void)
     if (pw == NULL)
       fatal_error("vlock-main: could not get the user name");
 
-    /* copy the username */
-    strncpy(username, pw->pw_name, sizeof username - 1);
-    username[sizeof username - 1] = '\0';
-  } else {
-    /* copy the username */
-    strncpy(username, envuser, sizeof username - 1);
-    username[sizeof username - 1] = '\0';
+    tmp_username = pw->pw_name;
   }
+
+  /* copy the username */
+  strncpy(username, tmp_username, sizeof username - 1);
+  username[sizeof username - 1] = '\0';
 
   return username;
 }
