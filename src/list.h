@@ -28,6 +28,7 @@ struct list
 };
 
 struct list *list_new(void);
+struct list *list_copy(struct list *l);
 
 void list_free(struct list *l);
 

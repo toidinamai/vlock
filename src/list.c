@@ -65,6 +65,16 @@ void list_append(struct list *l, void *data)
     l->first = item;
 }
 
+struct list *list_copy(struct list *l)
+{
+  struct list *new_list = list_new();
+
+  list_for_each(l, item)
+    list_append(new_list, item->data);
+
+  return new_list;
+}
+
 size_t list_length(struct list *l)
 {
   size_t length = 0;
