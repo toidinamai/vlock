@@ -11,6 +11,13 @@
 #include "script.h"
 #include "util.h"
 
+#define AFTER 0
+#define BEFORE 1
+#define REQUIRES 2
+#define NEEDS 3
+#define DEPENDS 4
+#define CONFLICTS 5
+
 const char *dependency_names[nr_dependencies] = {
   "after",
   "before",
@@ -86,6 +93,75 @@ void load_plugin(const char *name)
 
 static void __resolve_depedencies(void)
 {
+  struct list *required_plugins = list_new();
+
+  /* load plugins that are required, this automagically takes care of plugins
+   * that are required by the plugins loaded here because they are appended to
+   * the end of the list */
+  list_for_each(plugins, plugin_item) {
+    struct plugin *p = plugin_item->data;
+
+    list_for_each(p->dependencies[REQUIRES], dependency_item)
+      list_append(required_plugins, __load_plugin(dependency_item->data));
+  }
+
+  /* fail if a plugins that is needed is not loaded */
+  list_for_each(plugins, plugin_item) {
+    struct plugin *p = plugin_item->data;
+
+    list_for_each(p->dependencies[NEEDS], dependency_item) {
+      const char *d = dependency_item->data;
+      struct plugin *q = get_plugin(d);
+
+      if (q == NULL)
+        fatal_error("vlock-plugins: '%s' depends on '%s' which is not loaded", p->name, d);
+
+      list_append(required_plugins, q);
+    }
+  }
+
+  /* unload plugins whose prerequisites are not present */
+  list_for_each_manual(plugins, plugin_item) {
+    struct plugin *p = plugin_item->data;
+    bool dependencies_loaded = true;
+
+    list_for_each(p->dependencies[DEPENDS], dependency_item) {
+      const char *d = dependency_item->data;
+      struct plugin *q = get_plugin(d);
+
+      if (q == NULL) {
+        dependencies_loaded = false;
+
+        /* abort if dependencies not met and plugin is required */
+        list_for_each(required_plugins, required_item)
+          if (required_item->data == p)
+            fatal_error(
+                "vlock-plugins: '%s' is required by some other plugin\n"
+                 "              but depends on '%s' which is not loaded",
+                 p->name, d);
+
+        break;
+      }
+    }
+
+    if (!dependencies_loaded) {
+      plugin_item = list_delete_item(plugins, plugin_item);
+      destroy_plugin(p);
+    } else {
+      plugin_item = plugin_item->next;
+    }
+  }
+
+  /* fail if conflicting plugins are loaded */
+  list_for_each(plugins, plugin_item) {
+    struct plugin *p = plugin_item->data;
+
+    list_for_each(p->dependencies[CONFLICTS], dependency_item) {
+      const char *d = dependency_item->data;
+      if (get_plugin(d) == NULL)
+        fatal_error("vlock-plugins: '%s' and '%s' cannot be loaded at the same time", p->name, d);
+    }
+  }
 }
 
 static void sort_plugins(void)
