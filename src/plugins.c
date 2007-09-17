@@ -198,6 +198,8 @@ static void __resolve_depedencies(void)
     }
   }
 
+  list_free(required_plugins, NULL);
+
   /* fail if conflicting plugins are loaded */
   list_for_each(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
