@@ -108,6 +108,13 @@ void unload_plugins(void)
 
 void plugin_hook(const char *hook_name)
 {
+  for (size_t i = 0; i < nr_hooks; i++)
+    if (strcmp(hook_name, hooks[i].name) == 0) {
+      hooks[i].handler(hook_name);
+      return;
+    }
+
+  fatal_error("vlock-plugins: invalid hook name '%s'", hook_name);
 }
 
 void handle_vlock_start(const char *hook_name)
