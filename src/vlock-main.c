@@ -51,7 +51,7 @@ static char *get_user(void)
     pw = getpwuid(uid);
 
     if (pw == NULL)
-      fatal_error("vlock-main: getpwuid() failed");
+      fatal_error("vlock-main: could not get the user name");
 
     /* copy the username */
     strncpy(user, pw->pw_name, sizeof user - 1);
