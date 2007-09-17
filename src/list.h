@@ -29,8 +29,7 @@ struct list
 
 struct list *list_new(void);
 
-typedef void (*list_free_item_function)(void *);
-void list_free(struct list *l, list_free_item_function free_item);
+void list_free(struct list *l);
 
 size_t list_length(struct list *l);
 void list_append(struct list *l, void *data);
@@ -45,6 +44,9 @@ struct list_item *list_delete_item(struct list *l, struct list_item *item);
 
 #define list_for_each(list, item) \
   list_for_each_from_increment((list), item, (list)->first, item = item->next)
+
+#define list_delete_for_each(list, item) \
+  list_for_each_from_increment((list), item, (list)->first, item = list_delete_item((list), item))
 
 #define list_for_each_manual(list, item) \
   list_for_each_from((list), item, (list)->first)

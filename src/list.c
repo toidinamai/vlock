@@ -37,19 +37,14 @@ struct list *list_new(void)
   return l;
 }
 
-void list_free(struct list *l, list_free_item_function free_item)
+void list_free(struct list *l)
 {
-  list_for_each(l, item) {
-    if (free_item != NULL && item->previous != NULL)
-      free_item(item->previous->data);
-
-    free(item->previous);
+  list_for_each_manual(l, item) {
+    struct list_item *tmp = item->next;
+    free(item);
+    item = tmp;
   }
 
-  if (free_item != NULL && l->last != NULL)
-    free(l->last);
-
-  free(l->last);
   free(l);
 }
 
