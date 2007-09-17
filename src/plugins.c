@@ -5,6 +5,7 @@
 #include "plugins.h"
 
 #include "list.h"
+#include "tsort.h"
 
 #include "plugin.h"
 #include "module.h"
@@ -212,8 +213,64 @@ static void __resolve_depedencies(void)
   }
 }
 
+static struct list *get_edges(void);
+static void print_and_free_edge(struct edge *e);
+
 static void sort_plugins(void)
 {
+  struct list *edges = get_edges();
+
+  tsort(plugins, edges);
+
+  list_free(edges, (list_free_item_function)print_and_free_edge);
+
+  if (!list_is_empty(edges)) {
+    fatal_error("vlock-plugins: circular dependencies detected");
+    abort();
+  }
+}
+
+static struct edge *make_edge(struct plugin *p, struct plugin *s)
+{
+  struct edge *e = ensure_malloc(sizeof *e);
+  e->predecessor = p;
+  e->successor = s;
+  return e;
+}
+
+static struct list *get_edges(void)
+{
+  struct list *edges = list_new();
+
+  list_for_each(plugins, plugin_item) {
+    struct plugin *p = plugin_item->data;
+    /* p must come after these */
+    list_for_each(p->dependencies[AFTER], successor_item) {
+      struct plugin *q = get_plugin(successor_item->data);
+
+      if (q != NULL)
+        list_append(edges, make_edge(p, q));
+    }
+
+    /* p must come before these */
+    list_for_each(p->dependencies[BEFORE], predecessor_item) {
+      struct plugin *q = get_plugin(predecessor_item->data);
+
+      if (q != NULL)
+        list_append(edges, make_edge(q, p));
+    }
+  }
+
+  return edges;
+}
+
+static void print_and_free_edge(struct edge *e)
+{
+  struct plugin *p = e->predecessor;
+  struct plugin *s = e->successor;
+
+  fprintf(stderr, "\t%s\tmust come before\t%s\n", p->name, s->name);
+  free(e);
 }
 
 void handle_vlock_start(const char *hook_name)
