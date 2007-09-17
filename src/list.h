@@ -25,7 +25,7 @@ struct list
 };
 
 struct list *list_new(void);
-void list_free(struct list *l);
+void list_free(struct list *l, void (*free_item)(void *));
 
 size_t list_length(struct list *l);
 void list_append(struct list *l, void *data);
