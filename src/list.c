@@ -55,6 +55,14 @@ void list_free(struct list *l, list_free_item_function free_item)
 
 void list_append(struct list *l, void *data)
 {
+  struct list_item *item = ensure_malloc(sizeof *item);
+
+  item->data = data;
+  item->previous = l->last;
+  item->next = NULL;
+
+  if (l->first == NULL)
+    l->first = item;
 }
 
 size_t list_length(struct list *l)
