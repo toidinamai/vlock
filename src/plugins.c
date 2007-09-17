@@ -11,6 +11,13 @@
 #include "script.h"
 #include "util.h"
 
+/* the list of plugins */
+static struct list *plugins = &(struct list ){ NULL, NULL };
+
+/****************/
+/* dependencies */
+/****************/
+
 #define AFTER 0
 #define BEFORE 1
 #define REQUIRES 2
@@ -27,6 +34,10 @@ const char *dependency_names[nr_dependencies] = {
   "conflicts",
 };
 
+/*********/
+/* hooks */
+/*********/
+
 static void handle_vlock_start(const char * hook_name);
 static void handle_vlock_end(const char * hook_name);
 static void handle_vlock_save(const char * hook_name);
@@ -39,7 +50,47 @@ const struct hook hooks[nr_hooks] = {
   { "vlock_save_abort", handle_vlock_save_abort },
 };
 
-static struct list *plugins = &(struct list ){ NULL, NULL };
+/**********************/
+/* exported functions */
+/**********************/
+
+static struct plugin *__load_plugin(const char *name);
+static void __resolve_depedencies(void);
+static void sort_plugins(void);
+
+void load_plugin(const char *name)
+{
+  (void) __load_plugin(name);
+}
+
+void resolve_dependencies(void)
+{
+  __resolve_depedencies();
+  sort_plugins();
+}
+
+void unload_plugins(void)
+{
+  list_for_each_manual(plugins, plugin_item) {
+    destroy_plugin(plugin_item->data);
+    plugin_item = list_delete_item(plugins, plugin_item);
+  }
+}
+
+void plugin_hook(const char *hook_name)
+{
+  for (size_t i = 0; i < nr_hooks; i++)
+    if (strcmp(hook_name, hooks[i].name) == 0) {
+      hooks[i].handler(hook_name);
+      return;
+    }
+
+  fatal_error("vlock-plugins: invalid hook name '%s'", hook_name);
+}
+
+/********************/
+/* helper functions */
+/********************/
 
 static struct plugin *get_plugin(const char *name)
 {
@@ -84,11 +135,6 @@ static struct plugin *__load_plugin(const char *name)
 
   list_append(plugins, p);
   return p;
-}
-
-void load_plugin(const char *name)
-{
-  (void) __load_plugin(name);
 }
 
 static void __resolve_depedencies(void)
@@ -166,31 +212,6 @@ static void __resolve_depedencies(void)
 
 static void sort_plugins(void)
 {
-}
-
-void resolve_dependencies(void)
-{
-  __resolve_depedencies();
-  sort_plugins();
-}
-
-void unload_plugins(void)
-{
-  list_for_each_manual(plugins, plugin_item) {
-    destroy_plugin(plugin_item->data);
-    plugin_item = list_delete_item(plugins, plugin_item);
-  }
-}
-
-void plugin_hook(const char *hook_name)
-{
-  for (size_t i = 0; i < nr_hooks; i++)
-    if (strcmp(hook_name, hooks[i].name) == 0) {
-      hooks[i].handler(hook_name);
-      return;
-    }
-
-  fatal_error("vlock-plugins: invalid hook name '%s'", hook_name);
 }
 
 void handle_vlock_start(const char *hook_name)
