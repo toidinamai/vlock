@@ -32,17 +32,7 @@ const struct hook hooks[nr_hooks] = {
   { "vlock_save_abort", handle_vlock_save_abort },
 };
 
-static struct list *plugins = NULL;
-
-static void __attribute__((constructor)) init_plugins(void)
-{
-  plugins = list_new();
-}
-
-static void __attribute__((destructor)) uninit_plugins(void)
-{
-  list_free(plugins);
-}
+static struct list *plugins = &(struct list ){ NULL, NULL };
 
 static struct plugin *get_plugin(const char *name)
 {
