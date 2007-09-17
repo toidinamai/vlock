@@ -71,14 +71,14 @@ void load_plugin(const char *name)
 
   if (p == NULL) {
     if (e1 == NULL && e2 == NULL)
-      fatal_error("vlock-plugins: error loading plugin '%s'\n", name);
+      fatal_error("vlock-plugins: error loading plugin '%s'", name);
 
     if (e1 != NULL) {
-      fprintf(stderr, "vlock-plugins: error loading module '%s': %s\n", name, e1);
+      fprintf(stderr, "vlock-plugins: error loading module '%s': %s", name, e1);
       free(e1);
     }
     if (e2 != NULL) {
-      fprintf(stderr, "vlock-plugins: error loading script '%s': %s\n", name, e2);
+      fprintf(stderr, "vlock-plugins: error loading script '%s': %s", name, e2);
       free(e2);
     }
 

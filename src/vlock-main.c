@@ -51,7 +51,7 @@ static char *get_user(void)
     pw = getpwuid(uid);
 
     if (pw == NULL)
-      fatal_error("vlock-main: getpwuid() failed\n");
+      fatal_error("vlock-main: getpwuid() failed");
 
     /* copy the username */
     strncpy(user, pw->pw_name, sizeof user - 1);
@@ -211,13 +211,13 @@ int main(int argc, char *const argv[])
         free(error);
         abort();
       } else {
-        fatal_error("vlock-main: could not disable console switching\n");
+        fatal_error("vlock-main: could not disable console switching");
       }
     }
 
     ensure_atexit(unlock_console_switch);
   } else if (argc > 1) {
-    fatal_error("vlock-main: plugin support disabled\n");
+    fatal_error("vlock-main: plugin support disabled");
   }
 #endif
 

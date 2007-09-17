@@ -59,7 +59,7 @@ void *ensure_malloc(size_t size)
   void *r = malloc(size);
 
   if (r == NULL)
-    fatal_error("failed to allocate %d bytes\n", size);
+    fatal_error("failed to allocate %d bytes", size);
 
   return r;
 }
