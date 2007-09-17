@@ -39,6 +39,11 @@ struct list *list_new(void)
 
 void list_free(struct list *l)
 {
+  list_for_each(l, item)
+    free(item->previous);
+
+  free(l->last);
+  free(l);
 }
 
 void list_append(struct list *l, void *data)
