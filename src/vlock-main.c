@@ -35,16 +35,15 @@
 
 static char *get_username(void)
 {
-  static char username[40];
   /* get the user id */
   uid_t uid = getuid();
-  char *tmp_username = NULL;
+  char *username = NULL;
 
   if (uid == 0)
     /* get the user name from the environment */
-    tmp_username = getenv("USER");
+    username = getenv("USER");
 
-  if (tmp_username == NULL) {
+  if (username == NULL) {
     struct passwd *pw;
 
     /* get the password entry */
@@ -53,14 +52,10 @@ static char *get_username(void)
     if (pw == NULL)
       fatal_error("vlock-main: could not get the user name");
 
-    tmp_username = pw->pw_name;
+    username = pw->pw_name;
   }
 
-  /* copy the username */
-  strncpy(username, tmp_username, sizeof username - 1);
-  username[sizeof username - 1] = '\0';
-
-  return username;
+  return ensure_not_null(strdup(username), "could not copy string");
 }
 
 static void terminate(int signum)
@@ -225,6 +220,8 @@ int main(int argc, char *const argv[])
   ensure_atexit(restore_terminal);
 
   auth_loop(username);
+
+  free(username);
 
   exit(0);
 }
