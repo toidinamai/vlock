@@ -8,8 +8,6 @@
 #include "tsort.h"
 
 #include "plugin.h"
-#include "module.h"
-#include "script.h"
 #include "util.h"
 
 /* the list of plugins */

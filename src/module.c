@@ -16,8 +16,6 @@
 
 #include "plugin.h"
 
-#include "module.h"
-
 #define VLOCK_MODULE_DIR PREFIX "/lib/vlock/modules"
 
 typedef bool (*module_hook_function)(void **);

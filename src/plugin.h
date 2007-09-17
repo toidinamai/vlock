@@ -21,6 +21,8 @@ struct plugin
   // dependencies
   struct list *dependencies[nr_dependencies];
 
+  bool save_disabled;
+
   bool (*call_hook)(struct plugin *p, const char *name);
   void (*close)(struct plugin *p);
 
@@ -28,7 +30,8 @@ struct plugin
 };
 
 struct plugin *__allocate_plugin(const char *name);
-
 void __destroy_plugin(struct plugin *p);
-
 void destroy_plugin(struct plugin *p);
+
+struct plugin *open_module(const char *name, char **error);
+struct plugin *open_script(const char *name, char **error);
