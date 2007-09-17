@@ -277,11 +277,12 @@ void handle_vlock_start(const char *hook_name)
 {
   list_for_each(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
+    bool hook_result = p->call_hook(p, hook_name);
 
-    if (!p->call_hook(p, hook_name)) {
+    if (!hook_result) {
       list_for_each_reverse_from(plugins, reverse_item, plugin_item) {
-        struct plugin *q = reverse_item->data;
-        q->call_hook(q, "vlock_end");
+        struct plugin *r = reverse_item->data;
+        r->call_hook(r, "vlock_end");
       }
 
       fatal_error("vlock-plugins: error in '%s' hook of plugin '%s'", hook_name, p->name);
@@ -291,6 +292,10 @@ void handle_vlock_start(const char *hook_name)
 
 void handle_vlock_end(const char *hook_name)
 {
+  list_for_each_reverse(plugins, plugin_item) {
+    struct plugin *p = plugin_item->data;
+    (void) p->call_hook(p, hook_name);
+  }
 }
 
 void handle_vlock_save(const char *hook_name)
