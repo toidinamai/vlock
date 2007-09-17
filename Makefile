@@ -105,7 +105,8 @@ endif
 
 ifeq ($(USE_PLUGINS),y)
 vlock-main: plugins.o plugin.o module.o script.o tsort.o list.o
-vlock-main : override LDFLAGS += $(DL_LIB) -lstdc++ -rdynamic
+# -rdynamic is needed so that the all plugin can access the symbols from console_switch.o
+vlock-main : override LDFLAGS += $(DL_LIB) -rdynamic
 vlock-main.o : override CFLAGS += -DUSE_PLUGINS
 vlock-main.o: plugins.h
 endif
