@@ -64,7 +64,7 @@ struct plugin *open_module(const char *name, char **error)
     const char *(*dependency)[] = dlsym(context->dl_handle, dependency_names[i]);
 
     for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++)
-      list_append(m->dependencies[i], strdup((*dependency)[j]));
+      list_append(m->dependencies[i], ensure_not_null(strdup((*dependency)[j]), "failed to copy string"));
   }
 
   m->context = context;
