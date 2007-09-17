@@ -50,7 +50,7 @@ static char *get_username(void)
     pw = getpwuid(uid);
 
     if (pw == NULL)
-      fatal_error("vlock-main: could not get the user name");
+      fatal_error("vlock-main: could not get username for uid %d", uid);
 
     username = pw->pw_name;
   }
