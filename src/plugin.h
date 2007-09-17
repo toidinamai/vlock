@@ -21,7 +21,7 @@ struct plugin
   // dependencies
   struct list *dependencies[nr_dependencies];
 
-  bool (*call_hook)(struct plugin *p, const char *name);
+  bool (*call_hook)(struct plugin *p, const char *name, char **error);
   void (*close)(struct plugin *p);
 
   void *context;
