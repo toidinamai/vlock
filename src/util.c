@@ -49,6 +49,7 @@ void fatal_error(const char *format, ...)
   va_start(ap, format);
   (void) vfprintf(stderr, format, ap);
   va_end(ap);
+  fputc('\n', stderr);
   abort();
 }
 
