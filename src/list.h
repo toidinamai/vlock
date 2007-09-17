@@ -37,11 +37,23 @@ void list_append(struct list *l, void *data);
 
 struct list_item *list_delete_item(struct list *l, struct list_item *item);
 
+#define list_for_each_from_increment(list, item, start, increment) \
+  for (struct list_item *item = (start); item != NULL; (increment))
+
+#define list_for_each_from(list, item, start) \
+  for (struct list_item *item = (start); item != NULL;)
+
 #define list_for_each(list, item) \
-  for (struct list_item *item = (list)->first; item != NULL; item = item->next)
+  list_for_each_from_increment((list), item, (list)->first, item = item->next)
 
 #define list_for_each_manual(list, item) \
-  for (struct list_item *item = (list)->first; item != NULL; )
+  list_for_each_from((list), item, (list)->first)
+
+#define list_for_each_reverse_from(list, item, start) \
+  list_for_each_from_increment((list), item, (start), item = item->previous)
+
+#define list_for_each_reverse(list, item) \
+  list_for_each_reverse_from((list), item, (list)->last)
 
 static inline bool list_is_empty(struct list *l)
 {
