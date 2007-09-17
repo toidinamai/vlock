@@ -180,12 +180,11 @@ static void __resolve_depedencies(void)
         dependencies_loaded = false;
 
         /* abort if dependencies not met and plugin is required */
-        list_for_each(required_plugins, required_item)
-          if (required_item->data == p)
-            fatal_error(
-                "vlock-plugins: '%s' is required by some other plugin\n"
-                 "              but depends on '%s' which is not loaded",
-                 p->name, d);
+        if (list_find(required_plugins, p) != NULL)
+          fatal_error(
+              "vlock-plugins: '%s' is required by some other plugin\n"
+               "              but depends on '%s' which is not loaded",
+               p->name, d);
 
         break;
       }
