@@ -30,7 +30,7 @@ struct module_context
 };
 
 static void close_module(struct plugin *m);
-static bool call_module_hook(struct plugin *m, const char *hook_name, char **error);
+static bool call_module_hook(struct plugin *m, const char *hook_name);
 
 struct plugin *open_module(const char *name, char **error)
 {
@@ -91,7 +91,7 @@ static void close_module(struct plugin *m)
   dlclose(context->dl_handle);
 }
 
-static bool call_module_hook(struct plugin *m, const char *hook_name, char __attribute__((unused)) **error)
+static bool call_module_hook(struct plugin *m, const char *hook_name)
 {
   bool result = true;
 
