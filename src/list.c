@@ -55,6 +55,27 @@ size_t list_length(struct list *l)
   return length;
 }
 
+struct list_item *list_delete_item(struct list *l, struct list_item *item)
+{
+  struct list_item *next = item->next;
+
+  if (item->previous != NULL)
+    item->previous->next = item->next;
+
+  if (item->next != NULL)
+    item->next->previous = item->previous;
+
+  if (l->first == item)
+    l->first = item->next;
+
+  if (l->last == item)
+    l->last = item->previous;
+
+  free(item);
+
+  return next;
+}
+
 #if 0
 /* Like list_append() but returns the item that was added instead of the start
  * of the list. */
