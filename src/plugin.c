@@ -17,14 +17,16 @@ struct plugin *__allocate_plugin(const char *name)
   return p;
 }
 
+static void free_dependency_list(struct list *dependency_list)
+{
+  list_free(dependency_list, free);
+}
+
 void __destroy_plugin(struct plugin *p)
 {
-  for (size_t i = 0; i < nr_dependencies; i++) {
-    list_for_each(p->dependencies[i], dependency_item)
-      free(dependency_item->data);
 
-    list_free(p->dependencies[i]);
-  }
+  for (size_t i = 0; i < nr_dependencies; i++)
+    list_free(p->dependencies[i], (free_item_function)free_dependency_list);
 
   free(p->name);
   free(p);
