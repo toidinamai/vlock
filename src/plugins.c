@@ -276,9 +276,8 @@ void handle_vlock_start(const char *hook_name)
 {
   list_for_each(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
-    bool hook_result = p->call_hook(p, hook_name);
 
-    if (!hook_result) {
+    if (!p->call_hook(p, hook_name)) {
       list_for_each_reverse_from(plugins, reverse_item, plugin_item) {
         struct plugin *r = reverse_item->data;
         r->call_hook(r, "vlock_end");
@@ -299,10 +298,28 @@ void handle_vlock_end(const char *hook_name)
 
 void handle_vlock_save(const char *hook_name)
 {
-  (void) hook_name;
+  list_for_each(plugins, plugin_item) {
+    struct plugin *p = plugin_item->data;
+
+    if (p->save_disabled)
+      continue;
+
+    if (!p->call_hook(p, hook_name)) {
+      p->save_disabled = true;
+      p->call_hook(p, "vlock_save_abort");
+    }
+  }
 }
 
 void handle_vlock_save_abort(const char *hook_name)
 {
-  (void) hook_name;
+  list_for_each_reverse(plugins, plugin_item) {
+    struct plugin *p = plugin_item->data;
+
+    if (p->save_disabled)
+      continue;
+
+    if (!p->call_hook(p, hook_name))
+      p->save_disabled = true;
+  }
 }
