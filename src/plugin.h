@@ -1,22 +1,25 @@
 #include <stdbool.h>
 
-#define NR_DEPENDENCIES 6
-#define NR_HOOKS 4
+// dependency names
+#define nr_dependencies 6
+extern const char *dependency_names[nr_dependencies];
 
-struct list;
+struct hook
+{
+  const char *name;
+  void (*handler)(const char *);
+};
 
-// list of dependency names
-extern struct list *dependency_names;
-
-// list of hook names
-extern struct list *hook_names;
+// hooks
+#define nr_hooks 4
+extern const struct hook hooks[nr_hooks];
 
 struct plugin
 {
   char *name;
 
   // dependencies
-  struct list *dependencies;
+  struct list *dependencies[nr_dependencies];
 
   bool (*call_hook)(struct plugin *p, const char *name);
   void (*close)(struct plugin *p);

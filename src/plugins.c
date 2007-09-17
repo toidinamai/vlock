@@ -10,17 +10,28 @@
 #include "script.h"
 #include "util.h"
 
-static struct list *plugins = NULL;
+const char *dependency_names[nr_dependencies] = {
+  "after",
+  "before",
+  "requires",
+  "needs",
+  "depends",
+  "conflicts",
+};
 
-static void __attribute__((constructor)) init_plugins(void)
-{
-  plugins = list_new();
-}
+static void handle_vlock_start(const char * hook_name);
+static void handle_vlock_end(const char * hook_name);
+static void handle_vlock_save(const char * hook_name);
+static void handle_vlock_save_abort(const char * hook_name);
 
-static void __attribute__((destructor)) uninit_plugins(void)
-{
-  list_free(plugins);
-}
+const struct hook hooks[nr_hooks] = {
+  { "vlock_start", handle_vlock_start },
+  { "vlock_end", handle_vlock_end },
+  { "vlock_save", handle_vlock_save },
+  { "vlock_save_abort", handle_vlock_save_abort },
+};
+
+static struct list *plugins;
 
 
 static struct plugin *get_plugin(const char *name)

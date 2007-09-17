@@ -26,7 +26,7 @@ typedef vlock_hook_fn (*hook_dlsym_t)(void *, const char *);
 struct module_context
 {
   void *dl_handle;
-  vlock_hook_fn *hooks;
+  vlock_hook_fn hooks[nr_hooks];
 };
 
 static void close_module(struct plugin *m);
@@ -56,22 +56,15 @@ struct plugin *open_module(const char *name, char **error)
 
   free(path);
 
-  context->hooks = ensure_malloc(list_length(hook_names) * sizeof (vlock_hook_fn));
+  for (size_t i = 0; i < nr_hooks; i++)
+    *(void **) (&context->hooks[i]) = dlsym(context->dl_handle, hooks[i].name);
 
-  size_t i = 0;
 
-  list_for_each(hook_names, name_item)
-    *(void **) (&context->hooks[i++]) = dlsym(context->dl_handle, name_item->data);
-
-  struct list_item *dependency_list_item = m->dependencies->first;
-
-  list_for_each(dependency_names, name_item) {
-    const char *(*dependency)[] = dlsym(context->dl_handle, name_item->data);
+  for (size_t i = 0; i < nr_dependencies; i++) {
+    const char *(*dependency)[] = dlsym(context->dl_handle, dependency_names[i]);
 
     for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++)
-      list_append(dependency_list_item->data, strdup((*dependency)[j]));
-
-    dependency_list_item = dependency_list_item->next;
+      list_append(m->dependencies[i], strdup((*dependency)[j]));
   }
 
   m->context = context;
