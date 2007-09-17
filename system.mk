@@ -24,3 +24,8 @@ else ifneq (,$(findstring FreeBSD,$(UNAME)))
 MODULES = all.so new.so
 endif
 endif
+
+ifeq ($(DEBUG),y)
+CFLAGS += -g -O0
+CXXFLAGS += -g -O0
+endif

@@ -76,11 +76,6 @@ vlock: vlock.sh config.mk Makefile
 override CFLAGS += -Isrc -DPREFIX="\"$(PREFIX)\""
 override CXXFLAGS += -Isrc -DPREFIX="\"$(PREFIX)\""
 
-ifeq ($(DEBUG),y)
-override CFLAGS += -g -O0
-override CXXFLAGS += -g -O0
-endif
-
 vlock-main: vlock-main.o prompt.o auth-$(AUTH_METHOD).o console_switch.o util.o
 
 auth-pam.o: auth-pam.c prompt.h auth.h
@@ -110,7 +105,7 @@ endif
 
 ifeq ($(USE_PLUGINS),y)
 vlock-main: plugins.o plugin.o module.o script.o tsort.o list.o
-vlock-main : override LDFLAGS += $(DL_LIB) -lstdc++
+vlock-main : override LDFLAGS += $(DL_LIB) -lstdc++ -rdynamic
 vlock-main.o : override CFLAGS += -DUSE_PLUGINS
 vlock-main.o: plugins.h
 endif
