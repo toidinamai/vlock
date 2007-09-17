@@ -31,3 +31,4 @@ void fatal_error(const char *format, ...)
   } while (0)
 
 void *ensure_malloc(size_t size);
+void *ensure_not_null(void *, const char *);

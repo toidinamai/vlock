@@ -62,3 +62,11 @@ void *ensure_malloc(size_t size)
 
   return r;
 }
+
+void *ensure_not_null(void *data, const char *errmsg)
+{
+  if (data == NULL)
+    fatal_error(errmsg);
+
+  return data;
+}
