@@ -37,7 +37,7 @@ struct list *list_new(void)
   return l;
 }
 
-void list_free(struct list *l, void (*free_item)(void *))
+void list_free(struct list *l, free_item_function free_item)
 {
   list_for_each(l, item) {
     if (free_item != NULL && item->previous != NULL)

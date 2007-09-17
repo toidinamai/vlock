@@ -24,8 +24,10 @@ struct list
   struct list_item *last;
 };
 
+typedef void (*free_item_function)(void *);
+
 struct list *list_new(void);
-void list_free(struct list *l, void (*free_item)(void *));
+void list_free(struct list *l, free_item_function free_item);
 
 size_t list_length(struct list *l);
 void list_append(struct list *l, void *data);
