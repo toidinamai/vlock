@@ -72,8 +72,18 @@ void load_plugin(const char *name)
   list_append(plugins, p);
 }
 
+static void __resolve_depedencies(void)
+{
+}
+
+static void sort_plugins(void)
+{
+}
+
 void resolve_dependencies(void)
 {
+  __resolve_depedencies();
+  sort_plugins();
 }
 
 void unload_plugins(void)
