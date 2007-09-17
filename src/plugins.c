@@ -275,6 +275,19 @@ static void print_and_free_edge(struct edge *e)
 
 void handle_vlock_start(const char *hook_name)
 {
+  list_for_each(plugins, plugin_item) {
+    char *error = NULL;
+    struct plugin *p = plugin_item->data;
+
+    if (!p->call_hook(p, hook_name, &error)) {
+      list_for_each_reverse_from(plugins, reverse_item, plugin_item) {
+        struct plugin *q = reverse_item->data;
+        q->call_hook(q, "vlock_end", NULL);
+      }
+
+      fatal_error("vlock-plugins: error in '%s' hook of plugin '%s'", hook_name, p->name);
+    }
+  }
 }
 
 void handle_vlock_end(const char *hook_name)
