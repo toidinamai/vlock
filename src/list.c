@@ -61,6 +61,11 @@ void list_append(struct list *l, void *data)
   item->previous = l->last;
   item->next = NULL;
 
+  if (l->last != NULL)
+    l->last->next = item;
+
+  l->last = item;
+
   if (l->first == NULL)
     l->first = item;
 }
