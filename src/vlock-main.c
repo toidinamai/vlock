@@ -33,9 +33,9 @@
 #include "plugins.h"
 #endif
 
-static char *get_user(void)
+static char *get_username(void)
 {
-  static char user[40];
+  static char username[40];
   /* get the user id */
   uid_t uid = getuid();
   /* get the user name from the environment */
@@ -54,15 +54,15 @@ static char *get_user(void)
       fatal_error("vlock-main: could not get the user name");
 
     /* copy the username */
-    strncpy(user, pw->pw_name, sizeof user - 1);
-    user[sizeof user - 1] = '\0';
+    strncpy(username, pw->pw_name, sizeof username - 1);
+    username[sizeof username - 1] = '\0';
   } else {
     /* copy the username */
-    strncpy(user, envuser, sizeof user - 1);
-    user[sizeof user - 1] = '\0';
+    strncpy(username, envuser, sizeof username - 1);
+    username[sizeof username - 1] = '\0';
   }
 
-  return user;
+  return username;
 }
 
 static void terminate(int signum)
@@ -114,7 +114,7 @@ static void restore_terminal(void)
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
 
-static void auth_loop(const char *user)
+static void auth_loop(const char *username)
 {
   struct timespec *prompt_timeout;
   struct timespec *wait_timeout;
@@ -161,7 +161,7 @@ static void auth_loop(const char *user)
       continue;
     }
 
-    if (auth(user, prompt_timeout))
+    if (auth(username, prompt_timeout))
       break;
     else
       sleep(1);
@@ -189,9 +189,11 @@ static void call_end_hook(void)
 /* Lock the current terminal until proper authentication is received. */
 int main(int argc, char *const argv[])
 {
-  char *user = get_user();
+  char *username;
 
   block_signals();
+
+  username = get_username();
 
 #ifdef USE_PLUGINS
   for (int i = 1; i < argc; i++)
@@ -224,7 +226,7 @@ int main(int argc, char *const argv[])
   secure_terminal();
   ensure_atexit(restore_terminal);
 
-  auth_loop(user);
+  auth_loop(username);
 
   exit(0);
 }
