@@ -123,11 +123,11 @@ static struct plugin *__load_plugin(const char *name)
       fatal_error("vlock-plugins: error loading plugin '%s'", name);
 
     if (e1 != NULL) {
-      fprintf(stderr, "vlock-plugins: error loading module '%s': %s", name, e1);
+      fprintf(stderr, "vlock-plugins: error loading module '%s': %s\n", name, e1);
       free(e1);
     }
     if (e2 != NULL) {
-      fprintf(stderr, "vlock-plugins: error loading script '%s': %s", name, e2);
+      fprintf(stderr, "vlock-plugins: error loading script '%s': %s\n", name, e2);
       free(e2);
     }
 
