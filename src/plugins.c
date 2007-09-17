@@ -199,7 +199,7 @@ static void __resolve_depedencies(void)
     }
   }
 
-  list_free(required_plugins, NULL);
+  list_free(required_plugins);
 
   /* fail if conflicting plugins are loaded */
   list_for_each(plugins, plugin_item) {
@@ -214,19 +214,27 @@ static void __resolve_depedencies(void)
 }
 
 static struct list *get_edges(void);
-static void print_and_free_edge(struct edge *e);
 
 static void sort_plugins(void)
 {
   struct list *edges = get_edges();
+  bool circles_present;
 
   tsort(plugins, edges);
 
-  list_free(edges, (list_free_item_function)print_and_free_edge);
+  circles_present = !list_is_empty(edges);
 
-  if (!list_is_empty(edges)) {
+  list_delete_for_each(edges, edge_item) {
+    struct edge *e = edge_item->data;
+    struct plugin *p = e->predecessor;
+    struct plugin *s = e->successor;
+
+    fprintf(stderr, "\t%s\tmust come before\t%s\n", p->name, s->name);
+    free(e);
+  }
+
+  if (circles_present) {
     fatal_error("vlock-plugins: circular dependencies detected");
-    abort();
   }
 }
 
@@ -264,14 +272,6 @@ static struct list *get_edges(void)
   return edges;
 }
 
-static void print_and_free_edge(struct edge *e)
-{
-  struct plugin *p = e->predecessor;
-  struct plugin *s = e->successor;
-
-  fprintf(stderr, "\t%s\tmust come before\t%s\n", p->name, s->name);
-  free(e);
-}
 
 void handle_vlock_start(const char *hook_name)
 {
@@ -300,8 +300,11 @@ void handle_vlock_end(const char *hook_name)
 
 void handle_vlock_save(const char *hook_name)
 {
+  (void) hook_name;
 }
 
 void handle_vlock_save_abort(const char *hook_name)
 {
+  (void) hook_name;
+  (void) hook_name;
 }
