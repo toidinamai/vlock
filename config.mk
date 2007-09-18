@@ -38,8 +38,6 @@ DESTDIR =
 BOURNE_SHELL = /bin/sh
 # C compiler
 CC = gcc
-# C++ compiler
-CXX = g++
 # gnu install
 INSTALL = install
 # linker
@@ -51,8 +49,6 @@ MKDIR_P = mkdir -p
 
 # C compiler flags
 CFLAGS = -O2 -Wall -W -pedantic -std=gnu99
-# C++ compiler flags
-CXXFLAGS = -O2 -Wall -W -pedantic
 # linker flags
 LDFLAGS = 
 # linker flags needed for dlopen and friends

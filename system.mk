@@ -27,5 +27,4 @@ endif
 
 ifeq ($(DEBUG),y)
 CFLAGS += -g -O0
-CXXFLAGS += -g -O0
 endif
