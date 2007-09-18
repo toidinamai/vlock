@@ -80,7 +80,7 @@ static char *get_console_name(int n)
     return NULL;
 
   /* format the virtual terminal filename from the number */
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined (__FreeBSD_kernel__)
   namelen = snprintf(name, sizeof name, VTNAME, n - 1);
 #else
   namelen = snprintf(name, sizeof name, VTNAME, n);
