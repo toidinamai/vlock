@@ -1,3 +1,16 @@
+/* process.c -- child process routines for vlock,
+ *              the VT locking program for linux
+ *
+ * This program is copyright (C) 2007 Frank Benkstein, and is free
+ * software which is freely distributable under the terms of the
+ * GNU General Public License version 2, included as the file COPYING in this
+ * distribution.  It is NOT public domain software, and any
+ * redistribution not permitted by the GNU General Public License is
+ * expressly forbidden without prior written permission from
+ * the author.
+ *
+ */
+
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
@@ -7,82 +20,104 @@
 
 #include "process.h"
 
+/* Do nothing. */
 static void ignore_sigalarm(int __attribute__((unused)) signum)
 {
-  // ignore
 }
 
 bool wait_for_death(pid_t pid, long sec, long usec)
 {
   int status;
-  struct sigaction act, oldact;
-  struct itimerval timer, otimer;
+  struct sigaction act;
+  struct sigaction oldact;
+  struct itimerval timer
+  struct itimerval otimer;
   bool result;
 
-  // ignore SIGALRM
+  /* Ignore SIGALRM.  The handler must be a real function instead of SIG_IGN
+   * otherwise waitpid() would not get interrupted.
+   *
+   * There is a small window here where a previously set alarm might be
+   * ignored.  */
   sigemptyset(&act.sa_mask);
   act.sa_handler = ignore_sigalarm;
   act.sa_flags = 0;
   sigaction(SIGALRM, &act, &oldact);
 
-  // initialize timer
-  timer.it_interval.tv_sec = 0;
-  timer.it_interval.tv_usec = 0;
+  /* Initialize the timer. */
   timer.it_value.tv_sec = sec;
   timer.it_value.tv_usec = usec;
+  /* No repetition. */
+  timer.it_interval.tv_sec = 0;
+  timer.it_interval.tv_usec = 0;
 
-  // set timer
+  /* Set the timer. */
   setitimer(ITIMER_REAL, &timer, &otimer);
 
-  // wait until interupted by timer
+  /* Wait until the child exits or the timer fires. */
   result = (waitpid(pid, &status, 0) == pid);
 
-  // restore signal handler
-  sigaction(SIGALRM, &oldact, NULL);
+  /* Possible race condition.  If an alarm was set before it may get ignored.
+   * This is probably better than getting killed by our own alarm. */
 
-  // restore timer
+  /* Restore the timer. */
   setitimer(ITIMER_REAL, &otimer, NULL);
+
+  /* Restore signal handler for SIGALRM. */
+  sigaction(SIGALRM, &oldact, NULL);
 
   return result;
 }
 
+/* Try hard to kill the given child process. */
 void ensure_death(pid_t pid)
 {
   int status;
 
-  // look if already dead
-  if (waitpid(pid, &status, WNOHANG) == pid)
-    return;
+  switch (waitpid(pid, &status, WNOHANG)) {
+    case -1:
+      /* Not your child? */
+      return;
+    case 0:
+      /* Not dead yet.  Continue. */
+      break;
+    default:
+      /* Already dead.  Nothing to do. */
+      return;
+  }
 
-  // kill!!!
+  /* Send SIGTERM. */
   (void) kill(pid, SIGTERM);
 
-  // wait 500ms for death
+  /* SIGTERM handler (if any) has 500ms to finish. */
   if (wait_for_death(pid, 0, 500000L))
     return;
 
-  // kill harder!!!
+  // Send SIGKILL. */
   (void) kill(pid, SIGKILL);
+  /* Child may be stopped.  Send SIGCONT just to be sure. */
   (void) kill(pid, SIGCONT);
 
-  // wait until dead
+  /* Wait until dead.  Shouldn't take long. */
   (void) waitpid(pid, &status, 0);
 }
 
+/* Close all possibly open file descriptors except STDIN_FILENO, STDOUT_FILENO
+ * and STDERR_FILENO. */
 void close_all_fds(void)
 {
   struct rlimit r;
   int maxfd;
 
-  // get the maximum number of file descriptors
+  /* Get the maximum number of file descriptors. */
   if (getrlimit(RLIMIT_NOFILE, &r) == 0)
     maxfd = r.rlim_cur;
   else
-    // hopefully safe default
+    /* Hopefully safe default. */
     maxfd = 1024;
 
-  // close all file descriptors except STDIN_FILENO, STDOUT_FILENO and
-  // STDERR_FILENO
+  /* Close all possibly open file descriptors except STDIN_FILENO,
+   * STDOUT_FILENO and STDERR_FILENO. */
   for (int i = 0; i < maxfd; i++) {
     switch (i) {
       case STDIN_FILENO:
@@ -91,6 +126,7 @@ void close_all_fds(void)
         break;
       default:
         (void) close(i);
+        break;
     }
   }
 }
