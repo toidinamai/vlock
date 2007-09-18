@@ -33,9 +33,6 @@
 
 #include "plugin.h"
 
-/* Hard coded module path. */
-#define VLOCK_MODULE_DIR PREFIX "/lib/vlock/modules"
-
 /* A hook function as defined by a module. */
 typedef bool (*module_hook_function)(void **);
 

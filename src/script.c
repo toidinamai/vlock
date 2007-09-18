@@ -48,9 +48,6 @@
 
 #include "plugin.h"
 
-/* Hard coded module path. */
-#define VLOCK_SCRIPT_DIR PREFIX "/lib/vlock/scripts"
-
 struct script_context 
 {
   /* The pipe file descriptor that is connected to the script's stdin. */

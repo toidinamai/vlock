@@ -31,6 +31,10 @@ VLOCK_MODULE_MODE =
 PREFIX = /usr/local
 # installation root
 DESTDIR =
+# path where modules will be located
+VLOCK_MODULE_DIR = $(PREFIX)/lib/vlock/modules
+# path where scripts will be located
+VLOCK_SCRIPT_DIR = $(PREFIX)/lib/vlock/scripts
 
 ### programs ###
 
