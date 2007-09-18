@@ -3,17 +3,13 @@ high
 
 - comments
 - documentation
-- better error handling in src/plugins.c
+- document plugins
 
 medium
 ------
 
-- make it possible to use vlock-all without USE_PLUGINS
-- do not require key press when no plugin with a vlock_save_abort
-  hook is active
-- use access() instead of uid changes to secure plugin loading
 - generate error on invalid script
-- improve script code the check for failures in call_hook only once
+- improve script code: check for failures in call_hook only once
 - ensure_* functions: output __FILE__, __LINENO__
 
 low
