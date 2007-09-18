@@ -8,13 +8,9 @@ endif
 
 ifndef VLOCK_GROUP
 VLOCK_GROUP = $(ROOT_GROUP)
-ifndef VLOCK_MODULE_MODE
-VLOCK_MODULE_MODE = 0755
 endif
-else # VLOCK_MODULE_GROUP is defined
 ifndef VLOCK_MODULE_MODE
 VLOCK_MODULE_MODE = 0750
-endif
 endif
 
 ifeq ($(origin MODULES),undefined)
