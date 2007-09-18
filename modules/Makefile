@@ -22,12 +22,9 @@ all.o : override CFLAGS += -I../src
 all.o: all.c ../src/console_switch.h
 
 .PHONY: install-%
-install-% : MODULE_SCRIPT=$(<:.so=.sh)
 install-%: %
-	$(MKDIR_P) $(DESTDIR)$(PREFIX)/lib/vlock/modules
-	$(INSTALL) -m $(MODULE_MODE) -o root -g $(MODULE_GROUP) $< $(DESTDIR)$(PREFIX)/lib/vlock/modules/$<
-	[ ! -e $(MODULE_SCRIPT) ] || \
-	  $(INSTALL) -m 0644 -o root -g $(ROOT_GROUP) $(MODULE_SCRIPT) $(DESTDIR)$(PREFIX)/lib/vlock/modules/$(MODULE_SCRIPT)
+	$(MKDIR_P) $(DESTDIR)$(VLOCK_MODULE_DIR)
+	$(INSTALL) -m $(MODULE_MODE) -o root -g $(MODULE_GROUP) $< $(DESTDIR)$(VLOCK_MODULE_DIR)/$<
 
 %.so : LDFLAGS += -shared
 %.so: %.o
