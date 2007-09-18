@@ -13,7 +13,7 @@ medium
   hook is active
 - use access() instead of uid changes to secure plugin loading
 - generate error on invalid script
-- check Script for race conditions
+- improve script code the check for failures in call_hook only once
 - ensure_* functions: output __FILE__, __LINENO__
 
 low
