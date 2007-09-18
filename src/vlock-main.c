@@ -148,10 +148,15 @@ static void auth_loop(const char *username)
 #ifdef USE_PLUGINS
       plugin_hook("vlock_save");
       /* wait for any key to be pressed */
-      (void) wait_for_character(NULL, NULL);
+      c = wait_for_character(NULL, NULL);
       plugin_hook("vlock_save_abort");
-#endif
+
+      /* do not require enter to be pressed twice */
+      if (c != '\n')
+        continue;
+#else
       continue;
+#endif
     }
 
     if (auth(username, prompt_timeout))
