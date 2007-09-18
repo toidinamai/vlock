@@ -124,7 +124,11 @@ main() {
        exit
        ;;
       -v|--version)
-        echo "vlock version ${VLOCK_VERSION}" >&2
+        if [ "${VLOCK_USE_PLUGINS}" = "y" ] ; then
+          echo >&2 "vlock version ${VLOCK_VERSION}"
+        else
+          echo >&2 "vlock version ${VLOCK_VERSION} (no plugin support)"
+        fi
         exit
         ;;
       --)
