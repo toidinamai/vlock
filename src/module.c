@@ -88,6 +88,7 @@ static void close_module(struct plugin *m)
 {
   struct module_context *context = m->context;
   dlclose(context->dl_handle);
+  free(context);
 }
 
 static bool call_module_hook(struct plugin *m, const char *hook_name)
