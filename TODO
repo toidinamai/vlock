@@ -20,3 +20,4 @@ low
 ---
 
 - screensavers (aalib, directfb)
+- test impact of inlining list code
