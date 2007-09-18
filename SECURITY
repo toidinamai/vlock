@@ -3,60 +3,47 @@ OVERVIEW
 
 vlock is a denial of service tool.  Linux allows any user logged into the
 virtual console to lock the system completely.  vlock takes this one step
-further and grants this ability to any user who is able to run the vlock-new
-program.
+further and potenially grants this ability (and potentially other, even more
+hazardous ones) to any user through the use of plugins.
 
-The default installation sets permission that allow any user to run vlock-new
-and is therefore insecure.  If you have a notion of trusted users it is
-possible to set the VLOCK_GROUP variable while installing vlock like so::
+The default installation sets permission that allow only users in the root
+group (or wheel on FreeBSD) to run dangerous modules and therefore prefers
+security over usability.  To override this you may set the VLOCK_GROUP variable
+while installing vlock like so::
 
   make VLOCK_GROUP=vlock install
 
-This way only members of the vlock group will be able to lock the machine
-completely.  Others will still be able to lock their own console or terminal.
-
-Another possibility is to install vlock with the VLOCK_GROUP set to root and
-allow use of vlock through tools like sudo.  This approach, however, does not
-bring much advantage over the previous group based one.
-
-In the future the vlock-new optionally protected through PAM.
-
-Setting VLOCK_GROUP also affects vlock-nosysrq.
+This way only members of the vlock group will be able to use potentially
+dangerous modules.  Others will still be able to lock their own console or
+terminal and run plugins that are considered secure.
 
 DETAILS
 =======
 
-vlock-current
--------------
+vlock-main allows plugins to extend its functionality.  These plugins a
+separated into two groups:  modules and scripts.  Both are only loaded from
+locations that are specified at compile time.  It is extremely important that
+these directories are only writable by privileged users.
 
-This tool does the user authentication.  Once started it only exits when proper
-authentication was received.
+MODULES
+-------
 
-Depending on the system configuration it probably needs read access to
-/etc/shadow.  It may be possible to install it without any special permissions.
-Installing as a setuid-root program should be safe, though.
+Modules are shared objects that are loaded into vlock's address space.  Because
+vlock will most likely be installed setuid-root care must be taken that these
+modules are secure themselves and that access to potentially dangerous modules
+is limited to trusted users.  UNDER NO CIRCUMSTANCES MUST UNPRIVILEGED USERS BE
+ALLOWED TO PUT THEIR OWN MODULES INTO VLOCK'S MODULE DIRECTORY.  Doing this
+would allowing them to run any code they want with elevated privileges, i.e.
+as root.
 
-vlock-all
-----------
+SCRIPTS
+-------
 
-This tool disables console switching while running vlock-current.
-
-Disabling console switching is an unpriviledged operation in Linux.  Therefore
-this tool does not need any special permissions.
-
-vlock-new
----------
-
-This tool switches to a new console and runs vlock-all there.  It is similar to
-using openvt(1) but much simpler.
-
-To access the new virtual console vlock-new needs permissions on /dev/ttyXX.
-It must therefore be installed as a setuid-root program.
-
-vlock-nosysrq
--------------
-
-This tool disables the magic SysRQ key while running vlock-all or vlock-new.
-
-To access the according sysctl file at /proc/sys/kernel/sysrq it should be
-installed as a setuid-root program.
+Scripts may be any kind of executables located in vlock's script directory.
+They are run with with lowered privileges, i.e. the same as the user who
+started vlock, in a separate process.  They also don't have direct access to
+the terminal vlock runs on and thus may be considered a relatively secure
+alternative to modules.  For any privileged operations they want to perform
+they have to use helpers such as sudo or (not recommended) be setuid binaries
+themselves.  Although less dangerous as modules vlock's script directory must
+also be protected to prevent stealing privileges from other users.
