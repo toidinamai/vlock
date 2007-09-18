@@ -114,7 +114,7 @@ void unlock_console_switch(void)
 {
   /* Restore virtual console mode. */
   if (console_switch_locked) {
-    console_switch_locked = (ioctl(STDIN_FILENO, VT_SETMODE, &vtm) <= 0);
+    console_switch_locked = (ioctl(STDIN_FILENO, VT_SETMODE, &vtm) < 0);
 
     if (console_switch_locked) {
       perror("could not restore virtual console mode");
