@@ -157,7 +157,7 @@ main() {
   export_if_set VLOCK_TIMEOUT VLOCK_PROMPT_TIMEOUT
   export_if_set VLOCK_MESSAGE VLOCK_ALL_MESSAGE VLOCK_CURRENT_MESSAGE
 
-  if [ "${VLOCK_PLUGINS}" = "y" ] ; then
+  if [ "${VLOCK_USE_PLUGINS}" = "y" ] ; then
     exec "${VLOCK_MAIN}" ${plugins} ${VLOCK_PLUGINS} "$@"
   else
     exec "${VLOCK_MAIN}" ${plugins}
