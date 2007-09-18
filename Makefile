@@ -73,8 +73,7 @@ vlock: vlock.sh config.mk Makefile
 		$< > $@.tmp
 	mv -f $@.tmp $@
 
-override CFLAGS += -Isrc -DPREFIX="\"$(PREFIX)\""
-override CXXFLAGS += -Isrc -DPREFIX="\"$(PREFIX)\""
+override CFLAGS += -Isrc
 
 vlock-main: vlock-main.o prompt.o auth-$(AUTH_METHOD).o console_switch.o util.o
 
@@ -83,7 +82,9 @@ auth-shadow.o: auth-shadow.c prompt.h auth.h
 prompt.o: prompt.c prompt.h
 vlock-main.o: vlock-main.c auth.h prompt.h util.h
 plugins.o: plugins.c tsort.h plugin.h plugins.h list.h util.h
+module.o : override CFLAGS += -DPREFIX="\"$(PREFIX)\""
 module.o: module.c plugin.h list.h util.h
+script.o : override CFLAGS += -DPREFIX="\"$(PREFIX)\""
 script.o: script.c plugin.h process.h list.h util.h
 plugin.o: plugin.c plugin.h list.h util.h
 tsort.o: tsort.c tsort.h list.h
