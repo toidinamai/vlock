@@ -84,11 +84,12 @@ prompt.o: prompt.c prompt.h
 vlock-main.o: vlock-main.c auth.h prompt.h util.h
 plugins.o: plugins.c tsort.h plugin.h plugins.h list.h util.h
 module.o: module.c plugin.h list.h util.h
-script.o: script.c plugin.h list.h util.h
+script.o: script.c plugin.h process.h list.h util.h
 plugin.o: plugin.c plugin.h list.h util.h
 tsort.o: tsort.c tsort.h list.h
 list.o: list.c list.h util.h
 console_switch.o: console_switch.c console_switch.h
+process.o: process.c process.h
 util.o: util.c util.h
 
 ifneq ($(USE_ROOT_PASS),y)
@@ -104,7 +105,7 @@ vlock-main : override LDFLAGS += $(CRYPT_LIB)
 endif
 
 ifeq ($(USE_PLUGINS),y)
-vlock-main: plugins.o plugin.o module.o script.o tsort.o list.o
+vlock-main: plugins.o plugin.o module.o process.o script.o tsort.o list.o
 # -rdynamic is needed so that the all plugin can access the symbols from console_switch.o
 vlock-main : override LDFLAGS += $(DL_LIB) -rdynamic
 vlock-main.o : override CFLAGS += -DUSE_PLUGINS
