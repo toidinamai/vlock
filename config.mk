@@ -58,8 +58,8 @@ CFLAGS = -g -O0 -Wall -W -pedantic -std=gnu99
 endif
 # linker flags
 LDFLAGS = 
-# linker flags needed for dlopen and friends
-DL_LIB = -ldl
+# linker flags needed for dlopen and friends, default is system dependend
+# DL_LIB = -ldl
 # linker flags needed for crypt
 CRYPT_LIB = -lcrypt
 # linker flags needed for pam

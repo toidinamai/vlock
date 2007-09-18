@@ -13,3 +13,9 @@ else ifneq (,$(findstring FreeBSD,$(UNAME)))
 MODULES = all.so new.so
 endif
 endif
+
+ifeq ($(origin DL_LIB),undefined)
+ifneq ($(UNAME),FreeBSD)
+DL_LIB = -ldl
+endif
+endif
