@@ -41,6 +41,8 @@ static struct script_context *launch_script(const char *path);
 static bool wait_for_death(pid_t pid, long sec, long usec);
 static void ensure_death(pid_t pid);
 static void close_all_fds(void);
+static void close_script(struct plugin *s);
+static bool call_script_hook(struct plugin *s, const char *hook_name);
 
 struct plugin *open_script(const char *name, char **error)
 {
@@ -61,6 +63,8 @@ struct plugin *open_script(const char *name, char **error)
     get_dependency(path, dependency_names[i], s->dependencies[i]);
 
   s->context = launch_script(path);
+  s->close = close_script;
+  s->call_hook = call_script_hook;
 
   free(path);
 
@@ -72,6 +76,35 @@ access_error:
 path_error:
   __destroy_plugin(s);
   return NULL;
+}
+
+static bool call_script_hook(struct plugin *s, const char *hook_name)
+{
+  struct script_context *context = s->context;
+  char *data;
+  ssize_t data_length;
+  ssize_t length;
+  struct sigaction act, oldact;
+
+  data_length = asprintf(&data, "%s\n", hook_name);
+
+  if (data_length < 0)
+    fatal_error("memory allocation failed");
+
+  // ignore SIGPIPE
+  (void) sigemptyset(&(act.sa_mask));
+  act.sa_flags = SA_RESTART;
+  act.sa_handler = SIG_IGN;
+  (void) sigaction(SIGPIPE, &act, &oldact);
+
+  // send hook name and line feed through the pipe
+  length = write(context->fd, data, data_length);
+
+  // restore SIGPIPE handler
+  (void) sigaction(SIGPIPE, &oldact, NULL);
+
+  // scripts fail silently
+  return (length == data_length);
 }
 
 static void get_dependency(const char *path, const char *dependency_name,
@@ -235,6 +268,16 @@ static struct script_context *launch_script(const char *path)
     free(script);
     fatal_error("fork() failed");
   }
+}
+
+static void close_script(struct plugin *s)
+{
+  struct script_context *context = s->context;
+
+  (void) close(context->fd);
+  if (!wait_for_death(context->pid, 0, 500000L))
+    ensure_death(context->pid);
+  free(context);
 }
 
 static void ignore_sigalarm(int __attribute__((unused)) signum)
