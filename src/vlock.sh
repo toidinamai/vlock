@@ -70,7 +70,7 @@ print_help() {
 # export arguments only if they are set
 export_if_set() {
   while [ $# -gt 0 ] ; do
-    if eval [ -n "\"\${$1}\"" ] ; then
+    if ( eval [ -n "\"\${$1}\"" ] ) ; then
       eval export $1
     fi
     shift
