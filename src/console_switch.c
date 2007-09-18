@@ -53,6 +53,9 @@ static void acquire_vt(int __attribute__ ((__unused__)) signum)
 
 /* Console mode before switching was disabled. */
 static struct vt_mode vtm;
+/* Signal actions before console handling was disabled. */
+static struct sigaction sa_usr1;
+static struct sigaction sa_usr2;
 
 /* Disable virtual console switching in the kernel.  If disabling fails false
  * is returned and *error is set to a diagnostic message that must be freed by
@@ -79,9 +82,9 @@ bool lock_console_switch(char **error)
   (void) sigemptyset(&(sa.sa_mask));
   sa.sa_flags = SA_RESTART;
   sa.sa_handler = release_vt;
-  (void) sigaction(SIGUSR1, &sa, NULL);
+  (void) sigaction(SIGUSR1, &sa, &sa_usr1);
   sa.sa_handler = acquire_vt;
-  (void) sigaction(SIGUSR2, &sa, NULL);
+  (void) sigaction(SIGUSR2, &sa, &sa_usr2);
 
   /* Set terminal switching to be process governed. */
   lock_vtm.mode = VT_PROCESS;
@@ -97,6 +100,8 @@ bool lock_console_switch(char **error)
    * switching through the signal handlers above. */
   if (ioctl(STDIN_FILENO, VT_SETMODE, &lock_vtm) < 0) {
     (void) asprintf(error, "could not set virtual console mode: %s", strerror(errno));
+    (void) sigaction(SIGUSR1, &sa_usr1, NULL);
+    (void) sigaction(SIGUSR2, &sa_usr2, NULL);
     return false;
   }
 
@@ -111,7 +116,11 @@ void unlock_console_switch(void)
   if (console_switch_locked) {
     console_switch_locked = (ioctl(STDIN_FILENO, VT_SETMODE, &vtm) <= 0);
 
-    if (console_switch_locked)
+    if (console_switch_locked) {
       perror("could not restore virtual console mode");
+    } else {
+      (void) sigaction(SIGUSR1, &sa_usr1, NULL);
+      (void) sigaction(SIGUSR2, &sa_usr2, NULL);
+    }
   }
 }
