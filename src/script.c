@@ -229,7 +229,7 @@ static struct script_context *launch_script(const char *path)
 
   (void) close(pipe_fds[0]);
 
-  if (script->pid < 0) {
+  if (script->pid > 0) {
     return script;
   } else {
     free(script);
