@@ -34,7 +34,7 @@ struct plugin *open_module(const char *name, char **error)
 {
   char *path;
   struct plugin *m = __allocate_plugin(name);
-  struct module_context *context = ensure_malloc(sizeof (struct module_context));
+  struct module_context *context = ensure_malloc(sizeof *context);
 
   context->module_data = NULL;
 
@@ -45,14 +45,14 @@ struct plugin *open_module(const char *name, char **error)
 
   if (access(path, R_OK) < 0) {
     (void) asprintf(error, "%s: %s", path, strerror(errno));
-    goto file_error;
+    goto access_error;
   }
 
   context->dl_handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
 
   if (context->dl_handle == NULL) {
     *error = strdup(dlerror());
-    goto file_error;
+    goto dlopen_error;
   }
 
   free(path);
@@ -74,7 +74,8 @@ struct plugin *open_module(const char *name, char **error)
 
   return m;
 
-file_error:
+dlopen_error:
+access_error:
   free(path);
 
 path_error:
