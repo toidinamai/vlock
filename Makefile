@@ -12,6 +12,10 @@ PROGRAMS = vlock vlock-main
 .PHONY: all
 all: $(PROGRAMS)
 
+.PHONY: debug
+debug:
+	@$(MAKE) DEBUG=y
+
 ifeq ($(USE_PLUGINS),y)
 all: plugins
 endif
