@@ -67,6 +67,16 @@ print_help() {
   echo >&2 "-h or --help: Print this help message and exit."
 }
 
+# export arguments only if they are set
+export_if_set() {
+  while [ $# -gt 0 ] ; do
+    if eval [ -n "\"\${$1}\"" ] ; then
+      eval export $1
+    fi
+    shift
+  done
+}
+
 main() {
   local options long_options short_options plugins
 
@@ -144,8 +154,8 @@ main() {
   done
 
   # export variables for vlock-main
-  export VLOCK_TIMEOUT VLOCK_PROMPT_TIMEOUT
-  export VLOCK_MESSAGE VLOCK_ALL_MESSAGE VLOCK_CURRENT_MESSAGE
+  export_if_set VLOCK_TIMEOUT VLOCK_PROMPT_TIMEOUT
+  export_if_set VLOCK_MESSAGE VLOCK_ALL_MESSAGE VLOCK_CURRENT_MESSAGE
 
   if [ "${VLOCK_PLUGINS}" = "y" ] ; then
     exec "${VLOCK_MAIN}" ${plugins} ${VLOCK_PLUGINS} "$@"
