@@ -19,11 +19,10 @@ SCRIPTS =
 # root's group, default is architecture dependent
 ROOT_GROUP =
 
-# group to install vlock-main with, defaults to ROOT_GROUP
-VLOCK_GROUP =
-# mode to install privileged plugins with, defaults to 0750 if VLOCK_GROUP
-# is unset and 0755 otherwise
-VLOCK_MODULE_MODE =
+# group to install vlock-main with
+VLOCK_GROUP = $(ROOT_GROUP)
+# mode to install privileged plugins with
+VLOCK_MODULE_MODE = 0750
 
 ### paths ###
 
@@ -52,7 +51,11 @@ MKDIR_P = mkdir -p
 ### compiler and linker settings ###
 
 # C compiler flags
+ifneq ($(DEBUG),y)
 CFLAGS = -O2 -Wall -W -pedantic -std=gnu99
+else
+CFLAGS = -g -O0 -Wall -W -pedantic -std=gnu99
+endif
 # linker flags
 LDFLAGS = 
 # linker flags needed for dlopen and friends
