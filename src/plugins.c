@@ -1,3 +1,15 @@
+/* plugins.c -- plugins for vlock, the VT locking program for linux
+ *
+ * This program is copyright (C) 2007 Frank Benkstein, and is free
+ * software which is freely distributable under the terms of the
+ * GNU General Public License version 2, included as the file COPYING in this
+ * distribution.  It is NOT public domain software, and any
+ * redistribution not permitted by the GNU General Public License is
+ * expressly forbidden without prior written permission from
+ * the author.
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,6 +65,7 @@ const struct hook hooks[nr_hooks] = {
 /* exported functions */
 /**********************/
 
+/* helper declarations */
 static struct plugin *__load_plugin(const char *name);
 static void __resolve_depedencies(void);
 static void sort_plugins(void);
@@ -79,6 +92,7 @@ void unload_plugins(void)
 void plugin_hook(const char *hook_name)
 {
   for (size_t i = 0; i < nr_hooks; i++)
+    /* Get the handler and call it. */
     if (strcmp(hook_name, hooks[i].name) == 0) {
       hooks[i].handler(hook_name);
       return;
@@ -102,6 +116,7 @@ static struct plugin *get_plugin(const char *name)
   return NULL;
 }
 
+/* Load and return the named plugin.  Aborts on error. */
 static struct plugin *__load_plugin(const char *name)
 {
   char *e1 = NULL;
@@ -136,13 +151,14 @@ static struct plugin *__load_plugin(const char *name)
   return p;
 }
 
+/* Resolve the dependencies of the plugins. */
 static void __resolve_depedencies(void)
 {
   struct list *required_plugins = list_new();
 
-  /* load plugins that are required, this automagically takes care of plugins
+  /* Load plugins that are required.  This automagically takes care of plugins
    * that are required by the plugins loaded here because they are appended to
-   * the end of the list */
+   * the end of the list. */
   list_for_each(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
 
@@ -150,7 +166,7 @@ static void __resolve_depedencies(void)
       list_append(required_plugins, __load_plugin(dependency_item->data));
   }
 
-  /* fail if a plugins that is needed is not loaded */
+  /* Fail if a plugins that is needed is not loaded. */
   list_for_each(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
 
@@ -165,7 +181,7 @@ static void __resolve_depedencies(void)
     }
   }
 
-  /* unload plugins whose prerequisites are not present */
+  /* Unload plugins whose prerequisites are not present. */
   list_for_each_manual(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
     bool dependencies_loaded = true;
@@ -177,7 +193,7 @@ static void __resolve_depedencies(void)
       if (q == NULL) {
         dependencies_loaded = false;
 
-        /* abort if dependencies not met and plugin is required */
+        /* Abort if dependencies not met and plugin is required. */
         if (list_find(required_plugins, p) != NULL)
           fatal_error(
               "vlock-plugins: '%s' is required by some other plugin\n"
@@ -198,7 +214,7 @@ static void __resolve_depedencies(void)
 
   list_free(required_plugins);
 
-  /* fail if conflicting plugins are loaded */
+  /* Fail if conflicting plugins are loaded. */
   list_for_each(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
 
@@ -243,6 +259,8 @@ static struct edge *make_edge(struct plugin *p, struct plugin *s)
   return e;
 }
 
+/* Get the edges of the plugin graph specified by the plugins' "preceeds" and
+ * "succeeds" dependencies. */
 static struct list *get_edges(void)
 {
   struct list *edges = list_new();
@@ -269,6 +287,9 @@ static struct list *get_edges(void)
   return edges;
 }
 
+/************/
+/* handlers */
+/************/
 
 void handle_vlock_start(const char *hook_name)
 {
