@@ -144,11 +144,8 @@ main() {
   done
 
   # export variables for vlock-main
-  export VLOCK_TIMEOUT
-  export VLOCK_PROMPT_TIMEOUT
-  export VLOCK_MESSAGE
-  export VLOCK_ALL_MESSAGE
-  export VLOCK_CURRENT_MESSAGE
+  export VLOCK_TIMEOUT VLOCK_PROMPT_TIMEOUT
+  export VLOCK_MESSAGE VLOCK_ALL_MESSAGE VLOCK_CURRENT_MESSAGE
 
   if [ "${VLOCK_PLUGINS}" = "y" ] ; then
     exec "${VLOCK_MAIN}" ${plugins} ${VLOCK_PLUGINS} "$@"
