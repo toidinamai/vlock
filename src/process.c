@@ -30,7 +30,7 @@ bool wait_for_death(pid_t pid, long sec, long usec)
   int status;
   struct sigaction act;
   struct sigaction oldact;
-  struct itimerval timer
+  struct itimerval timer;
   struct itimerval otimer;
   bool result;
 
