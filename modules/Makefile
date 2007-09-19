@@ -22,7 +22,7 @@ all.o: all.c ../src/console_switch.h
 
 #generic build rule
 
-%.so : LDFLAGS += -shared
+%.so : override LDFLAGS += -shared
 %.so: %.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
@@ -35,8 +35,8 @@ install-nosysrq.so : MODULE_MODE=$(VLOCK_MODULE_MODE)
 
 # generic installation rule
 
-.PHONY: install-%
-install-%: %
+.PHONY: install-%.so
+install-%.so: %.so
 	$(MKDIR_P) $(DESTDIR)$(VLOCK_MODULE_DIR)
 	$(INSTALL) -m $(MODULE_MODE) -o root -g $(MODULE_GROUP) $< $(DESTDIR)$(VLOCK_MODULE_DIR)/$<
 
