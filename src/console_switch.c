@@ -1,3 +1,16 @@
+/* console_switch.c -- console grabbing routines for vlock,
+ *                     the VT locking program for linux
+ *
+ * This program is copyright (C) 2007 Frank Benkstein, and is free
+ * software which is freely distributable under the terms of the
+ * GNU General Public License version 2, included as the file COPYING in this
+ * distribution.  It is NOT public domain software, and any
+ * redistribution not permitted by the GNU General Public License is
+ * expressly forbidden without prior written permission from
+ * the author.
+ *
+ */
+
 #if !defined(__FreeBSD__) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE
 #endif
@@ -19,9 +32,10 @@
 
 #include "console_switch.h"
 
+/* Is console switching currently disabled? */
 bool console_switch_locked = false;
 
-/* This handler is called by a signal whenever a user tries to
+/* This handler is called whenever a user tries to
  * switch away from this virtual console. */
 static void release_vt(int __attribute__ ((__unused__)) signum)
 {
@@ -37,10 +51,18 @@ static void acquire_vt(int __attribute__ ((__unused__)) signum)
   (void) ioctl(STDIN_FILENO, VT_RELDISP, VT_ACKACQ);
 }
 
+/* Console mode before switching was disabled. */
 static struct vt_mode vtm;
+/* Signal actions before console handling was disabled. */
+static struct sigaction sa_usr1;
+static struct sigaction sa_usr2;
 
+/* Disable virtual console switching in the kernel.  If disabling fails false
+ * is returned and *error is set to a diagnostic message that must be freed by
+ * the caller.  */
 bool lock_console_switch(char **error)
 {
+  /* Console mode when switching is disabled. */
   struct vt_mode lock_vtm;
   struct sigaction sa;
 
@@ -54,30 +76,32 @@ bool lock_console_switch(char **error)
     return false;
   }
 
-  /* Use a copy of the current virtual console mode. */
+  /* Copy the current virtual console mode. */
   lock_vtm = vtm;
 
   (void) sigemptyset(&(sa.sa_mask));
   sa.sa_flags = SA_RESTART;
   sa.sa_handler = release_vt;
-  (void) sigaction(SIGUSR1, &sa, NULL);
+  (void) sigaction(SIGUSR1, &sa, &sa_usr1);
   sa.sa_handler = acquire_vt;
-  (void) sigaction(SIGUSR2, &sa, NULL);
+  (void) sigaction(SIGUSR2, &sa, &sa_usr2);
 
-  /* set terminal switching to be process governed */
+  /* Set terminal switching to be process governed. */
   lock_vtm.mode = VT_PROCESS;
-  /* set terminal release signal, i.e. sent when switching away */
+  /* Set terminal release signal, i.e. sent when switching away. */
   lock_vtm.relsig = SIGUSR1;
-  /* set terminal acquire signal, i.e. sent when switching here */
+  /* Set terminal acquire signal, i.e. sent when switching here. */
   lock_vtm.acqsig = SIGUSR2;
-  /* set terminal free signal, not implemented on either FreeBSD or Linux */
-  /* Linux ignores it but FreeBSD wants a valid signal number here */
+  /* Set terminal free signal, not implemented on either FreeBSD or Linux. */
+  /* Linux ignores this but FreeBSD wants a valid signal number here. */
   lock_vtm.frsig = SIGHUP;
 
-  /* set virtual console mode to be process governed
-   * thus disabling console switching */
+  /* Set virtual console mode to be process governed thus disabling console
+   * switching through the signal handlers above. */
   if (ioctl(STDIN_FILENO, VT_SETMODE, &lock_vtm) < 0) {
     (void) asprintf(error, "could not set virtual console mode: %s", strerror(errno));
+    (void) sigaction(SIGUSR1, &sa_usr1, NULL);
+    (void) sigaction(SIGUSR2, &sa_usr2, NULL);
     return false;
   }
 
@@ -85,13 +109,18 @@ bool lock_console_switch(char **error)
   return true;
 }
 
+/* Reenable console switching if it was previously disabled. */
 void unlock_console_switch(void)
 {
-  /* restore virtual console mode */
+  /* Restore virtual console mode. */
   if (console_switch_locked) {
-    if (ioctl(STDIN_FILENO, VT_SETMODE, &vtm) == 0)
-      console_switch_locked = false;
-    else
-      perror("vlock-all: could not restore console mode");
+    console_switch_locked = (ioctl(STDIN_FILENO, VT_SETMODE, &vtm) <= 0);
+
+    if (console_switch_locked) {
+      perror("could not restore virtual console mode");
+    } else {
+      (void) sigaction(SIGUSR1, &sa_usr1, NULL);
+      (void) sigaction(SIGUSR2, &sa_usr2, NULL);
+    }
   }
 }

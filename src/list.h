@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+/* Single list item. */
 struct list_item
 {
   void *data;
@@ -21,43 +22,63 @@ struct list_item
   struct list_item *previous;
 };
 
+/* Whole list. */
 struct list
 {
   struct list_item *first;
   struct list_item *last;
 };
 
+/* All list functions abort() on memory allocation errors. */
+
+/* Create a new, empty list. */
 struct list *list_new(void);
+/* Create a (shallow) copy of the given list. */
 struct list *list_copy(struct list *l);
 
+/* Deallocate the given list and all items. */
 void list_free(struct list *l);
 
+/* Calculate the number of items in the given list. */
 size_t list_length(struct list *l);
+
+/* Create a new list item with the given data and add it to the end of the
+ * list. */
 void list_append(struct list *l, void *data);
 
+/* Remove the given item from the list.  Returns the item following the deleted
+ * one or NULL if the given item was the last. */
 struct list_item *list_delete_item(struct list *l, struct list_item *item);
+
+/* Remove the first item with the given data.  Does nothing if no item has this
+ * data. */
 void list_delete(struct list *l, void *data);
 
+/* Find the first item with the given data.  Returns NULL if no item has this
+ * data. */
 struct list_item *list_find(struct list *l, void *data);
 
+/* Generic list iteration macro. */
 #define list_for_each_from_increment(list, item, start, increment) \
   for (struct list_item *item = (start); item != NULL; (increment))
 
-#define list_for_each_from(list, item, start) \
-  for (struct list_item *item = (start); item != NULL;)
-
+/* Iterate over the whole list. */
 #define list_for_each(list, item) \
   list_for_each_from_increment((list), item, (list)->first, item = item->next)
 
+/* Iterate over the list while deleting every item after the iteration. */
 #define list_delete_for_each(list, item) \
   list_for_each_from_increment((list), item, (list)->first, item = list_delete_item((list), item))
 
+/* Iterate over the list.  Incrementation must be done manually. */
 #define list_for_each_manual(list, item) \
-  list_for_each_from((list), item, (list)->first)
+  for (struct list_item *item = (list)->first; item != NULL;)
 
+/* Iterate backwards over list from the given start. */
 #define list_for_each_reverse_from(list, item, start) \
   list_for_each_from_increment((list), item, (start), item = item->previous)
 
+/* Iterate backwards over the whole list. */
 #define list_for_each_reverse(list, item) \
   list_for_each_reverse_from((list), item, (list)->last)
 
@@ -65,73 +86,3 @@ static inline bool list_is_empty(struct list *l)
 {
   return l->first == NULL;
 }
-
-#if 0
-/* Inspired by the doubly linked list code from glib:
- *
- * GLIB - Library of useful routines for C programming
- * Copyright (C) 1995-1997  Peter Mattis, Spencer Kimball and Josh MacDonald
- *
- * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
- * file for a list of people on the GLib Team.  See the ChangeLog
- * files for a list of changes.  These files are distributed with
- * GLib at ftp://ftp.gtk.org/pub/gtk/. 
- */
-
-/* An item of the list.
- *
- * Any item also represents the full list.
- *
- * An empty list is represented by the NULL pointer.
- */
-struct List {
-  void *data;
-  struct List *next;
-  struct List *previous;
-};
-
-/* Get the first item of the list.  Returns the first item of the list or NULL
- * if the list is empty. */
-struct List *list_first(struct List *list);
-
-/* Get the last item of the list.  Returns the last item of the list or NULL if
- * the list is empty. */
-struct List *list_last(struct List *list);
-
-/* Get the next item.  Returns the item after the given item or NULL if the
- * list is empty. */
-struct List *list_next(struct List *list);
-
-/* Get the previous item.  Returns the item before the given item or NULL if
- * the list is empty. */
-struct List *list_previous(struct List *list);
-
-/* Allocate a new list item with the given data pointer and append it to the
- * end of the list.  Returns the new start of the list.  Calls abort() on
- * memory errors. */
-struct List *list_append(struct List *list, void *data);
-
-/* Removes the first item with the given data pointer and deletes it from the
- * list.  Returns the new start of the list.  Does not free the data. */
-struct List *list_remove(struct List *list, void *data);
-
-/* Delete one item from the list.  Returns the new start of the list. */
-struct List *list_delete_link(struct List *list, struct List *item);
-
-/* Returns the first item with the given data pointer or NULL if none is found.
- */
-struct List *list_find(struct List *list, void *data);
-
-/* Make a copy of the list.  Returns a shallow copy of the entire list.  Calls
- * abort() on memory error. */
-struct List *list_copy(struct List *list);
-
-/* Free the entire list.  Does free the items'. */
-void list_free(struct List *list);
-
-#define list_for_each(list, item) \
-  for (struct List *item = list_first(list); item != NULL; item = list_next(item))
-
-#define list_reverse_for_each(list, item) \
-    for (struct List *item = list_last(plugins); item != NULL; item = list_previous(item))
-#endif

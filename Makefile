@@ -12,6 +12,10 @@ PROGRAMS = vlock vlock-main
 .PHONY: all
 all: $(PROGRAMS)
 
+.PHONY: debug
+debug:
+	@$(MAKE) DEBUG=y
+
 ifeq ($(USE_PLUGINS),y)
 all: plugins
 endif
@@ -70,11 +74,11 @@ vlock: vlock.sh config.mk Makefile
 		-e 's,%BOURNE_SHELL%,$(BOURNE_SHELL),' \
 		-e 's,%PREFIX%,$(PREFIX),' \
 		-e 's,%VLOCK_VERSION%,$(VLOCK_VERSION),' \
+		-e 's,%VLOCK_USE_PLUGINS%,$(USE_PLUGINS),' \
 		$< > $@.tmp
 	mv -f $@.tmp $@
 
-override CFLAGS += -Isrc -DPREFIX="\"$(PREFIX)\""
-override CXXFLAGS += -Isrc -DPREFIX="\"$(PREFIX)\""
+override CFLAGS += -Isrc
 
 vlock-main: vlock-main.o prompt.o auth-$(AUTH_METHOD).o console_switch.o util.o
 
@@ -82,13 +86,16 @@ auth-pam.o: auth-pam.c prompt.h auth.h
 auth-shadow.o: auth-shadow.c prompt.h auth.h
 prompt.o: prompt.c prompt.h
 vlock-main.o: vlock-main.c auth.h prompt.h util.h
-plugins.o: plugins.c tsort.h plugin.h plugins.h list.h
-module.o: module.c plugin.h list.h
-script.o: script.c plugin.h list.h
-plugin.o: plugin.c plugin.h list.h
+plugins.o: plugins.c tsort.h plugin.h plugins.h list.h util.h
+module.o : override CFLAGS += -DVLOCK_MODULE_DIR="\"$(VLOCK_MODULE_DIR)\""
+module.o: module.c plugin.h list.h util.h
+script.o : override CFLAGS += -DVLOCK_SCRIPT_DIR="\"$(VLOCK_SCRIPT_DIR)\""
+script.o: script.c plugin.h process.h list.h util.h
+plugin.o: plugin.c plugin.h list.h util.h
 tsort.o: tsort.c tsort.h list.h
-list.o: list.c list.h
+list.o: list.c list.h util.h
 console_switch.o: console_switch.c console_switch.h
+process.o: process.c process.h
 util.o: util.c util.h
 
 ifneq ($(USE_ROOT_PASS),y)
@@ -104,7 +111,7 @@ vlock-main : override LDFLAGS += $(CRYPT_LIB)
 endif
 
 ifeq ($(USE_PLUGINS),y)
-vlock-main: plugins.o plugin.o module.o script.o tsort.o list.o
+vlock-main: plugins.o plugin.o module.o process.o script.o tsort.o list.o
 # -rdynamic is needed so that the all plugin can access the symbols from console_switch.o
 vlock-main : override LDFLAGS += $(DL_LIB) -rdynamic
 vlock-main.o : override CFLAGS += -DUSE_PLUGINS

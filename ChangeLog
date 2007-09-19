@@ -1,3 +1,13 @@
+2007-09-19 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.2 alpha1
+
+	* Medium rewrite was undertaken.
+	* Support for plugins (modules and scripts) was added.
+	* vlock-all, vlock-new, and vlock-nosysrq were converted to modules.
+	* Other sample modules and scripts were added.
+	* vlock now tries to terminale cleanly if killed by SIGTERM and on errors.
+
 2007-09-08 Frank Benkstein <frank-vlock@benkstein.net>
 
 	vlock 2.1

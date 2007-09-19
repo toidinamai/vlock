@@ -19,11 +19,10 @@ SCRIPTS =
 # root's group, default is architecture dependent
 ROOT_GROUP =
 
-# group to install vlock-main with, defaults to ROOT_GROUP
-VLOCK_GROUP =
-# mode to install privileged plugins with, defaults to 0750 if VLOCK_GROUP
-# is unset and 0755 otherwise
-VLOCK_MODULE_MODE =
+# group to install vlock-main with
+VLOCK_GROUP = $(ROOT_GROUP)
+# mode to install privileged plugins with
+VLOCK_MODULE_MODE = 0750
 
 ### paths ###
 
@@ -31,6 +30,10 @@ VLOCK_MODULE_MODE =
 PREFIX = /usr/local
 # installation root
 DESTDIR =
+# path where modules will be located
+VLOCK_MODULE_DIR = $(PREFIX)/lib/vlock/modules
+# path where scripts will be located
+VLOCK_SCRIPT_DIR = $(PREFIX)/lib/vlock/scripts
 
 ### programs ###
 
@@ -38,8 +41,6 @@ DESTDIR =
 BOURNE_SHELL = /bin/sh
 # C compiler
 CC = gcc
-# C++ compiler
-CXX = g++
 # gnu install
 INSTALL = install
 # linker
@@ -50,13 +51,15 @@ MKDIR_P = mkdir -p
 ### compiler and linker settings ###
 
 # C compiler flags
+ifneq ($(DEBUG),y)
 CFLAGS = -O2 -Wall -W -pedantic -std=gnu99
-# C++ compiler flags
-CXXFLAGS = -O2 -Wall -W -pedantic
+else
+CFLAGS = -g -O0 -Wall -W -pedantic -std=gnu99
+endif
 # linker flags
 LDFLAGS = 
-# linker flags needed for dlopen and friends
-DL_LIB = -ldl
+# linker flags needed for dlopen and friends, default is system dependend
+# DL_LIB = -ldl
 # linker flags needed for crypt
 CRYPT_LIB = -lcrypt
 # linker flags needed for pam

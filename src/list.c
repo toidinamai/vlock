@@ -11,17 +11,6 @@
  *
  */
 
-/* Inspired by the doubly linked list code from glib:
- *
- * GLIB - Library of useful routines for C programming
- * Copyright (C) 1995-1997  Peter Mattis, Spencer Kimball and Josh MacDonald
- *
- * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
- * file for a list of people on the GLib Team.  See the ChangeLog
- * files for a list of changes.  These files are distributed with
- * GLib at ftp://ftp.gtk.org/pub/gtk/. 
- */
-
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -29,6 +18,7 @@
 
 #include "list.h"
 
+/* Create a new, empty list. */
 struct list *list_new(void)
 {
   struct list *l = ensure_malloc(sizeof *l);
@@ -37,6 +27,18 @@ struct list *list_new(void)
   return l;
 }
 
+/* Create a (shallow) copy of the given list. */
+struct list *list_copy(struct list *l)
+{
+  struct list *new_list = list_new();
+
+  list_for_each(l, item)
+    list_append(new_list, item->data);
+
+  return new_list;
+}
+
+/* Deallocate the given list and all items. */
 void list_free(struct list *l)
 {
   list_for_each_manual(l, item) {
@@ -48,6 +50,19 @@ void list_free(struct list *l)
   free(l);
 }
 
+/* Calculate the number of items in the given list. */
+size_t list_length(struct list *l)
+{
+  size_t length = 0;
+
+  list_for_each(l, item)
+    length++;
+
+  return length;
+}
+
+/* Create a new list item with the given data and add it to the end of the
+ * list. */
 void list_append(struct list *l, void *data)
 {
   struct list_item *item = ensure_malloc(sizeof *item);
@@ -65,26 +80,8 @@ void list_append(struct list *l, void *data)
     l->first = item;
 }
 
-struct list *list_copy(struct list *l)
-{
-  struct list *new_list = list_new();
-
-  list_for_each(l, item)
-    list_append(new_list, item->data);
-
-  return new_list;
-}
-
-size_t list_length(struct list *l)
-{
-  size_t length = 0;
-
-  list_for_each(l, item)
-    length++;
-
-  return length;
-}
-
+/* Remove the given item from the list.  Returns the item following the deleted
+ * one or NULL if the given item was the last. */
 struct list_item *list_delete_item(struct list *l, struct list_item *item)
 {
   struct list_item *next = item->next;
@@ -106,6 +103,8 @@ struct list_item *list_delete_item(struct list *l, struct list_item *item)
   return next;
 }
 
+/* Remove the first item with the given data.  Does nothing if no item has this
+ * data. */
 void list_delete(struct list *l, void *data)
 {
   struct list_item *item = list_find(l, data);
@@ -114,6 +113,8 @@ void list_delete(struct list *l, void *data)
     (void) list_delete_item(l, item);
 }
 
+/* Find the first item with the given data.  Returns NULL if no item has this
+ * data. */
 struct list_item *list_find(struct list *l, void *data)
 {
   list_for_each(l, item)
@@ -122,136 +123,3 @@ struct list_item *list_find(struct list *l, void *data)
 
   return NULL;
 }
-
-#if 0
-/* Like list_append() but returns the item that was added instead of the start
- * of the list. */
-static struct List *__list_append(struct List *list, void *data)
-{
-  struct List *new_item = malloc(sizeof (struct List));
-  struct List *last = list_last(list);
-
-  if (new_item == NULL) {
-    fprintf(stderr, "%s:%d failed to allocate new list item\n", __FILE__,
-            __LINE__);
-    abort();
-  }
-
-  new_item->data = data;
-  new_item->next = NULL;
-  new_item->previous = last;
-
-  if (last != NULL)
-    last->next = new_item;
-
-  return new_item;
-}
-
-struct List *list_append(struct List *list, void *data)
-{
-  struct List *new_item = __list_append(list, data);
-
-  if (list != NULL)
-    return list;
-  else
-    return new_item;
-}
-
-struct List *list_copy(struct List *list)
-{
-  struct List *new_list = NULL;
-  struct List *last = NULL;
-  struct List *item = list_first(list);
-
-  /* Make a copy of the first item.  It is now also the last item of the new
-   * list. */
-  if (item != NULL)
-    last = new_list = list_append(new_list, item->data);
-
-  /* Append all further items to the first. */
-  for (item = list_next(item); item != NULL; item = list_next(item))
-    last = __list_append(last, item->data);
-
-  return list_first(new_list);
-}
-
-struct List *list_first(struct List *list)
-{
-  if (list != NULL) {
-    while (list->previous != NULL)
-      list = list->previous;
-  }
-
-  return list;
-}
-
-struct List *list_last(struct List *list)
-{
-  if (list != NULL) {
-    while (list->next != NULL)
-      list = list->next;
-  }
-
-  return list;
-}
-
-struct List *list_next(struct List *list)
-{
-  if (list == NULL)
-    return NULL;
-  else
-    return list->next;
-}
-
-struct List *list_previous(struct List *list)
-{
-  if (list == NULL)
-    return NULL;
-  else
-    return list->previous;
-}
-
-struct List *list_find(struct List *list, void *data)
-{
-  list_for_each(list, item) {
-    if (item->data == data)
-      return item;
-  }
-
-  return NULL;
-}
-
-struct List *list_delete_link(struct List *list, struct List *item)
-{
-  if (item != NULL) {
-    if (item->previous != NULL)
-      item->previous->next = item->next;
-    if (item->next != NULL)
-      item->next->previous = item->previous;
-    if (item == list) {
-      if (item->next != NULL)
-        list = item->next;
-      else if (item->previous != NULL)
-        list = item->previous;
-      else
-        list = NULL;
-    }
-
-    free(item);
-  }
-
-  return list;
-}
-
-struct List *list_remove(struct List *list, void *data)
-{
-  struct List *item = list_find(list, data);
-  return list_delete_link(list, item);
-}
-
-void list_free(struct List *list)
-{
-  while (list != NULL)
-    list = list_delete_link(list, list_first(list));
-}
-#endif

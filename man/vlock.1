@@ -2,9 +2,9 @@
 .SH NAME
 vlock \- Virtual Console lock program
 .SH SYNOPSIS
-.B vlock
+.B vlock [ -hv ]
 .PP
-.B vlock [ -a,--all ] [ -c,--current ] [ -n,--new] [ -s,--disable-sysrq ] [ -h,--help ] [ -v,--version ]
+.B vlock [ -acns ] [ -t <timeout> ] [ plugins... ]
 .SH DESCRIPTION
 .B vlock
 is a program to lock one or more sessions on the Linux console.  This is
@@ -34,6 +34,10 @@ running.  See /usr/src/linux/Documentation/sysrq.txt for more details.
 display from an X session use the \fB-n,--new\fR option. \fBvlock\fR will then
 switch to an empty virtual console before locking.  Giving this option implies
 the \fB-a,--all\fR option.
+.PP
+The options \fB-n,--new\fR, \fB-s,--disable-sysrq\fR, and \fB-t,--timeout\fR
+only work if vlock is compiled with plugin support.  See the PLUGINS section
+for more information.
 .SH OPTIONS
 .B -a,--all
 .IP
@@ -52,6 +56,11 @@ Switch to a new virtual console before locking all console sessions.
 Disable sysrq while consoles are locked.  Does not have effect unless
 the \fB-a,--all\fR option is also specified.
 .PP
+.B -t,--timeout <seconds>
+.IP
+Run screen saver plugins after the given timeout.  See the PLUGINS section for
+more information.
+.PP
 .B -h,--help
 .IP
 Print a brief help message.
@@ -60,6 +69,16 @@ Print a brief help message.
 .IP
 Print the version number of \fBvlock\fR.
 .PP
+.SH PLUGINS
+If vlock is compiled with plugin support, it is possible to trigger custom
+actions at certains points vlock locks the virtual console.  A plugin may be
+called before or after vlock locks the console.  It may also be called while
+the console is locked after the timeout given through the \fB-t,--timeout\fR
+option or the Escape key is pressed.
+.PP
+The plugins that should be loaded by vlock may be given as command line
+arguments or specified through enviroment variable \fBVLOCK_PLUGINS\fR (see
+below).
 .SH "ENVIRONMENT VARIABLES"
 .B USER
 .IP
@@ -68,26 +87,40 @@ is set, \fBvlock\fR prompts for this user's password.
 .PP
 .B VLOCK_MESSAGE
 .IP
-Set this variable to replace vlock's default locking messages.  Example use:
+If this variable is set it will be printed before each password prompt.
+.PP
+.B VLOCK_ALL_MESSAGE
+.B VLOCK_CURRENT_MESSAGE
 .IP
-$ alias vlock=\(aqenv VLOCK_MESSAGE="$(fortune)" vlock\(aq
+Like \fBVLOCK_MESSAGE\fR but if you set these variables instead, \fBvlock\fR will
+automatically choose the message.  \fBVLOCK_ALL_MESSAGE\fR is printed when all
+sessions are locked and console switching is disabled. Otherwise
+\fBVLOCK_CURRENT_MESSAGE\fR is printed.  These variables will only be used
+if \fBVLOCK_MESSAGE\fR is unset.
+.PP
+.B VLOCK_PLUGINS
+.IP
+Set this variable to a space separated list of plugins that should be loaded
+every time you run vlock.
 .PP
 .B VLOCK_PROMPT_TIMEOUT
 .IP
 Set this variable to specify the amount of time (in seconds) you will have to
 enter your password at the password prompt.  \fBWarning\fR: If this value is too
 low, you will have trouble unlocking your machine.
+.PP
+.B VLOCK_TIMEOUT
+.IP
+Set this variable to specify the timeout (in seconds) after which the screen
+saver plugins (if any) will be invoked.
+.PP
 .SH FILES
 .B ~/.vlockrc
 .IP
 If existent, this file is read by \fBvlock\fR on startup.  All the 
 variables mentioned above can be set here.
 .SH SECURITY
-\fBvlock\fR consists of several programs.  To use the \fB-n,--new\fR and
-\fB-s,--disable-sysrq\fR options you need to be able to execute vlock-new(8)
-and vlock-nosysrq(8), respectively.  Access to the other programs, vlock-all(8)
-for \fB-a,--all\fR and vlock-current(8), should be unrestricted.  See the
-SECURITY file in the \fBvlock\fR distribution for more information.
+See the SECURITY file in the \fBvlock\fR distribution for more information.
 .PP
 .SH NOTES
 Long options depend on the availability of an enhanced getopt(1) command.  On
@@ -95,10 +128,7 @@ systems without it only the short options will work and long options will cause
 errors.
 .PP
 .SH "SEE ALSO"
-.BR vlock-all (8),
-.BR vlock-current (8),
-.BR vlock-new (8),
-.BR vlock-nosysrq (8),
+.BR vlock-main (8),
 .BR getopt (1)
 .SH AUTHORS
 Michael K. Johnson <http://danlj.org/mkj/>
