@@ -29,6 +29,8 @@
 #include <fcntl.h>
 #include <signal.h>
 
+#include <ncurses.h>
+
 #include <cucul.h>
 #include <caca.h>
 
@@ -83,6 +85,8 @@ int caca_main(void);
 
 bool vlock_save(void **ctx_ptr)
 {
+  initscr();
+
   pid = fork();
 
   if (pid == 0) {
@@ -109,14 +113,21 @@ bool vlock_save(void **ctx_ptr)
 
   if (pid > 0)
     *ctx_ptr = &pid;
+
+  return pid > 0;
 }
 
 bool vlock_save_abort(void **ctx_ptr)
 {
   if (*ctx_ptr != NULL) {
     ensure_death(pid);
+    curs_set(1);
+    refresh();
+    endwin();
     *ctx_ptr = NULL;
   }
+
+  return true;
 }
 
 int caca_main(void)
@@ -135,11 +146,6 @@ int caca_main(void)
 
     (void) setenv("CACA_DRIVER", "ncurses", 1);
     dp = caca_create_display(frontcv);
-
-    if (dp == NULL) {
-        (void) setenv("CACA_DRIVER", "slang", 1);
-        dp = caca_create_display(frontcv);
-    }
 
     if(!dp)
         return 1;

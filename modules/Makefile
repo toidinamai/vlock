@@ -14,7 +14,7 @@ MODULE_MODE = 0755
 
 #special build rules
 
-caca.so : override LDFLAGS += -lcaca
+caca.so : override LDFLAGS += -lcaca -lncurses
 caca.o : override CFLAGS += -I../src
 
 all.o : override CFLAGS += -I../src
