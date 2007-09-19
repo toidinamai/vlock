@@ -12,23 +12,33 @@ install: $(addprefix install-, $(MODULES))
 MODULE_GROUP = $(ROOT_GROUP)
 MODULE_MODE = 0755
 
+#special build rules
+
+caca.so : override LDFLAGS += -lcaca
+caca.o : override CFLAGS += -I../src
+
+all.o : override CFLAGS += -I../src
+all.o: all.c ../src/console_switch.h
+
+#generic build rule
+
+%.so : LDFLAGS += -shared
+%.so: %.o
+	$(LD) $(LDFLAGS) -o $@ $^
+
+# special installation rules
+
 install-new.so : MODULE_GROUP=$(VLOCK_GROUP)
 install-new.so : MODULE_MODE=$(VLOCK_MODULE_MODE)
 install-nosysrq.so : MODULE_GROUP=$(VLOCK_GROUP)
 install-nosysrq.so : MODULE_MODE=$(VLOCK_MODULE_MODE)
 
-# pseudo plugin
-all.o : override CFLAGS += -I../src
-all.o: all.c ../src/console_switch.h
+# generic installation rule
 
 .PHONY: install-%
 install-%: %
 	$(MKDIR_P) $(DESTDIR)$(VLOCK_MODULE_DIR)
 	$(INSTALL) -m $(MODULE_MODE) -o root -g $(MODULE_GROUP) $< $(DESTDIR)$(VLOCK_MODULE_DIR)/$<
-
-%.so : LDFLAGS += -shared
-%.so: %.o
-	$(LD) $(LDFLAGS) -o $@ $^
 
 .PHONY: clean
 clean:
