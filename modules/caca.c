@@ -45,7 +45,6 @@ void plasma(enum action, cucul_canvas_t *);
 void metaballs(enum action, cucul_canvas_t *);
 void moire(enum action, cucul_canvas_t *);
 void matrix(enum action, cucul_canvas_t *);
-void rotozoom(enum action, cucul_canvas_t *);
 
 void (*fn[])(enum action, cucul_canvas_t *) =
 {
@@ -53,7 +52,6 @@ void (*fn[])(enum action, cucul_canvas_t *) =
     metaballs,
     moire,
     matrix,
-    rotozoom,
 };
 #define DEMOS (sizeof(fn)/sizeof(*fn))
 
@@ -790,99 +788,3 @@ void matrix(enum action action, cucul_canvas_t *cv)
         break;
     }
 }
-
-/* Rotozoom effect */
-#define TEXTURE_SIZE 256
-#define TABLE_SIZE 65536
-
-/* 24:8 Fixed point stuff */
-#define PRECISION 8
-
-#define FMUL(a, b) (((a)*(b))>>PRECISION)
-#define TOFIX(d)   ((int)( (d)*(double)(1<<PRECISION) ))
-#define TOINT(a)   (a>>PRECISION);
-
-#include "caca_texture.h"
-
-void rotozoom(enum action action, cucul_canvas_t *canvas)
-{
-    static uint32_t screen[XSIZ * YSIZ];
-    static int cos_tab[TABLE_SIZE], sin_tab[TABLE_SIZE];
-    static int y_tab[TEXTURE_SIZE];
-
-    static cucul_dither_t *dither;
-    static uint32_t *texture;
-    uint32_t *p;
-    static int alphaF, tF;
-    int scaleF;
-
-    /* register is quite a bad idea on CISC, but not on RISC */
-    register unsigned int x, y;
-    register unsigned int xxF, yyF, uF, vF, uF_, vF_;
-    register unsigned int vu, vv;
-
-    switch(action)
-    {
-    case PREPARE:
-        for(x = 0; x < TABLE_SIZE; x++)
-        {
-            cos_tab[x] = TOFIX(cos(x * (360.0f / (float)TABLE_SIZE)));
-            sin_tab[x] = TOFIX(sin(x * (360.0f / (float)TABLE_SIZE)));
-        }
-        for(x = 0; x < TEXTURE_SIZE; x++)
-            y_tab[x] = x * TEXTURE_SIZE; /* start of lines offsets */
-        /* FIXME: this may be an invalid cast */
-        texture = (uint32_t *)textureByte;
-        break;
-
-    case INIT:
-        dither = cucul_create_dither(32, XSIZ, YSIZ, XSIZ * 4,
-                                     0x00FF0000,
-                                     0x0000FF00,
-                                     0x000000FF,
-                                     0x00000000);
-        break;
-
-    case UPDATE:
-        alphaF += 4;
-        tF     += 3;
-        scaleF = FMUL(sin_tab[tF & 0xFFFF], TOFIX(3)) + (TOFIX(4));
-        xxF    = FMUL(cos_tab[(alphaF) & 0xFFFF], scaleF);
-        yyF    = FMUL(sin_tab[(alphaF) & 0xFFFF], scaleF);
-        uF  = vF  = 0;
-        uF_ = vF_ = 0;
-        p = screen;
-
-        for(y = YSIZ; y--;)
-        {
-            for(x = XSIZ; x--;)
-            {
-                uF += xxF;
-                vF += yyF;
-
-                vu = TOINT(uF);
-                vv = TOINT(vF);
-                vu &= 0xFF;       /* ARM doesn't like    */
-                vv &= 0xFF;       /* chars as local vars */
-
-                *p++ = texture[vu + y_tab[vv]];
-            }
-
-            uF = uF_ -= yyF;
-            vF = vF_ += xxF;
-        }
-        break;
-
-    case RENDER:
-        cucul_dither_bitmap(canvas, 0, 0,
-                            cucul_get_canvas_width(canvas),
-                            cucul_get_canvas_height(canvas),
-                            dither, screen);
-        break;
-
-    case FREE:
-        cucul_free_dither(dither);
-        break;
-    }
-}
-
