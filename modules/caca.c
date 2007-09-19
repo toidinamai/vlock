@@ -24,8 +24,17 @@
 #    define M_PI 3.14159265358979323846
 #endif
 
-#include "cucul.h"
-#include "caca.h"
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+
+#include <cucul.h>
+#include <caca.h>
+
+#include "process.h"
+
+#include "vlock_plugin.h"
 
 enum action { PREPARE, INIT, UPDATE, RENDER, FREE };
 
@@ -62,13 +71,60 @@ void (*fn[])(enum action, cucul_canvas_t *) =
 
 /* Global variables */
 static int frame = 0;
+static bool abort_requested = false;
+static pid_t pid;
 
-int main(int argc, char **argv)
+void handle_sigterm(int __attribute__((unused)) signum)
+{
+  abort_requested = true;
+}
+
+int caca_main(void);
+
+bool vlock_save(void **ctx_ptr)
+{
+  pid = fork();
+
+  if (pid == 0) {
+    /* Child. */
+    int nullfd = open("/dev/null", O_RDONLY);
+
+    if (nullfd < 0)
+      _exit(1);
+
+    (void) dup2(nullfd, STDIN_FILENO);
+
+    close_all_fds();
+
+    (void) signal(SIGTERM, handle_sigterm);
+    (void) signal(SIGABRT, SIG_DFL);
+    (void) signal(SIGUSR1, SIG_DFL);
+    (void) signal(SIGUSR2, SIG_DFL);
+
+    setgid(getgid());
+    setuid(getuid());
+
+    _exit(caca_main());
+  }
+
+  if (pid > 0)
+    *ctx_ptr = &pid;
+}
+
+bool vlock_save_abort(void **ctx_ptr)
+{
+  if (*ctx_ptr != NULL) {
+    ensure_death(pid);
+    *ctx_ptr = NULL;
+  }
+}
+
+int caca_main(void)
 {
     static caca_display_t *dp;
     static cucul_canvas_t *frontcv, *backcv, *mask;
 
-    int demo, next = -1, pause = 0, next_transition = DEMO_FRAMES;
+    int demo, next = -1, next_transition = DEMO_FRAMES;
     unsigned int i;
     int tmode = cucul_rand(0, TRANSITION_COUNT);
 
@@ -77,7 +133,14 @@ int main(int argc, char **argv)
     backcv = cucul_create_canvas(0, 0);
     mask = cucul_create_canvas(0, 0);
 
+    (void) setenv("CACA_DRIVER", "ncurses", 1);
     dp = caca_create_display(frontcv);
+
+    if (dp == NULL) {
+        (void) setenv("CACA_DRIVER", "slang", 1);
+        dp = caca_create_display(frontcv);
+    }
+
     if(!dp)
         return 1;
 
@@ -98,38 +161,14 @@ int main(int argc, char **argv)
 
     for(;;)
     {
-        /* Handle events */
-        caca_event_t ev;
-        while(caca_get_event(dp, CACA_EVENT_KEY_PRESS
-                                  | CACA_EVENT_QUIT, &ev, 0))
-        {
-            if(ev.type == CACA_EVENT_QUIT)
-                goto end;
-
-            switch(ev.data.key.ch)
-            {
-                case CACA_KEY_ESCAPE:
-                case CACA_KEY_CTRL_C:
-                case CACA_KEY_CTRL_Z:
-                    goto end;
-                case ' ':
-                    pause = !pause;
-                    break;
-                case '\r':
-                    if(next == -1)
-                        next_transition = frame;
-                    break;
-            }
-        }
+        if (abort_requested)
+          goto end;
 
         /* Resize the spare canvas, just in case the main one changed */
         cucul_set_canvas_size(backcv, cucul_get_canvas_width(frontcv),
                                       cucul_get_canvas_height(frontcv));
         cucul_set_canvas_size(mask, cucul_get_canvas_width(frontcv),
                                     cucul_get_canvas_height(frontcv));
-
-        if(pause)
-            goto paused;
 
         /* Update demo's data */
         fn[demo](UPDATE, frontcv);
@@ -155,7 +194,7 @@ int main(int argc, char **argv)
             fn[next](UPDATE, backcv);
 
         frame++;
-paused:
+
         /* Render main demo's canvas */
         fn[demo](RENDER, frontcv);
 
