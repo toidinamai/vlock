@@ -24,4 +24,7 @@ case "$1" in
   hooks)
     hooks
   ;;
+  depends)
+    echo "all"
+  ;;
 esac
