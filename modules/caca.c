@@ -44,7 +44,6 @@ void transition(cucul_canvas_t *, int, int);
 void plasma(enum action, cucul_canvas_t *);
 void metaballs(enum action, cucul_canvas_t *);
 void moire(enum action, cucul_canvas_t *);
-void langton(enum action, cucul_canvas_t *);
 void matrix(enum action, cucul_canvas_t *);
 void rotozoom(enum action, cucul_canvas_t *);
 
@@ -53,7 +52,6 @@ void (*fn[])(enum action, cucul_canvas_t *) =
     plasma,
     metaballs,
     moire,
-    /*langton,*/
     matrix,
     rotozoom,
 };
@@ -704,94 +702,6 @@ static void draw_line(int x, int y, char color)
            color, 2 * x - 1);
     memset(disc + (DISCSIZ / 2) - x + DISCSIZ * ((DISCSIZ / 2) + y - 1),
            color, 2 * x - 1);
-}
-
-/* Langton ant effect */
-#define ANTS 15
-#define ITER 2
-
-void langton(enum action action, cucul_canvas_t *cv)
-{
-    static char gradient[] =
-    {
-        ' ', ' ', '.', '.', ':', ':', 'x', 'x',
-        'X', 'X', '&', '&', 'W', 'W', '@', '@',
-    };
-    static int steps[][2] = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
-    static uint8_t *screen;
-    static int width, height;
-    static int ax[ANTS], ay[ANTS], dir[ANTS];
-
-    int i, a, x, y;
-
-    switch(action)
-    {
-    case PREPARE:
-        width = cucul_get_canvas_width(cv);
-        height = cucul_get_canvas_height(cv);
-        for(i = 0; i < ANTS; i++)
-        {
-            ax[i] = cucul_rand(0, width);
-            ay[i] = cucul_rand(0, height);
-            dir[i] = cucul_rand(0, 4);
-        }
-        break;
-
-    case INIT:
-        screen = malloc(width * height);
-        memset(screen, 0, width * height);
-        break;
-
-    case UPDATE:
-        for(i = 0; i < ITER; i++)
-        {
-            for(x = 0; x < width * height; x++)
-            {
-                uint8_t p = screen[x];
-                if((p & 0x0f) > 1)
-                    screen[x] = p - 1;
-            }
-
-            for(a = 0; a < ANTS; a++)
-            {
-                uint8_t p = screen[ax[a] + width * ay[a]];
-
-                if(p & 0x0f)
-                {
-                    dir[a] = (dir[a] + 1) % 4;
-                    screen[ax[a] + width * ay[a]] = a << 4;
-                }
-                else
-                {
-                    dir[a] = (dir[a] + 3) % 4;
-                    screen[ax[a] + width * ay[a]] = (a << 4) | 0x0f;
-                }
-                ax[a] = (width + ax[a] + steps[dir[a]][0]) % width;
-                ay[a] = (height + ay[a] + steps[dir[a]][1]) % height;
-            }
-        }
-        break;
-
-    case RENDER:
-        for(y = 0; y < height; y++)
-        {
-            for(x = 0; x < width; x++)
-            {
-                uint8_t p = screen[x + width * y];
-
-                if(p & 0x0f)
-                    cucul_set_color_ansi(cv, CUCUL_WHITE, p >> 4);
-                else
-                    cucul_set_color_ansi(cv, CUCUL_BLACK, CUCUL_BLACK);
-                cucul_put_char(cv, x, y, gradient[p & 0x0f]);
-            }
-        }
-        break;
-
-    case FREE:
-        free(screen);
-        break;
-    }
 }
 
 /* Matrix effect */
