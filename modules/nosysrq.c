@@ -58,7 +58,7 @@ bool vlock_start(void **ctx_ptr)
 
   /* Check whether all data was read. */
   if (feof(ctx->file) != 0) {
-    fprintf(stderr, "vlock-nosysrq: sysrq buffer to small: %d\n",
+    fprintf(stderr, "vlock-nosysrq: sysrq buffer to small: %u\n",
             sizeof ctx->value);
     goto err;
   }
