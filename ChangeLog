@@ -1,3 +1,10 @@
+2007-09-21
+
+	vlock 2.2 alpha2
+
+	* Added libcaca based screen saver module.
+	* Miscellaneous minor fixes.
+
 2007-09-19 Frank Benkstein <frank-vlock@benkstein.net>
 
 	vlock 2.2 alpha1

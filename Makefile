@@ -5,7 +5,7 @@ include system.mk
 
 VPATH = src
 
-VLOCK_VERSION = 2.2 alpha1
+VLOCK_VERSION = 2.2 alpha2
 
 PROGRAMS = vlock vlock-main
 
