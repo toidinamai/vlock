@@ -1,4 +1,10 @@
-/*
+/* caca.c -- a screen saving plugin for vlock,
+ *           the VT locking program for linux
+ *
+ *  This file consists mostly of code cacademo from libcaca.  Only
+ *  minor changes were necessary to fit it into vlock's module
+ *  architecture.  These changes are copyright (C) 2007 Frank Benkstein.
+ *
  *  cacademo      various demo effects for libcaca
  *  Copyright (c) 1998 Michele Bini <mibin@tin.it>
  *                2003-2006 Jean-Yves Lamoureux <jylam@lnxscene.org>
