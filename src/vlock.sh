@@ -10,37 +10,40 @@
 # expressly forbidden without prior written permission from
 # the author.
 
-# ignore some signals
+# Ignore some signals.
 trap : HUP INT QUIT TSTP
 
-# exit on error
+# Exit on error.
 set -e
 
-# magic characters to clear the terminal
+# Magic characters to clear the terminal.
 CLEAR_SCREEN="`echo -e '\033[H\033[J'`"
 
+# Enter message that is common to different the messages.
 VLOCK_ENTER_PROMPT="Please press [ENTER] to unlock."
 
-# message that is displayed when console switching is disabled
+# Message that is displayed when console switching is disabled.
 VLOCK_ALL_MESSAGE="${CLEAR_SCREEN}\
 The entire console display is now completely locked.
 You will not be able to switch to another virtual console.
 
 ${VLOCK_ENTER_PROMPT}"
 
-# message that is displayed when only the current terminal is locked
+# Message that is displayed when only the current terminal is locked.
 VLOCK_CURRENT_MESSAGE="${CLEAR_SCREEN}\
 This TTY is now locked.
 
 ${VLOCK_ENTER_PROMPT}"
 
-# read user settings
+# Read user settings.
 if [ -r "${HOME}/.vlockrc" ] ; then
   . "${HOME}/.vlockrc"
 fi
 
+# "Compile" time variables.
 VLOCK_MAIN="%PREFIX%/sbin/vlock-main"
 VLOCK_VERSION="%VLOCK_VERSION%"
+# If set to "y" plugin support is enabled in vlock-main.
 VLOCK_USE_PLUGINS="%VLOCK_USE_PLUGINS%"
 
 print_help() {
@@ -67,7 +70,8 @@ print_help() {
   echo >&2 "-h or --help: Print this help message and exit."
 }
 
-# export arguments only if they are set
+# Export variables only if they are set.  Some shells create an empty variable
+# on export even if it was previously unset.
 export_if_set() {
   while [ $# -gt 0 ] ; do
     if ( eval [ -n "\"\${$1}\"" ] ) ; then
@@ -88,14 +92,14 @@ main() {
     long_options="${long_options}new,disable-sysrq,timeout:"
   fi
 
-  # test for gnu getopt
+  # Test for GNU getopt.
   ( getopt -T >/dev/null )
 
   if [ $? -eq 4 ] ; then
-    # gnu getopt
+    # GNU getopt.
     options=`getopt -o "${short_options}" --long "${long_options}" -n vlock -- "$@"` || getopt_error=1
   else
-    # other getopt, e.g. BSD
+    # Other getopt, e.g. BSD.
     options=`getopt "${short_options}" "$@"` || getopt_error=1
   fi
 
@@ -142,7 +146,7 @@ main() {
         exit
         ;;
       --)
-        # option list end
+        # End of option list.
         shift
         break
         ;;
@@ -153,7 +157,7 @@ main() {
     esac
   done
 
-  # export variables for vlock-main
+  # Export variables for vlock-main.
   export_if_set VLOCK_TIMEOUT VLOCK_PROMPT_TIMEOUT
   export_if_set VLOCK_MESSAGE VLOCK_ALL_MESSAGE VLOCK_CURRENT_MESSAGE
 
