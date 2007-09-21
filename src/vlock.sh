@@ -89,7 +89,7 @@ main() {
 
   if [ "${VLOCK_USE_PLUGINS}" = "y" ] ; then
     short_options="${short_options}nst:"
-    long_options="${long_options}new,disable-sysrq,timeout:"
+    long_options="${long_options},new,disable-sysrq,timeout:"
   fi
 
   # Test for GNU getopt.
