@@ -1,5 +1,5 @@
-/* blank.c -- a console blanking plugin for vlock,
- *            the VT locking program for linux
+/* ttyblank.c -- a console blanking plugin for vlock,
+ *               the VT locking program for linux
  *
  * This program is copyright (C) 2007 Frank Benkstein, and is free
  * software which is freely distributable under the terms of the
