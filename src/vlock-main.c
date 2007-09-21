@@ -134,7 +134,7 @@ static void auth_loop(const char *username)
   for (;;) {
     char c;
 
-    if (vlock_message) {
+    if (vlock_message && *vlock_message) {
       /* print vlock message */
       fputs(vlock_message, stderr);
       fputc('\n', stderr);
