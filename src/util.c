@@ -10,6 +10,10 @@
  *
  */
 
+#if !defined(__FreeBSD__) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -45,14 +49,21 @@ struct timespec *parse_seconds(const char *s)
 
 void fatal_error(const char *format, ...)
 {
+  char *error;
   va_list ap;
   va_start(ap, format);
-  (void) vfprintf(stderr, format, ap);
+  if (vasprintf(&error, format, ap) < 0)
+    error = "error while formatting error message";
   va_end(ap);
+  fatal_error_free(error);
+}
+
+void fatal_error_free(char *error)
+{
+  fputs(error, stderr);
   fputc('\n', stderr);
   abort();
 }
-
 
 void *ensure_malloc(size_t size)
 {

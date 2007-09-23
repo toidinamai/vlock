@@ -23,6 +23,8 @@ struct timespec *parse_seconds(const char *s);
 
 void fatal_error(const char *format, ...)
   __attribute__((noreturn, format(printf, 1, 2)));
+void fatal_error_free(char *errmsg)
+  __attribute__((noreturn));
 
 #define ensure_atexit(func) \
   do { \
