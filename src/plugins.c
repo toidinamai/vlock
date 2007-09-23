@@ -83,10 +83,8 @@ void resolve_dependencies(void)
 
 void unload_plugins(void)
 {
-  list_for_each_manual(plugins, plugin_item) {
+  list_delete_for_each(plugins, plugin_item)
     destroy_plugin(plugin_item->data);
-    plugin_item = list_delete_item(plugins, plugin_item);
-  }
 }
 
 void plugin_hook(const char *hook_name)
