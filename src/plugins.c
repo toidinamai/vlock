@@ -179,7 +179,8 @@ static void __resolve_depedencies(void)
     }
   }
 
-  /* Unload plugins whose prerequisites are not present. */
+  /* Unload plugins whose prerequisites are not present, fail if those plugins
+   * are required. */
   list_for_each_manual(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
     bool dependencies_loaded = true;
@@ -226,11 +227,14 @@ static void __resolve_depedencies(void)
 
 static struct list *get_edges(void);
 
+/* Sort the list of plugins according to their "preceeds" and "succeeds"
+ * dependencies.  Fails if sorting is not possible because of circles. */
 static void sort_plugins(void)
 {
   struct list *edges = get_edges();
   bool circles_present;
 
+  /* Topological sort. */
   tsort(plugins, edges);
 
   circles_present = !list_is_empty(edges);
@@ -244,9 +248,8 @@ static void sort_plugins(void)
     free(e);
   }
 
-  if (circles_present) {
+  if (circles_present)
     fatal_error("vlock-plugins: circular dependencies detected");
-  }
 }
 
 static struct edge *make_edge(struct plugin *p, struct plugin *s)
@@ -257,7 +260,7 @@ static struct edge *make_edge(struct plugin *p, struct plugin *s)
   return e;
 }
 
-/* Get the edges of the plugin graph specified by the plugins' "preceeds" and
+/* Get the edges of the plugin graph specified by each plugin's "preceeds" and
  * "succeeds" dependencies. */
 static struct list *get_edges(void)
 {
@@ -289,6 +292,9 @@ static struct list *get_edges(void)
 /* handlers */
 /************/
 
+/* Call the "vlock_start" hook of each plugin.  Fails if the hook of one of the
+ * plugins fails.  In this case the "vlock_end" hooks of all plugins that were
+ * called before are called in reverse order. */
 void handle_vlock_start(const char *hook_name)
 {
   list_for_each(plugins, plugin_item) {
@@ -305,6 +311,7 @@ void handle_vlock_start(const char *hook_name)
   }
 }
 
+/* Call the "vlock_end" hook of each plugin in reverse order.  Never fails. */
 void handle_vlock_end(const char *hook_name)
 {
   list_for_each_reverse(plugins, plugin_item) {
@@ -313,6 +320,9 @@ void handle_vlock_end(const char *hook_name)
   }
 }
 
+/* Call the "vlock_save" hook of each plugin.  Never fails.  If the hook of a
+ * plugin fails its "vlock_save_abort" hook is called and both hooks are never
+ * called again afterwards. */
 void handle_vlock_save(const char *hook_name)
 {
   list_for_each(plugins, plugin_item) {
@@ -328,6 +338,9 @@ void handle_vlock_save(const char *hook_name)
   }
 }
 
+/* Call the "vlock_save" hook of each plugin.  Never fails.  If the hook of a
+ * plugin fails both hooks "vlock_save" and "vlock_save_abort" are never called
+ * again afterwards. */
 void handle_vlock_save_abort(const char *hook_name)
 {
   list_for_each_reverse(plugins, plugin_item) {
