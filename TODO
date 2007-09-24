@@ -11,6 +11,7 @@ medium
 - generate error on invalid script
 - improve script code: check for failures in call_hook only once
 - ensure_* functions: output __FILE__, __LINENO__
+- provide ./configure script so people don't get confused
 
 low
 ---
