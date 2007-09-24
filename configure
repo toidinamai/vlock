@@ -1,0 +1,48 @@
+#!/bin/sh
+
+show_usage() {
+cat <<EOT
+Usage: $0 [OPTION]... [VAR=VALUE]...
+
+This script creates necessary configuration files to build/install.
+
+To assign environment variables (e.g., CC, CFLAGS...), specify them as
+VAR=VALUE.  See below for descriptions of some of the useful variables.
+
+Defaults for the options are specified in brackets.
+
+Main options:
+  -h, --help             display this help and exit
+  --prefix=[path]        base path [/usr/local]
+  --bindir=DIR           user executables [PREFIX/bin]
+  --sbindir=DIR          system admin executables [PREFIX/sbin]
+  --libdir=DIR           object code libraries [PREFIX/lib]
+  --scriptdir=DIR        script type plugins [LIBDIR/vlock/scripts]
+  --moduledir=DIR        module type plugins [LIBDIR/vlock/modules]
+  --mandir=DIR           man documentation [PREFIX/share/man]
+
+Optional Features:
+  --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
+  --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-plugins        enable plugin support [enabled]
+  --enable-pam            enable PAM authentication [enabled]
+  --enable-shadow         enable shadow authentication [disabled]
+  --enable-root-password  enable unlogging with root password [enabled]
+
+Some influential environment variables:
+  CC          C compiler command
+  CFLAGS      C compiler flags
+  LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
+              nonstandard directory <lib dir>
+  CPPFLAGS    C/C++ preprocessor flags, e.g. -I<include dir> if you have
+              headers in a nonstandard directory <include dir>
+  CPP         C preprocessor
+
+Use these variables to override the choices made by \`configure' or to help
+it to find libraries and programs with nonstandard names/locations.
+
+Report bugs to <frank-vlock@benkstein.net>.
+EOT
+}
+
+show_usage
