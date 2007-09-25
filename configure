@@ -81,6 +81,8 @@ enable_feature() {
 }
 
 parse_arguments() {
+  local feature opt optarg
+
   while [ $# -gt 0 ] ; do
     opt=`expr "x$1" : 'x\([^=]*\)=.*' ||:`
     optarg=`expr "x$1" : 'x[^=]*=\(.*\)' ||:`
@@ -105,38 +107,42 @@ parse_arguments() {
         enable_feature "$feature" yes
         shift
       ;;
-      --*=*)
+      *=*)
         shift
         # unshift
         eval set -- "$opt" "$optarg" "$@"
       ;;
       --prefix)
-        prefix="$2"
+        PREFIX="$2"
         shift 2 || fatal_error "$1 argument missing"
       ;;
       --bindir)
-        bindir="$2"
+        BINDIR="$2"
         shift 2 || fatal_error "$1 argument missing"
       ;;
       --sbindir)
-        sbindir="$2"
+        SBINDIR="$2"
         shift 2 || fatal_error "$1 argument missing"
       ;;
       --libdir)
-        libdir="$2"
+        LIBDIR="$2"
         shift 2 || fatal_error "$1 argument missing"
       ;;
       --moduledir)
-        moduledir="$2"
+        MODULEDIR="$2"
         shift 2 || fatal_error "$1 argument missing"
       ;;
       --scriptdir)
-        scriptdir="$2"
+        SCRIPTDIR="$2"
         shift 2 || fatal_error "$1 argument missing"
       ;;
       --mandir)
-        mandir="$2"
+        MANDIR="$2"
         shift 2 || fatal_error "$1 argument missing"
+      ;;
+      CC|CFLAGS|LDFLAGS|LD|BOURNE_SHELL|CRYPT_LIB)
+        eval $1="$2"
+        shift 2 || fatal_error "$1 value missing"
       ;;
       --help)
         show_usage
@@ -155,7 +161,40 @@ parse_arguments() {
 }
 
 parse_environment() {
-  :
+  OS=`uname`
+
+  for make in make gmake ; do
+    if $make -f /dev/null -q -v 2>/dev/null | head -n 1 | grep -q "GNU Make" ; then
+      MAKE="$make"
+      break
+    fi
+  done
+
+  if [ -z "$MAKE" ] ; then
+    error "GNU make not found"
+    echo >&2 "Set MAKE variable to specify alternative."
+    exit 1
+  fi
+
+  ROOT_GROUP=`getent group | awk -F: '$3 == 0 { print $1 ; exit }'`
+
+  case "$OS" in
+    Linux)
+      PAM_LIBS='-ldl -lpam'
+      DL_LIBS='-ldl'
+      DEFAULT_MODULES="all.so new.so nosysrq.so"
+    ;;
+    GNU/kFreeBSD)
+      PAM_LIBS='-ldl -lpam'
+      DL_LIBS='-ldl'
+      DEFAULT_MODULES="all.so new.so"
+    ;;
+    FreeBSD)
+      PAM_LIBS='-lpam'
+      DL_LIBS=''
+      DEFAULT_MODULES="all.so new.so"
+    ;;
+  esac
 }
 
 parse_config_mk() {
@@ -164,7 +203,7 @@ parse_config_mk() {
 
 show_summary() {
   cat <<EOF
-vlock configuration"
+vlock configuration
 
 directories:
   prefix:     $PREFIX
@@ -178,7 +217,24 @@ features:
   plugins:        $ENABLE_PLUGINS
   root-password:  $ENABLE_ROOT_PASSWORD
   auth-method:    $AUTH_METHOD
+
+build configuration:
+
+  operating system: $OS
+  gnu make:         $MAKE
+  c compiler:       $CC
+  compiler flags:   $CFLAGS
+  pam libs:         $PAM_LIBS
+  dl libs:          $DL_LIBS
+
+installation configuration:
+  root group:       $ROOT_GROUP
+  vlock group:      $VLOCK_GROUP
 EOF
+}
+
+create_config_mk() {
+  :
 }
 
 parse_environment
@@ -186,3 +242,5 @@ parse_config_mk
 parse_arguments "$@"
 
 show_summary
+
+create_config_mk
