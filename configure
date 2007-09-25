@@ -154,6 +154,14 @@ parse_arguments() {
   done
 }
 
+parse_environment() {
+  :
+}
+
+parse_config_mk() {
+  :
+}
+
 show_summary() {
   cat <<EOF
 vlock configuration"
@@ -173,5 +181,8 @@ features:
 EOF
 }
 
+parse_environment
+parse_config_mk
 parse_arguments "$@"
+
 show_summary
