@@ -80,77 +80,81 @@ enable_feature() {
   esac
 }
 
-while [ $# -gt 0 ] ; do
-  opt=`expr "x$1" : 'x\([^=]*\)=.*' ||:`
-  optarg=`expr "x$1" : 'x[^=]*=\(.*\)' ||:`
-  case "$1" in
-    --disable-*)
-      feature=`expr "$1" : '--disable-\(.*\)'`
-      enable_feature "$feature" no
-      shift
-    ;;
-    --enable-*=no)
-      feature=`expr "$1" : '--enable-\(.*\)=no'`
-      enable_feature "$feature" no
-      shift
-    ;;
-    --enable-*=yes)
-      feature=`expr "$1" : '--enable-\(.*\)=yes'`
-      enable_feature "$feature" yes
-      shift
-    ;;
-    --enable-*)
-      feature=`expr "$1" : '--enable-\(.*\)'`
-      enable_feature "$feature" yes
-      shift
-    ;;
-    --*=*)
-      shift
-      # unshift
-      eval set -- "$opt" "$optarg" "$@"
-    ;;
-    --prefix)
-      prefix="$2"
-      shift 2 || fatal_error "$1 argument missing"
-    ;;
-    --bindir)
-      bindir="$2"
-      shift 2 || fatal_error "$1 argument missing"
-    ;;
-    --sbindir)
-      sbindir="$2"
-      shift 2 || fatal_error "$1 argument missing"
-    ;;
-    --libdir)
-      libdir="$2"
-      shift 2 || fatal_error "$1 argument missing"
-    ;;
-    --moduledir)
-      moduledir="$2"
-      shift 2 || fatal_error "$1 argument missing"
-    ;;
-    --scriptdir)
-      scriptdir="$2"
-      shift 2 || fatal_error "$1 argument missing"
-    ;;
-    --mandir)
-      mandir="$2"
-      shift 2 || fatal_error "$1 argument missing"
-    ;;
-    --help)
-      show_usage
-      exit
-    ;;
-    --*)
-      error "unrecognized option: $1"
-      echo >&2 "Try \`$0 --help' for more information."
-      exit 1
-    ;;
-    *)
-      fatal_error "invalid argument: $1"
-    ;;
-  esac
-done
+parse_arguments() {
+  while [ $# -gt 0 ] ; do
+    opt=`expr "x$1" : 'x\([^=]*\)=.*' ||:`
+    optarg=`expr "x$1" : 'x[^=]*=\(.*\)' ||:`
+    case "$1" in
+      --disable-*)
+        feature=`expr "$1" : '--disable-\(.*\)'`
+        enable_feature "$feature" no
+        shift
+      ;;
+      --enable-*=no)
+        feature=`expr "$1" : '--enable-\(.*\)=no'`
+        enable_feature "$feature" no
+        shift
+      ;;
+      --enable-*=yes)
+        feature=`expr "$1" : '--enable-\(.*\)=yes'`
+        enable_feature "$feature" yes
+        shift
+      ;;
+      --enable-*)
+        feature=`expr "$1" : '--enable-\(.*\)'`
+        enable_feature "$feature" yes
+        shift
+      ;;
+      --*=*)
+        shift
+        # unshift
+        eval set -- "$opt" "$optarg" "$@"
+      ;;
+      --prefix)
+        prefix="$2"
+        shift 2 || fatal_error "$1 argument missing"
+      ;;
+      --bindir)
+        bindir="$2"
+        shift 2 || fatal_error "$1 argument missing"
+      ;;
+      --sbindir)
+        sbindir="$2"
+        shift 2 || fatal_error "$1 argument missing"
+      ;;
+      --libdir)
+        libdir="$2"
+        shift 2 || fatal_error "$1 argument missing"
+      ;;
+      --moduledir)
+        moduledir="$2"
+        shift 2 || fatal_error "$1 argument missing"
+      ;;
+      --scriptdir)
+        scriptdir="$2"
+        shift 2 || fatal_error "$1 argument missing"
+      ;;
+      --mandir)
+        mandir="$2"
+        shift 2 || fatal_error "$1 argument missing"
+      ;;
+      --help)
+        show_usage
+        exit
+      ;;
+      --*)
+        error "unrecognized option: $1"
+        echo >&2 "Try \`$0 --help' for more information."
+        exit 1
+      ;;
+      *)
+        fatal_error "invalid argument: $1"
+      ;;
+    esac
+  done
+}
+
+parse_arguments "$@"
 
 cat <<EOF
 vlock configuration"
