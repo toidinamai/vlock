@@ -35,16 +35,16 @@ scripts:
 .PHONY: install
 install: install-programs install-man
 
-ifeq ($(USE_PLUGINS),y)
+ifeq ($(ENABLE_PLUGINS),yes)
 install: install-plugins
 endif
 
 .PHONY: install-programs
 install-programs: $(PROGRAMS)
 	$(MKDIR_P) $(DESTDIR)$(PREFIX)/bin
-	$(INSTALL) -m 755 -o root -g $(ROOT_GROUP) vlock $(DESTDIR)$(PREFIX)/bin/vlock
+	$(INSTALL) -m 755 -o root -g $(ROOT_GROUP) vlock $(DESTDIR)$(BINDIR)/vlock
 	$(MKDIR_P) $(DESTDIR)$(PREFIX)/sbin
-	$(INSTALL) -m 4711 -o root -g $(ROOT_GROUP) vlock-main $(DESTDIR)$(PREFIX)/sbin/vlock-main
+	$(INSTALL) -m 4711 -o root -g $(ROOT_GROUP) vlock-main $(DESTDIR)$(SBINDIR)/vlock-main
 
 .PHONY: install-plugins
 install-plugins: install-modules install-scripts
@@ -60,9 +60,9 @@ install-scripts:
 .PHONY: install-man
 install-man:
 	$(MKDIR_P) $(DESTDIR)$(PREFIX)/share/man/man1
-	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock.1 $(DESTDIR)$(PREFIX)/share/man/man1/vlock.1
+	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock.1 $(DESTDIR)$(MANDIR)/man1/vlock.1
 	$(MKDIR_P) $(DESTDIR)$(PREFIX)/share/man/man8
-	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock-main.8 $(DESTDIR)$(PREFIX)/share/man/man8/vlock-main.8
+	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock-main.8 $(DESTDIR)$(MANDIR)/man8/vlock-main.8
 
 
 ### build rules ###
@@ -97,7 +97,7 @@ console_switch.o: console_switch.c console_switch.h
 process.o: process.c process.h
 util.o: util.c util.h
 
-ifneq ($(USE_ROOT_PASS),y)
+ifneq ($(ENABLE_ROOT_PASSWORD),yes)
 vlock-main.o : override CFLAGS += -DNO_ROOT_PASS
 endif
 
@@ -109,7 +109,7 @@ ifeq ($(AUTH_METHOD),shadow)
 vlock-main : override LDFLAGS += $(CRYPT_LIB)
 endif
 
-ifeq ($(USE_PLUGINS),y)
+ifeq ($(ENABLE_PLUGINS),yes)
 vlock-main: plugins.o plugin.o module.o process.o script.o tsort.o list.o
 # -rdynamic is needed so that the all plugin can access the symbols from console_switch.o
 vlock-main : override LDFLAGS += $(DL_LIB) -rdynamic
