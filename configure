@@ -64,17 +64,17 @@ set_variable() {
 enable_feature() {
   case "$1" in
     plugins)
-      enable_plugins="$2"
+      ENABLE_PLUGINS="$2"
     ;;
     root-password)
-      enable_root_password="$2"
+      ENABLE_ROOT_PASSWORD="$2"
     ;;
     pam|shadow)
       if [ "$2" = "yes" ] ; then
         if [ -n "$auth_method" ] && [ "$auth_method" != "$1" ] ; then
           fatal_error "pam and shadow authentication are mutually exclusive"
         fi
-        auth_method="$1"
+        AUTH_METHOD="$1"
       else
         fatal_error "cannot disable authentication"
       fi
@@ -239,11 +239,12 @@ parse_config_mk() {
 
 parse_defaults() {
   is_set PREFIX || PREFIX="/usr/local"
-  is_set BINDIR || BINDIR="${PREFIX}/bin"
-  is_set SBINDIR || SBINDIR="${PREFIX}/sbin"
-  is_set LIBDIR || LIBDIR="${PREFIX}/lib"
-  is_set SCRIPTDIR || SCRIPTDIR="${LIBDIR}/vlock/scripts"
-  is_set MODULEDIR || MODULEDIR="${LIBDIR}/vlock/modules"
+  is_set BINDIR || BINDIR="\$(PREFIX)/bin"
+  is_set SBINDIR || SBINDIR="\$(PREFIX)/sbin"
+  is_set LIBDIR || LIBDIR="\$(PREFIX)/lib"
+  is_set MANDIR || MANDIR="\$(PREFIX)/share/man"
+  is_set SCRIPTDIR || SCRIPTDIR="\$(LIBDIR)/vlock/scripts"
+  is_set MODULEDIR || MODULEDIR="\$(LIBDIR)/vlock/modules"
 
   is_set CC || CC=gcc
   is_set CFLAGS || CFLAGS="-O2 -Wall -W -pedantic -std=gnu99"
@@ -269,6 +270,7 @@ directories:
   bindir:     $BINDIR
   sbindir:    $SBINDIR
   libdir:     $LIBDIR
+  mandir:     $MANDIR
   scriptdir:  $SCRIPTDIR
   moduledir:  $MODULEDIR
 
@@ -325,6 +327,8 @@ VLOCK_MODULE_MODE = ${VLOCK_MODULE_MODE}
 PREFIX = ${PREFIX}
 BINDIR = ${BINDIR}
 SBINDIR = ${SBINDIR}
+LIBDIR = ${LIBDIR}
+MANDIR = ${MANDIR}
 # installation root
 DESTDIR =
 # path where modules will be located
