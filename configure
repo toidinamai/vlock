@@ -11,6 +11,10 @@ fatal_error() {
   exit 1
 }
 
+is_set() {
+  eval [ "\"\${$1+set}\"" = "set" ]
+}
+
 show_usage() {
 cat <<EOT
 Usage: $0 [OPTION]... [VAR=VALUE]...
@@ -45,9 +49,6 @@ Some influential environment variables:
   CFLAGS      C compiler flags
   LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
               nonstandard directory <lib dir>
-  CPPFLAGS    C/C++ preprocessor flags, e.g. -I<include dir> if you have
-              headers in a nonstandard directory <include dir>
-  CPP         C preprocessor
 
 Use these variables to override the choices made by \`configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -193,17 +194,20 @@ parse_environment() {
   case "$OS" in
     Linux)
       PAM_LIBS='-ldl -lpam'
-      DL_LIBS='-ldl'
+      DL_LIB='-ldl'
+      CRYPT_LIB='-lcrypt'
       DEFAULT_MODULES="all.so new.so nosysrq.so"
     ;;
     GNU/kFreeBSD)
       PAM_LIBS='-ldl -lpam'
-      DL_LIBS='-ldl'
+      DL_LIB='-ldl'
+      CRYPT_LIB='-lcrypt'
       DEFAULT_MODULES="all.so new.so"
     ;;
     FreeBSD)
       PAM_LIBS='-lpam'
-      DL_LIBS=''
+      DL_LIB=''
+      CRYPT_LIB=''
       DEFAULT_MODULES="all.so new.so"
     ;;
   esac
@@ -234,7 +238,26 @@ parse_config_mk() {
 }
 
 parse_defaults() {
-  :
+  is_set PREFIX || PREFIX="/usr/local"
+  is_set BINDIR || BINDIR="${PREFIX}/bin"
+  is_set SBINDIR || SBINDIR="${PREFIX}/sbin"
+  is_set LIBDIR || LIBDIR="${PREFIX}/lib"
+  is_set SCRIPTDIR || SCRIPTDIR="${LIBDIR}/vlock/scripts"
+  is_set MODULEDIR || MODULEDIR="${LIBDIR}/vlock/modules"
+
+  is_set CC || CC=gcc
+  is_set CFLAGS || CFLAGS="-O2 -Wall -W -pedantic -std=gnu99"
+  is_set LD || LD=ld
+  is_set LDFLAGS || LDFLAGS=""
+  is_set AUTH_METHOD || AUTH_METHOD="pam"
+  is_set PLUGINS || PLUGINS="$DEFAULT_MODULES"
+  is_set ENABLE_ROOT_PASSWORD || ENABLE_ROOT_PASSWORD="yes"
+  is_set ENABLE_PLUGINS || ENABLE_PLUGINS="yes"
+
+  is_set VLOCK_GROUP || VLOCK_GROUP="vlock"
+  is_set VLOCK_MODULE_MODE || VLOCK_MODULE_MODE="0750"
+
+  is_set BOURNE_SHELL || BOURNE_SHELL="/bin/sh"
 }
 
 show_summary() {
@@ -250,9 +273,10 @@ directories:
   moduledir:  $MODULEDIR
 
 features:
-  plugins:        $ENABLE_PLUGINS
+  enable plugins: $ENABLE_PLUGINS
   root-password:  $ENABLE_ROOT_PASSWORD
   auth-method:    $AUTH_METHOD
+  plugins:        $PLUGINS
 
 build configuration:
 
@@ -261,7 +285,8 @@ build configuration:
   c compiler:       $CC
   compiler flags:   $CFLAGS
   pam libs:         $PAM_LIBS
-  dl libs:          $DL_LIBS
+  dl libs:          $DL_LIB
+  crypt lib:        $CRYPT_LIB
 
 installation configuration:
   root group:       $ROOT_GROUP
