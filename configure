@@ -376,11 +376,11 @@ main() {
   parse_arguments "$@"
   parse_defaults
   
-  if [ "$verbose" -ge 0 ] ; then
+  if [ "$verbose" -ge 1 ] ; then
     show_summary
   fi
   
   create_config_mk
 }
 
-main
+main "$@"
