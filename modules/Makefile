@@ -1,5 +1,4 @@
 include ../config.mk
-include ../system.mk
 
 MODULES += $(EXTRA_MODULES)
 

@@ -1,7 +1,6 @@
 # vlock makefile
 
 include config.mk
-include system.mk
 
 VPATH = src
 
