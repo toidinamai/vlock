@@ -33,8 +33,8 @@ scripts:
 ### configuration ###
 
 config.mk:
-	$(warning "Creating default configuration.")
-	./configure --quiet
+	$(warning Creating default configuration.)
+	@./configure --quiet
 
 ### installation rules ###
 
@@ -122,6 +122,10 @@ vlock-main : override LDFLAGS += $(DL_LIB) -rdynamic
 vlock-main.o : override CFLAGS += -DUSE_PLUGINS
 vlock-main.o: plugins.h
 endif
+
+.PHONY: realclean
+realclean: clean
+	$(RM) config.mk
 
 .PHONY: clean
 clean:
