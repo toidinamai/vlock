@@ -155,6 +155,10 @@ parse_arguments() {
         set_variable "$1" "$2"
         shift 2 || fatal_error "$1 value missing"
       ;;
+      --quiet)
+        verbose=0
+        shift
+      ;;
       --help)
         show_usage
         exit
@@ -364,11 +368,19 @@ PAM_LIBS = ${PAM_LIBS}
 EOF
 }
 
-parse_environment
-parse_config_mk
-parse_arguments "$@"
-parse_defaults
+main() {
+  verbose=1
 
-show_summary
+  parse_environment
+  parse_config_mk
+  parse_arguments "$@"
+  parse_defaults
+  
+  if [ "$verbose" -ge 0 ] ; then
+    show_summary
+  fi
+  
+  create_config_mk
+}
 
-create_config_mk
+main
