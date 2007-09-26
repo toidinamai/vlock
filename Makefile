@@ -30,6 +30,12 @@ modules:
 scripts:
 	@$(MAKE) -C scripts
 
+### configuration ###
+
+config.mk:
+	$(warning "Creating default configuration.")
+	./configure --quiet
+
 ### installation rules ###
 
 .PHONY: install
