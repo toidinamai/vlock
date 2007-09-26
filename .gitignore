@@ -1,4 +1,5 @@
 *.o
 *.so
+config.mk
 vlock
 vlock-main
