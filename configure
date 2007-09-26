@@ -56,6 +56,10 @@ Report bugs to <frank-vlock@benkstein.net>.
 EOT
 }
 
+set_variable() {
+  eval "$1"='"$2"'
+}
+
 enable_feature() {
   case "$1" in
     plugins)
@@ -84,8 +88,14 @@ parse_arguments() {
   local feature opt optarg
 
   while [ $# -gt 0 ] ; do
-    opt=`expr "x$1" : 'x\([^=]*\)=.*' ||:`
-    optarg=`expr "x$1" : 'x[^=]*=\(.*\)' ||:`
+    if ! opt=`expr "x$1" : 'x\([^=]*\)=.*'` ; then
+      opt="$1"
+    fi
+
+    if ! optarg=`expr "x$1" : 'x[^=]*=\(.*\)'` ; then
+      optarg=""
+    fi
+
     case "$1" in
       --disable-*)
         feature=`expr "$1" : '--disable-\(.*\)'`
@@ -110,7 +120,7 @@ parse_arguments() {
       *=*)
         shift
         # unshift
-        eval set -- "$opt" "$optarg" "$@"
+        set -- "$opt" "$optarg" "$@"
       ;;
       --prefix)
         PREFIX="$2"
@@ -140,8 +150,8 @@ parse_arguments() {
         MANDIR="$2"
         shift 2 || fatal_error "$1 argument missing"
       ;;
-      CC|CFLAGS|LDFLAGS|LD|BOURNE_SHELL|CRYPT_LIB)
-        eval $1="$2"
+      [A-Z]*)
+        set_variable "$1" "$2"
         shift 2 || fatal_error "$1 value missing"
       ;;
       --help)
@@ -154,7 +164,9 @@ parse_arguments() {
         exit 1
       ;;
       *)
-        fatal_error "invalid argument: $1"
+        error "invalid argument: $1"
+        echo >&2 "Try \`$0 --help' for more information."
+        exit 1
       ;;
     esac
   done
@@ -198,6 +210,30 @@ parse_environment() {
 }
 
 parse_config_mk() {
+  local tmpdir
+
+  tmpdir=`mktemp -d`
+
+  $MAKE -rR -f config.mk -p -q . 2>/dev/null | awk > "$tmpdir/config.mk" '\
+    /^# makefile .from .config\.mk., line/ { p=1; next }
+    /^#/ { p=0; next }
+    p==1 && $1 != "MAKEFILE_LIST" && /^[[:alpha:]_]+ :?= .*/ { print }
+  '
+
+  while read line
+  do
+    variable_name=`expr "${line}" : '\([[:alpha:]_]\+\) :\?='`
+    if variable_value=`expr "${line}" : '[[:alpha:]_]\+ :\?= \(.*\)'` ; then
+      set_variable "$variable_name" "$variable_value"
+    else
+      set_variable "$variable_name" ""
+    fi
+  done < "$tmpdir/config.mk"
+
+  rm -rf "$tmpdir"
+}
+
+parse_defaults() {
   :
 }
 
@@ -240,6 +276,7 @@ create_config_mk() {
 parse_environment
 parse_config_mk
 parse_arguments "$@"
+parse_defaults
 
 show_summary
 
