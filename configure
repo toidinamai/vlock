@@ -230,8 +230,8 @@ parse_config_mk() {
 
   while read line
   do
-    variable_name=`expr "${line}" : '\([[:alpha:]_][[:alpha:]_]*\) :\?='`
-    if variable_value=`expr "${line}" : '[[:alpha:]_]\+ :\?= \(.*\)'` ; then
+    variable_name=`expr "${line}" : '\([[[:alpha:]_]\{1,\}\) :\{0,1\}='`
+    if variable_value=`expr "${line}" : '[[:alpha:]_]\{1,\} :\{0,1\}= \(.*\)'` ; then
       set_variable "$variable_name" "$variable_value"
     else
       set_variable "$variable_name" ""
