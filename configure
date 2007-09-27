@@ -12,7 +12,7 @@ fatal_error() {
 }
 
 is_set() {
-  eval [ "\"\${$1+set}\"" = "set" ]
+  ( eval [ "\"\${$1+set}\"" = "set" ] )
 }
 
 show_usage() {
