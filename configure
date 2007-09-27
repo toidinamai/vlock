@@ -220,7 +220,7 @@ parse_environment() {
 parse_config_mk() {
   local tmpdir
 
-  tmpdir=`mktemp -t -d vlock-configure.XXXXXX`
+  tmpdir=`mktemp -d -t vlock-configure.XXXXXX`
 
   $MAKE -rR -f config.mk -p -q . 2>/dev/null | awk > "$tmpdir/config.mk" '\
     /^# makefile .from .config\.mk., line/ { p=1; next }
