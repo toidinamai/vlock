@@ -1,0 +1,49 @@
+.TH VLOCK-MAIN 8 "28 July 2007" "Linux" "Linux Programmer's Manual"
+.SH NAME
+vlock-main \- lock current virtual console
+.SH SYNOPSIS
+.B vlock-main [plugins...]
+.SH DESCRIPTION
+\fBvlock-main\fR is part of vlock(1), the Virtual Console locking program for
+Linux.  Once started it only exits if correct authentification data (either the
+current user's or root's) is received.  Authentification can be done against
+PAM or shadow, determined at compile time.  The command line arguments specify
+the plugins that should be loaded by \fBvlock-main\fR.  If plugin support is
+disabled at compile time, only "all" is supported, disabling console switching
+while \fBvlock-main\fR is run.
+.SH "ENVIRONMENT VARIABLES"
+.B USER
+.IP
+When \fBvlock\fR is run as root (uid 0) and the \fBUSER\fR environment variable
+is set, \fBvlock-main\fR prompts for this user's password.
+.PP
+.B VLOCK_MESSAGE
+.IP
+If this variable is set it will be printed before each password prompt.
+.PP
+.B VLOCK_ALL_MESSAGE
+.B VLOCK_CURRENT_MESSAGE
+.IP
+Like \fBVLOCK_MESSAGE\fR but if you set these variables instead, \fBvlock-main\fR will
+automatically choose the message.  \fBVLOCK_ALL_MESSAGE\fR is printed when all
+sessions are locked and console switching is disabled. Otherwise
+\fBVLOCK_CURRENT_MESSAGE\fR is printed.  These variables will only be used
+if \fBVLOCK_MESSAGE\fR is unset.
+.PP
+.B VLOCK_PROMPT_TIMEOUT
+.IP
+Set this variable to specify the amount of time (in seconds) you will have to
+enter your password at the password prompt.  \fBWarning\fR: If this value is too
+low, you will have trouble unlocking your machine.
+.PP
+.B VLOCK_TIMEOUT
+.IP
+Set this variable to specify the timeout (in seconds) after which the screen
+saver plugins (if any) will be invoked.
+.SH SIGNALS
+Several signals are ignored.  \fBvlock-main\fR will try to exit cleanly if
+SIGTERM is received.
+.SH "SEE ALSO"
+.BR vlock (1)
+.SH AUTHORS
+Frank Benkstein <frank-vlock@benkstein.net>
