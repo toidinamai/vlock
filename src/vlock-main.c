@@ -35,6 +35,12 @@
 
 int vlock_debug = 0;
 
+#define ensure_atexit(func) \
+  do { \
+    if (atexit(func) != 0) \
+      fatal_perror("vlock-main: atexit() failed"); \
+  } while (0)
+
 static char *get_username(void)
 {
   uid_t uid = getuid();

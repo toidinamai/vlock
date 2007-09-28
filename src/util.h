@@ -28,12 +28,6 @@ void fatal_error_free(char *errmsg)
 void fatal_perror(const char *errmsg)
   __attribute__((noreturn));
 
-#define ensure_atexit(func) \
-  do { \
-    if (atexit(func) != 0) \
-      fatal_error("vlock-main: Cannot register function '%s' with atexit().",  #func); \
-  } while (0)
-
 void *ensure_malloc(size_t);
 void *ensure_calloc(size_t, size_t);
 void *ensure_realloc(void *, size_t);
