@@ -49,12 +49,12 @@ static char *get_username(void)
     pw = getpwuid(uid);
 
     if (pw == NULL)
-      fatal_error("vlock-main: could not get username for uid %d", uid);
+      return NULL;
 
     username = pw->pw_name;
   }
 
-  return ensure_not_null(strdup(username), "could not copy string");
+  return strdup(username);
 }
 
 static void terminate(int signum)
@@ -192,6 +192,9 @@ int main(int argc, char *const argv[])
   block_signals();
 
   username = get_username();
+
+  if (username == NULL)
+    fatal_perror("vlock-main: could not get username");
 
 #ifdef USE_PLUGINS
   for (int i = 1; i < argc; i++)
