@@ -25,3 +25,36 @@ void ensure_death(pid_t pid);
 /* Close all possibly open file descriptors except STDIN_FILENO, STDOUT_FILENO
  * and STDERR_FILENO. */
 void close_all_fds(void);
+
+#define NO_REDIRECT (-2)
+#define REDIRECT_DEV_NULL (-3)
+#define REDIRECT_PIPE (-4)
+
+struct child_process {
+  /* Function that will be run in the child. */
+  void (*function)(void *argument);
+  /* Argument for the function. */
+  void *argument;
+  /* First argument to execv. */
+  const char *path;
+  /* Second argument to execv. */
+  const char **argv;
+  /* The child's stdin. */
+  int stdin_fd;
+  /* The child's stdout. */
+  int stdout_fd;
+  /* The child's stderr. */
+  int stderr_fd;
+  /* The child's PID. */
+  pid_t pid;
+};
+
+/* Create a new child process.  All file descriptors except stdin, stdout and
+ * stderr are closed and privileges are dropped.  All fields of the child
+ * struct except pid must be set.  If a stdio file descriptor field has the
+ * special value of REDIRECT_DEV_NULL it is redirected from or to /dev/null.
+ * If it has the value REDIRECT_PIPE a pipe will be created and one end will be
+ * connected to the respective descriptor of the child.  The file descriptor of
+ * the other end is stored in the field after the call.  It is up to the caller
+ * to close the pipe descriptor(s). */
+void create_child(struct child_process *child);

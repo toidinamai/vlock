@@ -158,49 +158,21 @@ static bool call_script_hook(struct plugin *s, const char *hook_name)
 static struct script_context *launch_script(const char *path)
 {
   struct script_context *script = ensure_malloc(sizeof *script);
-  int pipe_fds[2];
+  const char *argv[] = { path, "hooks", NULL };
+  struct child_process child = {
+    .path = path,
+    .argv = argv,
+    .stdin_fd = REDIRECT_PIPE,
+    .stdout_fd = REDIRECT_PIPE,
+    .stderr_fd = REDIRECT_PIPE,
+    .function = NULL,
+  };
 
-  /* Open a pipe. */
-  if (pipe(pipe_fds) < 0)
-    fatal_error("pipe() failed");
+  create_child(&child);
+  script->fd = child.stdin_fd;
+  script->pid = child.pid;
 
-  script->fd = pipe_fds[1];
-
-  script->pid = fork();
-
-  if (script->pid == 0) {
-    /* Child. */
-    int nullfd = open("/dev/null", O_WRONLY);
-
-    if (nullfd < 0)
-      _exit(1);
-
-    /* Redirect stdio. */
-    (void) dup2(pipe_fds[0], STDIN_FILENO);
-    (void) dup2(nullfd, STDOUT_FILENO);
-    (void) dup2(nullfd, STDERR_FILENO);
-
-    /* Close all other file descriptors. */
-    close_all_fds();
-
-    // drop privileges
-    setgid(getgid());
-    setuid(getuid());
-
-    /* Close all other file descriptors. */
-    (void) execl(path, path, "hooks", NULL);
-
-    _exit(1);
-  }
-
-  /* Close read end of the pipe. */
-  (void) close(pipe_fds[0]);
-
-  if (script->pid > 0)
-    return script;
-
-  free(script);
-  fatal_error("fork() failed");
+  return script;
 }
 
 static char *read_dependency(const char *path, const char *dependency_name);
