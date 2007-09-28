@@ -192,9 +192,9 @@ set_defaults() {
   LD=ld
   LDFLAGS=""
   AUTH_METHOD="pam"
-  PLUGINS="$DEFAULT_MODULES"
   ENABLE_ROOT_PASSWORD="yes"
   ENABLE_PLUGINS="yes"
+  SCRIPTS=""
 
   VLOCK_GROUP="vlock"
   VLOCK_MODULE_MODE="0750"
@@ -218,13 +218,13 @@ set_defaults() {
       PAM_LIBS='-ldl -lpam'
       DL_LIB='-ldl'
       CRYPT_LIB='-lcrypt'
-      DEFAULT_MODULES="all.so new.so nosysrq.so"
+      MODULES="all.so new.so nosysrq.so"
     ;;
     GNU/kFreeBSD)
       PAM_LIBS='-ldl -lpam'
       DL_LIB='-ldl'
       CRYPT_LIB='-lcrypt'
-      DEFAULT_MODULES="all.so new.so"
+      MODULES="all.so new.so"
     ;;
     FreeBSD)
       PAM_LIBS='-lpam'
@@ -282,7 +282,8 @@ features:
   enable plugins: $ENABLE_PLUGINS
   root-password:  $ENABLE_ROOT_PASSWORD
   auth-method:    $AUTH_METHOD
-  plugins:        $PLUGINS
+  modules:        $MODULES
+  scripts:        $SCRIPTS
 
 build configuration:
 
@@ -313,9 +314,9 @@ ENABLE_ROOT_PASSWORD = ${ENABLE_ROOT_PASSWORD}
 # enable plugins for vlock-main
 ENABLE_PLUGINS = ${ENABLE_PLUGINS}
 # which plugins should be build
-MODULES = \$(filter %.so, ${PLUGINS})
+MODULES = ${MODULES}
 # which scripts should be installed
-SCRIPTS = \$(filter %.sh, ${PLUGINS})
+SCRIPTS = ${SCRIPTS}
 
 # root's group
 ROOT_GROUP = ${ROOT_GROUP}
@@ -357,8 +358,8 @@ MKDIR_P = mkdir -p
 CFLAGS = ${CFLAGS}
 # linker flags
 LDFLAGS = ${LDFLAGS}
-# linker flags needed for dlopen and friends, default is system dependend
-# DL_LIB = ${DL_LIB}
+# linker flags needed for dlopen and friends
+DL_LIB = ${DL_LIB}
 # linker flags needed for crypt
 CRYPT_LIB = ${CRYPT_LIB}
 # linker flags needed for pam
