@@ -345,11 +345,9 @@ VLOCK_SCRIPT_DIR = ${VLOCK_SCRIPT_DIR}
 # shell to run vlock.sh with (only bash is known to work)
 BOURNE_SHELL = ${BOURNE_SHELL}
 # C compiler
-CC = gcc
-# gnu install
-INSTALL = install
+CC = ${CC}
 # linker
-LD = ld
+LD = ${LD}
 # mkdir
 MKDIR_P = mkdir -p
 
