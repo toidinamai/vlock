@@ -25,6 +25,8 @@ void fatal_error(const char *format, ...)
   __attribute__((noreturn, format(printf, 1, 2)));
 void fatal_error_free(char *errmsg)
   __attribute__((noreturn));
+void fatal_perror(const char *errmsg)
+  __attribute__((noreturn));
 
 #define ensure_atexit(func) \
   do { \
