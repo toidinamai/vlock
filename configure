@@ -177,7 +177,31 @@ parse_arguments() {
   done
 }
 
-parse_environment() {
+set_defaults() {
+  # architecture independent defaults
+  PREFIX="/usr/local"
+  BINDIR="\$(PREFIX)/bin"
+  SBINDIR="\$(PREFIX)/sbin"
+  LIBDIR="\$(PREFIX)/lib"
+  MANDIR="\$(PREFIX)/share/man"
+  SCRIPTDIR="\$(LIBDIR)/vlock/scripts"
+  MODULEDIR="\$(LIBDIR)/vlock/modules"
+
+  CC=gcc
+  CFLAGS="-O2 -Wall -W -pedantic -std=gnu99"
+  LD=ld
+  LDFLAGS=""
+  AUTH_METHOD="pam"
+  PLUGINS="$DEFAULT_MODULES"
+  ENABLE_ROOT_PASSWORD="yes"
+  ENABLE_PLUGINS="yes"
+
+  VLOCK_GROUP="vlock"
+  VLOCK_MODULE_MODE="0750"
+
+  BOURNE_SHELL="/bin/sh"
+
+  # architecture dependent defaults
   OS=`uname`
 
   for make in make gmake ; do
@@ -186,12 +210,6 @@ parse_environment() {
       break
     fi
   done
-
-  if [ -z "$MAKE" ] ; then
-    error "GNU make not found"
-    echo >&2 "Set MAKE variable to specify alternative."
-    exit 1
-  fi
 
   ROOT_GROUP=`getent group | awk -F: '$3 == 0 { print $1 ; exit }'`
 
@@ -220,9 +238,15 @@ parse_environment() {
 parse_config_mk() {
   local tmpdir
 
+  if [ -z "$MAKE" ] ; then
+    error "GNU make not found"
+    echo >&2 "Set MAKE environment variable to specify alternative."
+    exit 1
+  fi
+
   tmpdir=`mktemp -d -t vlock-configure.XXXXXX`
 
-  $MAKE -rR -f config.mk -p -q . 2>/dev/null | awk > "$tmpdir/config.mk" '\
+  $MAKE -rR -f config.mk -p -q . 2>/dev/null | awk > "$tmpdir/config.mk" '
     /^# makefile .from .config\.mk., line/ { p=1; next }
     /^#/ { p=0; next }
     p==1 && $1 != "MAKEFILE_LIST" && /^[[:alpha:]_]+ :?= .*/ { print }
@@ -239,30 +263,6 @@ parse_config_mk() {
   done < "$tmpdir/config.mk"
 
   rm -rf "$tmpdir"
-}
-
-parse_defaults() {
-  is_set PREFIX || PREFIX="/usr/local"
-  is_set BINDIR || BINDIR="\$(PREFIX)/bin"
-  is_set SBINDIR || SBINDIR="\$(PREFIX)/sbin"
-  is_set LIBDIR || LIBDIR="\$(PREFIX)/lib"
-  is_set MANDIR || MANDIR="\$(PREFIX)/share/man"
-  is_set SCRIPTDIR || SCRIPTDIR="\$(LIBDIR)/vlock/scripts"
-  is_set MODULEDIR || MODULEDIR="\$(LIBDIR)/vlock/modules"
-
-  is_set CC || CC=gcc
-  is_set CFLAGS || CFLAGS="-O2 -Wall -W -pedantic -std=gnu99"
-  is_set LD || LD=ld
-  is_set LDFLAGS || LDFLAGS=""
-  is_set AUTH_METHOD || AUTH_METHOD="pam"
-  is_set PLUGINS || PLUGINS="$DEFAULT_MODULES"
-  is_set ENABLE_ROOT_PASSWORD || ENABLE_ROOT_PASSWORD="yes"
-  is_set ENABLE_PLUGINS || ENABLE_PLUGINS="yes"
-
-  is_set VLOCK_GROUP || VLOCK_GROUP="vlock"
-  is_set VLOCK_MODULE_MODE || VLOCK_MODULE_MODE="0750"
-
-  is_set BOURNE_SHELL || BOURNE_SHELL="/bin/sh"
 }
 
 show_summary() {
@@ -371,10 +371,9 @@ EOF
 main() {
   verbose=1
 
-  parse_environment
+  set_defaults
   parse_config_mk
   parse_arguments "$@"
-  parse_defaults
   
   if [ "$verbose" -ge 1 ] ; then
     show_summary
