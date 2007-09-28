@@ -33,6 +33,8 @@
 #include "plugins.h"
 #endif
 
+int vlock_debug = 0;
+
 static char *get_username(void)
 {
   uid_t uid = getuid();
@@ -188,6 +190,8 @@ static void call_end_hook(void)
 int main(int argc, char *const argv[])
 {
   char *username;
+
+  vlock_debug = (getenv("VLOCK_DEBUG") != NULL);
 
   block_signals();
 
