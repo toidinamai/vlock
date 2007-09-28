@@ -65,7 +65,7 @@ void fatal_error_free(char *error)
   fputs(error, stderr);
   fputc('\n', stderr);
   free(error);
-  abort();
+  exit(EXIT_FAILURE);
 }
 
 void fatal_perror(const char *errmsg)
