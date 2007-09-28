@@ -44,6 +44,10 @@ Optional Features:
   --enable-shadow         enable shadow authentication [disabled]
   --enable-root-password  enable unlogging with root password [enabled]
 
+Additional configuration:
+  --with-scripts=SCRIPTS  enable the named scripts []
+  --with-modules=MODULES  enable the named modules [<architecture depedent>]
+
 Some influential environment variables:
   CC          C compiler command
   CFLAGS      C compiler flags
@@ -149,6 +153,14 @@ parse_arguments() {
       ;;
       --mandir)
         MANDIR="$2"
+        shift 2 || fatal_error "$1 argument missing"
+      ;;
+      --with-modules)
+        MODULES="$2"
+        shift 2 || fatal_error "$1 argument missing"
+      ;;
+      --with-scripts)
+        SCRIPTS="$2"
         shift 2 || fatal_error "$1 argument missing"
       ;;
       [A-Z]*)
