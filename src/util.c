@@ -62,6 +62,7 @@ void fatal_error_free(char *error)
 {
   fputs(error, stderr);
   fputc('\n', stderr);
+  free(error);
   abort();
 }
 
