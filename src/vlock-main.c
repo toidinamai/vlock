@@ -217,19 +217,14 @@ int main(int argc, char *const argv[])
 #else /* !USE_PLUGINS */
   /* Emulate pseudo plugin "all". */
   if (argc == 2 && (strcmp(argv[1], "all") == 0)) {
-    char *error = NULL;
-
-    if (!lock_console_switch(&error)) {
-      if (error != NULL) {
-        fprintf(stderr, "vlock-main: %s\n", error);
-        free(error);
-        abort();
-      } else {
-        fatal_error("vlock-main: could not disable console switching");
-      }
+    if (!lock_console_switch()) {
+      if (errno == ENOTTY || errno == EINVAL)
+        fatal_error("vlock-main: this terminal is not a virtual console");
+      else
+        fatal_perror("vlock-main: could not disable console switching");
     }
 
-    ensure_atexit(unlock_console_switch);
+    ensure_atexit((void (*)(void))unlock_console_switch);
   } else if (argc > 1) {
     fatal_error("vlock-main: plugin support disabled");
   }
