@@ -25,14 +25,12 @@
 
 bool vlock_start(void __attribute__((unused)) **ctx_ptr)
 {
-  char *error = NULL;
-
-  if (!lock_console_switch(&error)) {
-    if (error != NULL) {
-      fprintf(stderr, "vlock-all: %s\n", error);
-      free(error);
-    } else {
-      fprintf(stderr, "vlock-all: could not disable console switching\n");
+  if (!lock_console_switch()) {
+    if (!lock_console_switch()) {
+      if (errno == ENOTTY || errno == EINVAL)
+        fprintf(stderr, "vlock-all: this terminal is not a virtual console\n");
+      else
+        fprintf(stderr, "vlock-all: could not disable console switching: %s\n", strerror(errno));
     }
   }
 
@@ -41,6 +39,5 @@ bool vlock_start(void __attribute__((unused)) **ctx_ptr)
 
 bool vlock_end(void __attribute__((unused)) **ctx_ptr)
 {
-  unlock_console_switch();
-  return true;
+  return unlock_console_switch();
 }
