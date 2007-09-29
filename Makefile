@@ -15,7 +15,7 @@ all: $(PROGRAMS)
 debug:
 	@$(MAKE) DEBUG=y
 
-ifeq ($(ENABLE_PLUGINS),y)
+ifeq ($(ENABLE_PLUGINS),yes)
 all: plugins
 endif
 
