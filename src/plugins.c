@@ -70,9 +70,9 @@ static struct plugin *__load_plugin(const char *name);
 static void __resolve_depedencies(void);
 static void sort_plugins(void);
 
-void load_plugin(const char *name)
+bool load_plugin(const char *name)
 {
-  (void) __load_plugin(name);
+  return __load_plugin(name) == NULL;
 }
 
 void resolve_dependencies(void)
