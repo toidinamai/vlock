@@ -28,7 +28,9 @@ struct hook
 #define nr_hooks 4
 extern const struct hook hooks[nr_hooks];
 
-/* A single plugin is represented by this struct. */
+struct plugin_type;
+
+/* Struct representing a plugin instance. */
 struct plugin
 {
   /* The name of the plugin. */
@@ -43,33 +45,37 @@ struct plugin
   /* Did one of the save hooks fail? */
   bool save_disabled;
 
-  /* Function that is to be called when a hook should be executed.  */
-  bool (*call_hook)(struct plugin *p, const char *name);
-  /* Function that is to be called when this plugin should be destroyed.  */
-  void (*close)(struct plugin *p);
+  /* The type of the plugin. */
+  struct plugin_type *type;
 
   /* The call_hook and close functions may use this pointer. */
   void *context;
 };
 
-/* Create a new module type plugin.  On failure errno is set and NULL is
- * returned. */
-struct plugin *open_module(const char *name);
 
-/* Create a new script type plugin.  On failure errno is set and NULL is
- * returned. */
-struct plugin *open_script(const char *name);
+/* Struct representing the type of a plugin. */
+struct plugin_type
+{
+  /* Method that is called on plugin initialization. */
+  bool (*init)(struct plugin *p);
+  /* Method that is called on plugin destruction.  */
+  void (*destroy)(struct plugin *p);
+  /* Method that is called when a hook should be executed.  */
+  bool (*call_hook)(struct plugin *p, const char *name);
+};
 
-/* Allocate a new plugin struct.  Only the name field is set to a copy of the
- * given name.  The dependencies array is intialized with empty lists and
- * save_disabled is set to false.  This function should not be called directly.
- */
-struct plugin *__allocate_plugin(const char *name);
+/* Modules. */
+extern struct plugin_type *module;
+/* Scripts. */
+extern struct plugin_type *script;
+
+/* Open a new plugin struct of the given type.  On error errno is set and NULL
+ * is returned. */ 
+struct plugin *new_plugin(const char *name, struct plugin_type *type);
 
 /* Destroy the given plugin.  This is the opposite of of __allocate_plugin.
  * This function should not be called directly. */
-void __destroy_plugin(struct plugin *p);
-
-/* Destroy the given plugin by calling its close function and then
- * __destroy_plugin. */
 void destroy_plugin(struct plugin *p);
+
+/* Call the hook of a plugin. */
+bool call_hook(struct plugin *p, const char *hook_name);

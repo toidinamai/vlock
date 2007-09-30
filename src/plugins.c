@@ -124,7 +124,7 @@ static struct plugin *__load_plugin(const char *name)
     return p;
 
   /* Try to open a module first. */
-  p = open_module(name);
+  p = new_plugin(name, module);
 
   if (p != NULL)
     goto success;
@@ -133,7 +133,7 @@ static struct plugin *__load_plugin(const char *name)
     return NULL;
 
   /* Now try to open a script. */
-  p = open_script(name);
+  p = new_plugin(name, script);
 
   if (p == NULL)
     return NULL;
@@ -294,10 +294,10 @@ void handle_vlock_start(const char *hook_name)
   list_for_each(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
 
-    if (!p->call_hook(p, hook_name)) {
+    if (!call_hook(p, hook_name)) {
       list_for_each_reverse_from(plugins, reverse_item, plugin_item) {
         struct plugin *r = reverse_item->data;
-        r->call_hook(r, "vlock_end");
+        (void) call_hook(r, "vlock_end");
       }
 
       fatal_error("vlock-plugins: error in '%s' hook of plugin '%s'", hook_name, p->name);
@@ -310,7 +310,7 @@ void handle_vlock_end(const char *hook_name)
 {
   list_for_each_reverse(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
-    (void) p->call_hook(p, hook_name);
+    (void) call_hook(p, hook_name);
   }
 }
 
@@ -325,9 +325,9 @@ void handle_vlock_save(const char *hook_name)
     if (p->save_disabled)
       continue;
 
-    if (!p->call_hook(p, hook_name)) {
+    if (!call_hook(p, hook_name)) {
       p->save_disabled = true;
-      p->call_hook(p, "vlock_save_abort");
+      call_hook(p, "vlock_save_abort");
     }
   }
 }
@@ -343,7 +343,7 @@ void handle_vlock_save_abort(const char *hook_name)
     if (p->save_disabled)
       continue;
 
-    if (!p->call_hook(p, hook_name))
+    if (!call_hook(p, hook_name))
       p->save_disabled = true;
   }
 }
