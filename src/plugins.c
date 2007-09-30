@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "plugins.h"
 
@@ -114,37 +115,30 @@ static struct plugin *get_plugin(const char *name)
   return NULL;
 }
 
-/* Load and return the named plugin.  Aborts on error. */
+/* Load and return the named plugin. */
 static struct plugin *__load_plugin(const char *name)
 {
-  char *e1 = NULL;
-  char *e2 = NULL;
   struct plugin *p = get_plugin(name);
 
   if (p != NULL)
     return p;
 
-  p = open_module(name, &e1);
+  /* Try to open a module first. */
+  p = open_module(name);
+
+  if (p != NULL)
+    goto success;
+
+  if (errno != ENOENT)
+    return NULL;
+
+  /* Now try to open a script. */
+  p = open_script(name);
 
   if (p == NULL)
-    p = open_script(name, &e2);
+    return NULL;
 
-  if (p == NULL) {
-    if (e1 == NULL && e2 == NULL)
-      fatal_error("vlock-plugins: error loading plugin '%s'", name);
-
-    if (e1 != NULL) {
-      fprintf(stderr, "vlock-plugins: error loading module '%s': %s\n", name, e1);
-      free(e1);
-    }
-    if (e2 != NULL) {
-      fprintf(stderr, "vlock-plugins: error loading script '%s': %s\n", name, e2);
-      free(e2);
-    }
-
-    abort();
-  }
-
+success:
   list_append(plugins, p);
   return p;
 }
