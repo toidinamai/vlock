@@ -52,13 +52,13 @@ struct plugin
   void *context;
 };
 
-/* Create a new module type plugin.  On failure *error may be set to a
- * diagnostic message that must be freed by the caller and NULL is returned. */
-struct plugin *open_module(const char *name, char **error);
+/* Create a new module type plugin.  On failure errno is set and NULL is
+ * returned. */
+struct plugin *open_module(const char *name);
 
-/* Create a new script type plugin.  On failure *error may be set to a
- * diagnostic message that must be freed by the caller and NULL is returned. */
-struct plugin *open_script(const char *name, char **error);
+/* Create a new script type plugin.  On failure errno is set and NULL is
+ * returned. */
+struct plugin *open_script(const char *name);
 
 /* Allocate a new plugin struct.  Only the name field is set to a copy of the
  * given name.  The dependencies array is intialized with empty lists and
