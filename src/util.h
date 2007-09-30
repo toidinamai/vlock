@@ -32,3 +32,5 @@ void *ensure_malloc(size_t);
 void *ensure_calloc(size_t, size_t);
 void *ensure_realloc(void *, size_t);
 void *ensure_not_null(void *, const char *);
+
+#define STRERROR (errno ? strerror(errno) : "Unknown error")
