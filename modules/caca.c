@@ -76,7 +76,6 @@ void (*fn[])(enum action, cucul_canvas_t *) =
 /* Global variables */
 static int frame = 0;
 static bool abort_requested = false;
-static pid_t pid;
 
 void handle_sigterm(int __attribute__((unused)) signum)
 {
@@ -87,42 +86,32 @@ int caca_main(void);
 
 bool vlock_save(void **ctx_ptr)
 {
+  static struct child_process child = {
+    .function = (void (*)(void *))caca_main,
+    .argument = NULL,
+    .stdin_fd = REDIRECT_DEV_NULL,
+    .stdout_fd = NO_REDIRECT,
+    .stderr_fd = NO_REDIRECT,
+  };
+
+  /* Initialize ncurses. */
   initscr();
 
-  pid = fork();
+  if (!create_child(&child))
+    return false;
 
-  if (pid == 0) {
-    /* Child. */
-    int nullfd = open("/dev/null", O_RDONLY);
+  *ctx_ptr = &child;
 
-    if (nullfd < 0)
-      _exit(1);
-
-    (void) dup2(nullfd, STDIN_FILENO);
-
-    close_all_fds();
-
-    (void) signal(SIGTERM, handle_sigterm);
-    (void) signal(SIGABRT, SIG_DFL);
-    (void) signal(SIGUSR1, SIG_DFL);
-    (void) signal(SIGUSR2, SIG_DFL);
-
-    setgid(getgid());
-    setuid(getuid());
-
-    _exit(caca_main());
-  }
-
-  if (pid > 0)
-    *ctx_ptr = &pid;
-
-  return pid > 0;
+  return true;
 }
 
 bool vlock_save_abort(void **ctx_ptr)
 {
-  if (*ctx_ptr != NULL) {
-    ensure_death(pid);
+  struct child_process *child = *ctx_ptr;
+
+  if (child != NULL) {
+    ensure_death(child->pid);
+    /* Restore sane terminal and uninitialize ncurses. */
     curs_set(1);
     refresh();
     endwin();
