@@ -178,25 +178,25 @@ bool create_child(struct child_process *child)
     fd_set except_fds;
 
     if (child->stdin_fd == REDIRECT_PIPE)
-      (void) dup2(STDIN_FILENO, stdin_pipe[0]);
+      (void) dup2(stdin_pipe[0], STDIN_FILENO);
     else if (child->stdin_fd == REDIRECT_DEV_NULL)
-      (void) dup2(STDIN_FILENO, open_devnull());
+      (void) dup2(open_devnull(), STDOUT_FILENO);
     else if (child->stdin_fd != NO_REDIRECT)
-      (void) dup2(STDIN_FILENO, child->stdin_fd);
+      (void) dup2(child->stdin_fd, STDIN_FILENO);
 
     if (child->stdout_fd == REDIRECT_PIPE)
-      (void) dup2(STDOUT_FILENO, stdout_pipe[1]);
+      (void) dup2(stdout_pipe[1], STDOUT_FILENO);
     else if (child->stdout_fd == REDIRECT_DEV_NULL)
-      (void) dup2(STDOUT_FILENO, open_devnull());
+      (void) dup2(open_devnull(), STDOUT_FILENO);
     else if (child->stdout_fd != NO_REDIRECT)
-      (void) dup2(STDOUT_FILENO, child->stdout_fd);
+      (void) dup2(child->stdout_fd, STDOUT_FILENO);
 
     if (child->stderr_fd == REDIRECT_PIPE)
-      (void) dup2(STDERR_FILENO, stderr_pipe[1]);
+      (void) dup2(stderr_pipe[1], STDERR_FILENO);
     else if (child->stderr_fd == REDIRECT_DEV_NULL)
-      (void) dup2(STDERR_FILENO, open_devnull());
+      (void) dup2(open_devnull(), STDERR_FILENO);
     else if (child->stderr_fd != NO_REDIRECT)
-      (void) dup2(STDERR_FILENO, child->stderr_fd);
+      (void) dup2(child->stderr_fd, STDERR_FILENO);
 
     FD_ZERO(&except_fds);
     FD_SET(STDIN_FILENO, &except_fds);
