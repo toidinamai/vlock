@@ -88,7 +88,9 @@ bool init_script(struct plugin *p)
    * Also there is currently no error detection in case exec() fails later.
    */
   if (access(path, X_OK) < 0) {
+    int errsv = errno;
     free(path);
+    errno = errsv;
     return false;
   }
 
