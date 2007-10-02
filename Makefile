@@ -92,9 +92,9 @@ auth-shadow.o: auth-shadow.c prompt.h auth.h
 prompt.o: prompt.c prompt.h
 vlock-main.o: vlock-main.c auth.h prompt.h util.h
 plugins.o: plugins.c tsort.h plugin.h plugins.h list.h util.h
-module.o : override CFLAGS += -DVLOCK_MODULE_DIR="\"$(VLOCK_MODULE_DIR)\""
+module.o : override CFLAGS += -DVLOCK_MODULE_DIR="\"$(MODULEDIR)\""
 module.o: module.c plugin.h list.h util.h
-script.o : override CFLAGS += -DVLOCK_SCRIPT_DIR="\"$(VLOCK_SCRIPT_DIR)\""
+script.o : override CFLAGS += -DVLOCK_SCRIPT_DIR="\"$(SCRIPTDIR)\""
 script.o: script.c plugin.h process.h list.h util.h
 plugin.o: plugin.c plugin.h list.h util.h
 tsort.o: tsort.c tsort.h list.h
