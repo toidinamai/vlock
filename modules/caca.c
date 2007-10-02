@@ -82,12 +82,12 @@ void handle_sigterm(int __attribute__((unused)) signum)
   abort_requested = true;
 }
 
-int caca_main(void);
+static int caca_main(void *argument);
 
 bool vlock_save(void **ctx_ptr)
 {
   static struct child_process child = {
-    .function = (void (*)(void *))caca_main,
+    .function = caca_main,
     .argument = NULL,
     .stdin_fd = REDIRECT_DEV_NULL,
     .stdout_fd = NO_REDIRECT,
@@ -121,7 +121,7 @@ bool vlock_save_abort(void **ctx_ptr)
   return true;
 }
 
-int caca_main(void)
+static int caca_main(void __attribute__((unused)) *argument)
 {
     static caca_display_t *dp;
     static cucul_canvas_t *frontcv, *backcv, *mask;
