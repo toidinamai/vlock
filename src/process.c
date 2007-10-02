@@ -180,7 +180,7 @@ bool create_child(struct child_process *child)
     if (child->stdin_fd == REDIRECT_PIPE)
       (void) dup2(stdin_pipe[0], STDIN_FILENO);
     else if (child->stdin_fd == REDIRECT_DEV_NULL)
-      (void) dup2(open_devnull(), STDOUT_FILENO);
+      (void) dup2(open_devnull(), STDIN_FILENO);
     else if (child->stdin_fd != NO_REDIRECT)
       (void) dup2(child->stdin_fd, STDIN_FILENO);
 
