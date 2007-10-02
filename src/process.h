@@ -32,13 +32,13 @@ void close_all_fds(void);
 
 struct child_process {
   /* Function that will be run in the child. */
-  void (*function)(void *argument);
+  int (*function)(void *argument);
   /* Argument for the function. */
   void *argument;
   /* First argument to execv. */
   const char *path;
   /* Second argument to execv. */
-  const char **argv;
+  const char *const *argv;
   /* The child's stdin. */
   int stdin_fd;
   /* The child's stdout. */

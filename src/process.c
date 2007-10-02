@@ -17,6 +17,7 @@
 #include <sys/wait.h>
 #include <sys/resource.h>
 #include <sys/time.h>
+#include <fcntl.h>
 
 #include "process.h"
 
@@ -131,7 +132,119 @@ void close_all_fds(void)
   }
 }
 
+static int open_devnull(void)
+{
+  static int devnull_fd = -1;
+
+  if (devnull_fd < 0)
+    devnull_fd = open("/dev/null", O_RDWR);
+
+  return devnull_fd;
+}
+
 bool create_child(struct child_process *child)
 {
+  int stdin_pipe[2];
+  int stdout_pipe[2];
+  int stderr_pipe[3];
+
+  if (child->stdin_fd == REDIRECT_PIPE) {
+    if (pipe(stdin_pipe) < 0)
+      return false;
+  } 
+
+  if (child->stdout_fd == REDIRECT_PIPE) {
+    if (pipe(stdout_pipe) < 0)
+      goto stdout_pipe_failed;
+  }
+
+  if (child->stderr_fd == REDIRECT_PIPE) {
+    if (pipe(stderr_pipe) < 0)
+      goto stderr_pipe_failed;
+  }
+
+  child->pid = fork();
+
+  if (child->pid == 0) {
+    /* Child. */
+    if (child->stdin_fd == REDIRECT_PIPE)
+      (void) dup2(STDIN_FILENO, stdin_pipe[0]);
+    else if (child->stdin_fd == REDIRECT_DEV_NULL)
+      (void) dup2(STDIN_FILENO, open_devnull());
+    else if (child->stdin_fd != NO_REDIRECT)
+      (void) dup2(STDIN_FILENO, child->stdin_fd);
+
+    if (child->stdout_fd == REDIRECT_PIPE)
+      (void) dup2(STDIN_FILENO, stdout_pipe[1]);
+    else if (child->stdout_fd == REDIRECT_DEV_NULL)
+      (void) dup2(STDIN_FILENO, open_devnull());
+    else if (child->stdout_fd != NO_REDIRECT)
+      (void) dup2(STDIN_FILENO, child->stdout_fd);
+
+    if (child->stderr_fd == REDIRECT_PIPE)
+      (void) dup2(STDIN_FILENO, stderr_pipe[1]);
+    else if (child->stderr_fd == REDIRECT_DEV_NULL)
+      (void) dup2(STDIN_FILENO, open_devnull());
+    else if (child->stderr_fd != NO_REDIRECT)
+      (void) dup2(STDIN_FILENO, child->stderr_fd);
+
+    (void) close_all_fds();
+
+    (void) setgid(getgid());
+    (void) setuid(getuid());
+
+    if (child->function != NULL) {
+      _exit(child->function(child->argument));
+    } else {
+      execv(child->path, (char *const*)child->argv);
+    }
+
+    _exit(1);
+  }
+
+  if (child->pid < 0)
+    goto fork_failed;
+
+  if (child->stdin_fd == REDIRECT_PIPE) {
+    /* Write end. */
+    child->stdin_fd = stdin_pipe[1];
+    /* Read end. */
+    (void) close(stdin_pipe[0]);
+  }
+
+  if (child->stdout_fd == REDIRECT_PIPE) {
+    /* Read end. */
+    child->stdout_fd = stdout_pipe[0];
+    /* Write end. */
+    (void) close(stdout_pipe[1]);
+  }
+
+  if (child->stderr_fd == REDIRECT_PIPE) {
+    /* Read end. */
+    child->stderr_fd = stderr_pipe[0];
+    /* Write end. */
+    (void) close(stderr_pipe[1]);
+  }
+
+  return true;
+
+fork_failed:
+  if (child->stderr_fd == REDIRECT_PIPE) {
+    (void) close(stderr_pipe[0]);
+    (void) close(stderr_pipe[1]);
+  }
+
+stderr_pipe_failed:
+  if (child->stdout_fd == REDIRECT_PIPE) {
+    (void) close(stdout_pipe[0]);
+    (void) close(stdout_pipe[1]);
+  }
+
+stdout_pipe_failed:
+  if (child->stdin_fd == REDIRECT_PIPE) {
+    (void) close(stdin_pipe[0]);
+    (void) close(stdin_pipe[1]);
+  }
+
   return false;
 }
