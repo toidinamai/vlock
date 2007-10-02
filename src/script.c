@@ -161,8 +161,8 @@ static struct script_context *launch_script(const char *path)
     .path = path,
     .argv = argv,
     .stdin_fd = REDIRECT_PIPE,
-    .stdout_fd = REDIRECT_PIPE,
-    .stderr_fd = REDIRECT_PIPE,
+    .stdout_fd = REDIRECT_DEV_NULL,
+    .stderr_fd = REDIRECT_DEV_NULL,
     .function = NULL,
   };
 
