@@ -18,6 +18,7 @@
 #include <sys/resource.h>
 #include <sys/time.h>
 #include <fcntl.h>
+#include <sys/select.h>
 
 #include "process.h"
 
@@ -103,9 +104,9 @@ void ensure_death(pid_t pid)
   (void) waitpid(pid, &status, 0);
 }
 
-/* Close all possibly open file descriptors except STDIN_FILENO, STDOUT_FILENO
- * and STDERR_FILENO. */
-void close_all_fds(void)
+/* Close all possibly open file descriptors except the ones specified in the
+ * given set. */
+static void close_fds(fd_set *except_fds)
 {
   struct rlimit r;
   int maxfd;
@@ -119,17 +120,9 @@ void close_all_fds(void)
 
   /* Close all possibly open file descriptors except STDIN_FILENO,
    * STDOUT_FILENO and STDERR_FILENO. */
-  for (int i = 0; i < maxfd; i++) {
-    switch (i) {
-      case STDIN_FILENO:
-      case STDOUT_FILENO:
-      case STDERR_FILENO:
-        break;
-      default:
-        (void) close(i);
-        break;
-    }
-  }
+  for (int fd = 0; fd < maxfd; fd++)
+    if (!FD_ISSET(fd, except_fds))
+      (void) close(fd);
 }
 
 static int open_devnull(void)

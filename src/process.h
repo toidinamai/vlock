@@ -22,10 +22,6 @@ bool wait_for_death(pid_t pid, long sec, long usec);
 /* Try hard to kill the given child process. */
 void ensure_death(pid_t pid);
 
-/* Close all possibly open file descriptors except STDIN_FILENO, STDOUT_FILENO
- * and STDERR_FILENO. */
-void close_all_fds(void);
-
 #define NO_REDIRECT (-2)
 #define REDIRECT_DEV_NULL (-3)
 #define REDIRECT_PIPE (-4)
