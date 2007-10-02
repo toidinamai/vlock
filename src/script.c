@@ -48,6 +48,16 @@
 
 #include "plugin.h"
 
+static bool init_script(struct plugin *p);
+static void destroy_script(struct plugin *p);
+static bool call_script_hook(struct plugin *p, const char *hook_name);
+
+struct plugin_type *script = &(struct plugin_type){
+  .init = init_script,
+  .destroy = destroy_script,
+  .call_hook = call_script_hook,
+};
+
 struct script_context 
 {
   /* The pipe file descriptor that is connected to the script's stdin. */
@@ -56,26 +66,20 @@ struct script_context
   pid_t pid;
 };
 
-/* Get the dependency from the script.  No error detection.  Aborts on fatal
- * errors. */
-static void get_dependency(const char *path, const char *dependency_name,
+/* Get the dependency from the script. */ 
+static bool get_dependency(const char *path, const char *dependency_name,
     struct list *dependency_list);
 /* Launch the script creating a new script_context.  No error detection aborts
  * on fatal errors. */
 static struct script_context *launch_script(const char *path);
 
-
-static void close_script(struct plugin *s);
-static bool call_script_hook(struct plugin *s, const char *hook_name);
-
-struct plugin *open_script(const char *name, char **error)
+bool init_script(struct plugin *p)
 {
   char *path;
-  struct plugin *s = __allocate_plugin(name);
 
-  if (asprintf(&path, "%s/%s", VLOCK_SCRIPT_DIR, name) < 0) {
-    *error = strdup("filename too long");
-    goto path_error;
+  if (asprintf(&path, "%s/%s", VLOCK_SCRIPT_DIR, p->name) < 0) {
+    errno = ENOMEM;
+    return false;
   }
 
   /* Test for access.  This must be done manually because vlock most likely
@@ -84,43 +88,37 @@ struct plugin *open_script(const char *name, char **error)
    * Also there is currently no error detection in case exec() fails later.
    */
   if (access(path, X_OK) < 0) {
-    (void) asprintf(error, "%s: %s", path, strerror(errno));
-    goto access_error;
+    free(path);
+    return false;
   }
 
   /* Get the dependency information. */
   for (size_t i = 0; i < nr_dependencies; i++)
-    get_dependency(path, dependency_names[i], s->dependencies[i]);
+    if (!get_dependency(path, dependency_names[i], p->dependencies[i]))
+      return false;
 
   /* Launch the script. */
-  s->context = launch_script(path);
-  s->close = close_script;
-  s->call_hook = call_script_hook;
+  p->context = launch_script(path);
 
   free(path);
 
-  return s;
-
-access_error:
-  free(path);
-
-path_error:
-  __destroy_plugin(s);
-  return NULL;
+  return true;
 }
 
-static void close_script(struct plugin *s)
+static void destroy_script(struct plugin *p)
 {
-  struct script_context *context = s->context;
+  struct script_context *context = p->context;
 
-  /* Close the pipe. */
-  (void) close(context->fd);
+  if (context != NULL) {
+    /* Close the pipe. */
+    (void) close(context->fd);
 
-  /* Kill the child process. */
-  if (!wait_for_death(context->pid, 0, 500000L))
-    ensure_death(context->pid);
+    /* Kill the child process. */
+    if (!wait_for_death(context->pid, 0, 500000L))
+      ensure_death(context->pid);
 
-  free(context);
+    free(context);
+  }
 }
 
 /* Invoke the hook by writing it on a single line to the scripts stdin. */
@@ -204,19 +202,27 @@ static struct script_context *launch_script(const char *path)
 }
 
 static char *read_dependency(const char *path, const char *dependency_name);
-static void parse_dependency(char *data, struct list *dependency_list);
+static bool parse_dependency(char *data, struct list *dependency_list);
 
 /* Get the dependency from the script. */
-static void get_dependency(const char *path, const char *dependency_name,
+static bool get_dependency(const char *path, const char *dependency_name,
     struct list *dependency_list)
 {
   /* Read the dependency data. */
-  char *data = read_dependency(path, dependency_name);
+  char *data;
+  errno = 0;
+  data = read_dependency(path, dependency_name);
 
-  if (data != NULL)  {
+
+  if (data == NULL)  {
+    return errno != 0;
+  } else {
     /* Parse the dependency data. */
-    parse_dependency(data, dependency_list);
+    bool result = parse_dependency(data, dependency_list);
+    int errsv = errno;
     free(data);
+    errno = errsv;
+    return result;
   }
 }
 
@@ -346,7 +352,7 @@ read_error:
   abort();
 }
 
-static void parse_dependency(char *data, struct list *dependency_list)
+static bool parse_dependency(char *data, struct list *dependency_list)
 {
   for (char *s = data, *saveptr;; s = NULL) {
     char *token = strtok_r(s, "\n", &saveptr);
@@ -356,4 +362,6 @@ static void parse_dependency(char *data, struct list *dependency_list)
 
     list_append(dependency_list, ensure_not_null(strdup(token), "could not copy string"));
   }
+
+  return true;
 }
