@@ -1,4 +1,13 @@
-2007-09-21
+2007-10-03 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.2 alpha3
+
+	* Added ./configure script.
+	* Improved plugin handling.
+	* Improved error handling.
+	* Improved child process handling.
+
+2007-09-21 Frank Benkstein <frank-vlock@benkstein.net>
 
 	vlock 2.2 alpha2
 
