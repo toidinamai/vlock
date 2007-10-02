@@ -167,7 +167,9 @@ static struct script_context *launch_script(const char *path)
   };
 
   if (!create_child(&child)) {
+    int errsv = errno;
     free(script);
+    errno = errsv;
     return NULL;
   }
 
