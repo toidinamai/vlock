@@ -57,4 +57,4 @@ struct child_process {
  * connected to the respective descriptor of the child.  The file descriptor of
  * the other end is stored in the field after the call.  It is up to the caller
  * to close the pipe descriptor(s). */
-void create_child(struct child_process *child);
+bool create_child(struct child_process *child);

@@ -131,6 +131,7 @@ void close_all_fds(void)
   }
 }
 
-void create_child(struct child_process *child)
+bool create_child(struct child_process *child)
 {
+  return false;
 }
