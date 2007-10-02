@@ -212,50 +212,24 @@ static bool get_dependency(const char *path, const char *dependency_name,
  * the dependencies to its stdout one on per line. */
 static char *read_dependency(const char *path, const char *dependency_name)
 {
-  char *error = NULL;
-  int pipe_fds[2];
-  pid_t pid;
-  struct timeval timeout = (struct timeval){1, 0};
+  const char *argv[] = { path, dependency_name, NULL };
+  struct child_process child = {
+    .path = path,
+    .argv = argv,
+    .stdin_fd = REDIRECT_DEV_NULL,
+    .stdout_fd = REDIRECT_PIPE,
+    .stderr_fd = REDIRECT_DEV_NULL,
+    .function = NULL,
+  };
+  struct timeval timeout = {1, 0};
   char *data = ensure_calloc(1, sizeof *data);
   size_t data_length = 0;
 
-  /* Open a pipe for the script. */
-  if (pipe(pipe_fds) < 0)
-    fatal_error("pipe() failed");
-
-  pid = fork();
-
-  if (pid == 0) {
-    /* Child. */
-    int nullfd = open("/dev/null", O_RDWR);
-
-    if (nullfd < 0)
-      _exit(1);
-
-    /* Redirect stdio. */
-    (void) dup2(nullfd, STDIN_FILENO);
-    (void) dup2(pipe_fds[1], STDOUT_FILENO);
-    (void) dup2(nullfd, STDERR_FILENO);
-
-    /* Close all other file descriptors. */
-    close_all_fds();
-
-    /* Drop privileges. */
-    setgid(getgid());
-    setuid(getuid());
-
-    (void) execl(path, path, dependency_name, NULL);
-
-    _exit(1);
-  }
-  
-  /* Close write end of the pipe. */
-  (void) close(pipe_fds[1]);
-
-  if (pid < 0) {
-    (void) close(pipe_fds[0]);
+  if (!create_child(&child)) {
+    int errsv = errno;
     free(data);
-    fatal_error("fork() failed");
+    errno = errsv;
+    return NULL;
   }
 
   /* Read the dependency from the child.  Reading fails if either the timeout
@@ -270,14 +244,14 @@ static char *read_dependency(const char *path, const char *dependency_name)
     fd_set read_fds;
 
     FD_ZERO(&read_fds);
-    FD_SET(pipe_fds[0], &read_fds);
+    FD_SET(child.stdout_fd, &read_fds);
 
     /* t1 is before select. */
     (void) gettimeofday(&t1, NULL);
 
-    if (select(pipe_fds[0]+1, &read_fds, NULL, NULL, &t) != 1) {
+    if (select(child.stdout_fd+1, &read_fds, NULL, NULL, &t) != 1) {
 timeout:
-      asprintf(&error, "timeout while reading dependency '%s' from '%s", dependency_name, path);
+      errno = ETIME;
       goto read_error;
     }
 
@@ -295,14 +269,14 @@ timeout:
     timersub(&timeout, &t2, &timeout);
 
     /* Read dependency data from the script. */
-    length = read(pipe_fds[0], buffer, sizeof buffer - 1);
+    length = read(child.stdout_fd+1, buffer, sizeof buffer - 1);
 
     /* Did the script close its stdin or exit? */
     if (length <= 0)
       break;
 
     if (data_length+length+1 > LINE_MAX) {
-      asprintf(&error, "too much data while reading dependency '%s' from '%s'", dependency_name, path);
+      errno = EFBIG;
       goto read_error;
     }
 
@@ -316,21 +290,23 @@ timeout:
   data[data_length] = '\0';
 
   /* Close the read end of the pipe. */
-  (void) close(pipe_fds[0]);
+  (void) close(child.stdout_fd);
   /* Kill the script. */
-  if (!wait_for_death(pid, 0, 500000L))
-    ensure_death(pid);
+  if (!wait_for_death(child.pid, 0, 500000L))
+    ensure_death(child.pid);
 
   return data;
 
 read_error:
-  free(data);
-  (void) close(pipe_fds[0]);
-  if (!wait_for_death(pid, 0, 500000L))
-    ensure_death(pid);
-  fprintf(stderr, "%s\n", error);
-  free(error);
-  abort();
+  {
+    int errsv = errno;
+    free(data);
+    (void) close(child.stdout_fd);
+    if (!wait_for_death(child.pid, 0, 500000L))
+      ensure_death(child.pid);
+    errno = errsv;
+    return NULL;
+  }
 }
 
 static bool parse_dependency(char *data, struct list *dependency_list)
