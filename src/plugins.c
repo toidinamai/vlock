@@ -300,7 +300,7 @@ void handle_vlock_start(const char *hook_name)
         (void) call_hook(r, "vlock_end");
       }
 
-      fatal_error("vlock-plugins: error in '%s' hook of plugin '%s'", hook_name, p->name);
+      fatal_error("vlock-plugins: hook '%s' of plugin '%s' failed: %s", hook_name, p->name, STRERROR);
     }
   }
 }
