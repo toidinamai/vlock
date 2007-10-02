@@ -185,7 +185,6 @@ static bool get_dependency(const char *path, const char *dependency_name,
   errno = 0;
   data = read_dependency(path, dependency_name);
 
-
   if (data == NULL)  {
     return errno != 0;
   } else {
