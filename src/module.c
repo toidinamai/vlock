@@ -33,6 +33,16 @@
 
 #include "plugin.h"
 
+static bool init_module(struct plugin *p);
+static void destroy_module(struct plugin *p);
+static bool call_module_hook(struct plugin *p, const char *hook_name);
+
+struct plugin_type *module = &(struct plugin_type){
+  .init = init_module,
+  .destroy = destroy_module,
+  .call_hook = call_module_hook,
+};
+
 /* A hook function as defined by a module. */
 typedef bool (*module_hook_function)(void **);
 
@@ -47,91 +57,93 @@ struct module_context
   module_hook_function hooks[nr_hooks];
 };
 
-static void close_module(struct plugin *m);
-static bool call_module_hook(struct plugin *m, const char *hook_name);
 
-/* Create a new module type plugin. */
-struct plugin *open_module(const char *name, char **error)
+/* Initialize a new plugin as a module. */
+bool init_module(struct plugin *p)
 {
   char *path;
-  struct plugin *m = __allocate_plugin(name);
-  struct module_context *context = ensure_malloc(sizeof *context);
+  struct module_context *context;
 
-  context->module_data = NULL;
-
-  if (asprintf(&path, "%s/%s.so", VLOCK_MODULE_DIR, name) < 0) {
-    *error = strdup("filename too long");
-    goto path_error;
+  if (asprintf(&path, "%s/%s.so", VLOCK_MODULE_DIR, p->name) < 0) {
+    errno = ENOMEM;
+    return false;
   }
 
   /* Test for access.  This must be done manually because vlock most likely
-   * runs as a setuid executable and would otherwise override restrictions. */
+   * runs as a setuid executable and would otherwise override restrictions.
+   * Also dlopen doesn't set errno on error. */
   if (access(path, R_OK) < 0) {
-    (void) asprintf(error, "%s: %s", path, strerror(errno));
-    goto access_error;
+    free(path);
+    return false;
+  }
+
+  context = malloc(sizeof *context);
+
+  if (context == NULL) {
+    int errsv = errno;
+    free(path);
+    errno = errsv;
+    return false;
   }
 
   /* Open the module as a shared library. */
   context->dl_handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
 
+  free(path);
+
   if (context->dl_handle == NULL) {
-    *error = strdup(dlerror());
-    goto dlopen_error;
+    errno = 0;
+    free(context);
+    return false;
   }
 
-  free(path);
+  /* Initialisation complete.  From now on cleanup is handled by destroy_module(). */
+  p->context = context;
 
   /* Load all the hooks.  Unimplemented hooks are NULL and will not be called later. */
   for (size_t i = 0; i < nr_hooks; i++)
     *(void **) (&context->hooks[i]) = dlsym(context->dl_handle, hooks[i].name);
 
-
   /* Load all dependencies.  Unspecified dependencies are NULL. */
   for (size_t i = 0; i < nr_dependencies; i++) {
     const char *(*dependency)[] = dlsym(context->dl_handle, dependency_names[i]);
 
-    for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++)
-      list_append(m->dependencies[i], ensure_not_null(strdup((*dependency)[j]), "failed to copy string"));
+    /* Append array elements to list. */
+    for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++) {
+      char *s = strdup((*dependency)[j]);
+
+      if (s == NULL)
+        return false;
+
+      list_append(p->dependencies[i], s);
+    }
   }
 
-  m->context = context;
-  m->close = close_module;
-  m->call_hook = call_module_hook;
-
-  return m;
-
-dlopen_error:
-access_error:
-  free(path);
-
-path_error:
-  free(context);
-  __destroy_plugin(m);
-  return NULL;
+  return true;
 }
 
-static void close_module(struct plugin *m)
+static void destroy_module(struct plugin *p)
 {
-  struct module_context *context = m->context;
-  dlclose(context->dl_handle);
-  free(context);
+  struct module_context *context = p->context;
+
+  if (context != NULL) {
+    dlclose(context->dl_handle);
+    free(context);
+  }
 }
 
-static bool call_module_hook(struct plugin *m, const char *hook_name)
+static bool call_module_hook(struct plugin *p, const char *hook_name)
 {
-  bool result = true;
+  struct module_context *context = p->context;
 
   /* Find the right hook index. */
   for (size_t i = 0; i < nr_hooks; i++)
     if (strcmp(hooks[i].name, hook_name) == 0) {
-      struct module_context *context = m->context;
       module_hook_function hook = context->hooks[i];
-      
-      if (hook != NULL)
-        result = context->hooks[i](&context->module_data);
 
-      break;
+      if (hook != NULL)
+        return hook(&context->module_data);
     }
 
-  return result;
+  return true;
 }

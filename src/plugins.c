@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "plugins.h"
 
@@ -70,9 +71,9 @@ static struct plugin *__load_plugin(const char *name);
 static void __resolve_depedencies(void);
 static void sort_plugins(void);
 
-void load_plugin(const char *name)
+bool load_plugin(const char *name)
 {
-  (void) __load_plugin(name);
+  return __load_plugin(name) == NULL;
 }
 
 void resolve_dependencies(void)
@@ -114,37 +115,30 @@ static struct plugin *get_plugin(const char *name)
   return NULL;
 }
 
-/* Load and return the named plugin.  Aborts on error. */
+/* Load and return the named plugin. */
 static struct plugin *__load_plugin(const char *name)
 {
-  char *e1 = NULL;
-  char *e2 = NULL;
   struct plugin *p = get_plugin(name);
 
   if (p != NULL)
     return p;
 
-  p = open_module(name, &e1);
+  /* Try to open a module first. */
+  p = new_plugin(name, module);
+
+  if (p != NULL)
+    goto success;
+
+  if (errno != ENOENT)
+    return NULL;
+
+  /* Now try to open a script. */
+  p = new_plugin(name, script);
 
   if (p == NULL)
-    p = open_script(name, &e2);
+    return NULL;
 
-  if (p == NULL) {
-    if (e1 == NULL && e2 == NULL)
-      fatal_error("vlock-plugins: error loading plugin '%s'", name);
-
-    if (e1 != NULL) {
-      fprintf(stderr, "vlock-plugins: error loading module '%s': %s\n", name, e1);
-      free(e1);
-    }
-    if (e2 != NULL) {
-      fprintf(stderr, "vlock-plugins: error loading script '%s': %s\n", name, e2);
-      free(e2);
-    }
-
-    abort();
-  }
-
+success:
   list_append(plugins, p);
   return p;
 }
@@ -300,10 +294,10 @@ void handle_vlock_start(const char *hook_name)
   list_for_each(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
 
-    if (!p->call_hook(p, hook_name)) {
+    if (!call_hook(p, hook_name)) {
       list_for_each_reverse_from(plugins, reverse_item, plugin_item) {
         struct plugin *r = reverse_item->data;
-        r->call_hook(r, "vlock_end");
+        (void) call_hook(r, "vlock_end");
       }
 
       fatal_error("vlock-plugins: error in '%s' hook of plugin '%s'", hook_name, p->name);
@@ -316,7 +310,7 @@ void handle_vlock_end(const char *hook_name)
 {
   list_for_each_reverse(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
-    (void) p->call_hook(p, hook_name);
+    (void) call_hook(p, hook_name);
   }
 }
 
@@ -331,9 +325,9 @@ void handle_vlock_save(const char *hook_name)
     if (p->save_disabled)
       continue;
 
-    if (!p->call_hook(p, hook_name)) {
+    if (!call_hook(p, hook_name)) {
       p->save_disabled = true;
-      p->call_hook(p, "vlock_save_abort");
+      call_hook(p, "vlock_save_abort");
     }
   }
 }
@@ -349,7 +343,7 @@ void handle_vlock_save_abort(const char *hook_name)
     if (p->save_disabled)
       continue;
 
-    if (!p->call_hook(p, hook_name))
+    if (!call_hook(p, hook_name))
       p->save_disabled = true;
   }
 }

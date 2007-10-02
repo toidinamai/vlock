@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
+#include <errno.h>
 #include <time.h>
 
 #include "util.h"
@@ -62,7 +64,16 @@ void fatal_error_free(char *error)
 {
   fputs(error, stderr);
   fputc('\n', stderr);
-  abort();
+  free(error);
+  exit(EXIT_FAILURE);
+}
+
+void fatal_perror(const char *errmsg)
+{
+  if (errno != 0)
+    fatal_error("%s: %s", errmsg, strerror(errno));
+  else
+    fatal_error("%s", errmsg);
 }
 
 void *ensure_malloc(size_t size)

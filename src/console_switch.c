@@ -58,23 +58,16 @@ static struct sigaction sa_usr1;
 static struct sigaction sa_usr2;
 
 /* Disable virtual console switching in the kernel.  If disabling fails false
- * is returned and *error is set to a diagnostic message that must be freed by
- * the caller.  */
-bool lock_console_switch(char **error)
+ * is returned and errno is set. */
+bool lock_console_switch(void)
 {
   /* Console mode when switching is disabled. */
   struct vt_mode lock_vtm;
   struct sigaction sa;
 
   /* Get the virtual console mode. */
-  if (ioctl(STDIN_FILENO, VT_GETMODE, &vtm) < 0) {
-    if (errno == ENOTTY || errno == EINVAL)
-      *error = strdup("this terminal is not a virtual console");
-    else
-      (void) asprintf(error, "could not get virtual console mode: %s", strerror(errno));
-
+  if (ioctl(STDIN_FILENO, VT_GETMODE, &vtm) < 0)
     return false;
-  }
 
   /* Copy the current virtual console mode. */
   lock_vtm = vtm;
@@ -99,9 +92,10 @@ bool lock_console_switch(char **error)
   /* Set virtual console mode to be process governed thus disabling console
    * switching through the signal handlers above. */
   if (ioctl(STDIN_FILENO, VT_SETMODE, &lock_vtm) < 0) {
-    (void) asprintf(error, "could not set virtual console mode: %s", strerror(errno));
+    int errsv = errno;
     (void) sigaction(SIGUSR1, &sa_usr1, NULL);
     (void) sigaction(SIGUSR2, &sa_usr2, NULL);
+    errno = errsv;
     return false;
   }
 
@@ -110,17 +104,17 @@ bool lock_console_switch(char **error)
 }
 
 /* Reenable console switching if it was previously disabled. */
-void unlock_console_switch(void)
+bool unlock_console_switch(void)
 {
-  /* Restore virtual console mode. */
   if (console_switch_locked) {
     console_switch_locked = (ioctl(STDIN_FILENO, VT_SETMODE, &vtm) < 0);
 
-    if (console_switch_locked) {
-      perror("could not restore virtual console mode");
-    } else {
-      (void) sigaction(SIGUSR1, &sa_usr1, NULL);
-      (void) sigaction(SIGUSR2, &sa_usr2, NULL);
-    }
+    if (console_switch_locked)
+      return false;
+
+    (void) sigaction(SIGUSR1, &sa_usr1, NULL);
+    (void) sigaction(SIGUSR2, &sa_usr2, NULL);
   }
+
+  return true;
 }

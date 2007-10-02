@@ -17,9 +17,9 @@
 /* Is console switching currently disabled? */
 extern bool console_switch_locked;
 
-/* Disable virtual console switching in the kernel.  If disabling fails false
- * is returned and *error is set to a diagnostic message that must be freed by
- * the caller.  */
-bool lock_console_switch(char **error);
-/* Reenable console switching if it was previously disabled. */
-void unlock_console_switch(void);
+/* Disable virtual console switching in the kernel.  On failure false
+ * is returned and errno is set. */
+bool lock_console_switch(void);
+/* Reenable console switching if it was previously disabled.  On failure false
+ * is returned and errno is set. */
+bool unlock_console_switch(void);

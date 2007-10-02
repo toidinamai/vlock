@@ -33,29 +33,36 @@
 #include "plugins.h"
 #endif
 
+int vlock_debug = 0;
+
+#define ensure_atexit(func) \
+  do { \
+    if (atexit(func) != 0) \
+      fatal_perror("vlock-main: atexit() failed"); \
+  } while (0)
+
 static char *get_username(void)
 {
-  /* get the user id */
   uid_t uid = getuid();
   char *username = NULL;
 
+  /* Get the user name from the environment if started as root. */
   if (uid == 0)
-    /* get the user name from the environment */
     username = getenv("USER");
 
   if (username == NULL) {
     struct passwd *pw;
 
-    /* get the password entry */
+    /* Get the password entry. */
     pw = getpwuid(uid);
 
     if (pw == NULL)
-      fatal_error("vlock-main: could not get username for uid %d", uid);
+      return NULL;
 
     username = pw->pw_name;
   }
 
-  return ensure_not_null(strdup(username), "could not copy string");
+  return strdup(username);
 }
 
 static void terminate(int signum)
@@ -72,9 +79,9 @@ static void block_signals(void)
 {
   struct sigaction sa;
 
-  /* ignore some signals */
-  /* these signals shouldn't be delivered anyway, because
-   * terminal signals are disabled below */
+  /* Ignore some signals. */
+  /* These signals shouldn't be delivered anyway, because terminal signals are
+   * disabled below. */
   (void) sigemptyset(&(sa.sa_mask));
   sa.sa_flags = SA_RESTART;
   sa.sa_handler = SIG_IGN;
@@ -82,6 +89,7 @@ static void block_signals(void)
   (void) sigaction(SIGQUIT, &sa, NULL);
   (void) sigaction(SIGTSTP, &sa, NULL);
 
+  /* Install special handler for TERM and ABRT. */
   sa.sa_flags = SA_RESETHAND;
   sa.sa_handler = terminate;
   (void) sigaction(SIGTERM, &sa, NULL);
@@ -93,7 +101,7 @@ static tcflag_t lflag;
 
 static void secure_terminal(void)
 {
-  /* disable terminal echoing and signals */
+  /* Disable terminal echoing and signals. */
   (void) tcgetattr(STDIN_FILENO, &term);
   lflag = term.c_lflag;
   term.c_lflag &= ~(ECHO | ISIG);
@@ -102,7 +110,7 @@ static void secure_terminal(void)
 
 static void restore_terminal(void)
 {
-  /* restore the terminal */
+  /* Restore the terminal. */
   term.c_lflag = lflag;
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
@@ -113,7 +121,7 @@ static void auth_loop(const char *username)
   struct timespec *wait_timeout;
   char *vlock_message;
 
-  /* get the vlock message from the environment */
+  /* Get the vlock message from the environment. */
   vlock_message = getenv("VLOCK_MESSAGE");
 
   if (vlock_message == NULL) {
@@ -123,7 +131,7 @@ static void auth_loop(const char *username)
       vlock_message = getenv("VLOCK_CURRENT_MESSAGE");
   }
 
-  /* get the timeouts from the environment */
+  /* Get the timeouts from the environment. */
   prompt_timeout = parse_seconds(getenv("VLOCK_PROMPT_TIMEOUT"));
 #ifdef USE_PLUGINS
   wait_timeout = parse_seconds(getenv("VLOCK_TIMEOUT"));
@@ -134,24 +142,24 @@ static void auth_loop(const char *username)
   for (;;) {
     char c;
 
+    /* Print vlock message if there is one. */
     if (vlock_message && *vlock_message) {
-      /* print vlock message */
       fputs(vlock_message, stderr);
       fputc('\n', stderr);
     }
 
-    /* wait for enter or escape to be pressed */
+    /* Wait for enter or escape to be pressed. */
     c = wait_for_character("\n\033", wait_timeout);
 
-    /* escape was pressed or the timeout occurred */
+    /* Escape was pressed or the timeout occurred. */
     if (c == '\033' || c == 0) {
 #ifdef USE_PLUGINS
       plugin_hook("vlock_save");
-      /* wait for any key to be pressed */
+      /* Wait for any key to be pressed. */
       c = wait_for_character(NULL, NULL);
       plugin_hook("vlock_save_abort");
 
-      /* do not require enter to be pressed twice */
+      /* Do not require enter to be pressed twice. */
       if (c != '\n')
         continue;
 #else
@@ -172,7 +180,7 @@ static void auth_loop(const char *username)
 #endif
   }
 
-  /* free some memory */
+  /* Free timeouts memory. */
   free(wait_timeout);
   free(prompt_timeout);
 }
@@ -180,7 +188,7 @@ static void auth_loop(const char *username)
 #ifdef USE_PLUGINS
 static void call_end_hook(void)
 {
-  plugin_hook("vlock_end");
+  (void) plugin_hook("vlock_end");
 }
 #endif
 
@@ -189,33 +197,35 @@ int main(int argc, char *const argv[])
 {
   char *username;
 
+  vlock_debug = (getenv("VLOCK_DEBUG") != NULL);
+
   block_signals();
 
   username = get_username();
 
+  if (username == NULL)
+    fatal_perror("vlock-main: could not get username");
+
 #ifdef USE_PLUGINS
   for (int i = 1; i < argc; i++)
-    load_plugin(argv[i]);
+    if (!load_plugin(argv[i]))
+      fatal_error("vlock-main: loading plugin '%s' failed: %s\n", argv[i], STRERROR);
 
   ensure_atexit(unload_plugins);
   resolve_dependencies();
   plugin_hook("vlock_start");
   ensure_atexit(call_end_hook);
 #else /* !USE_PLUGINS */
+  /* Emulate pseudo plugin "all". */
   if (argc == 2 && (strcmp(argv[1], "all") == 0)) {
-    char *error = NULL;
-
-    if (!lock_console_switch(&error)) {
-      if (error != NULL) {
-        fprintf(stderr, "vlock-main: %s\n", error);
-        free(error);
-        abort();
-      } else {
-        fatal_error("vlock-main: could not disable console switching");
-      }
+    if (!lock_console_switch()) {
+      if (errno == ENOTTY || errno == EINVAL)
+        fatal_error("vlock-main: this terminal is not a virtual console");
+      else
+        fatal_perror("vlock-main: could not disable console switching");
     }
 
-    ensure_atexit(unlock_console_switch);
+    ensure_atexit((void (*)(void))unlock_console_switch);
   } else if (argc > 1) {
     fatal_error("vlock-main: plugin support disabled");
   }

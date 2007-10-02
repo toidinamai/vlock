@@ -20,22 +20,43 @@
 #include "util.h"
 
 /* Allocate a new plugin struct. */
-struct plugin *__allocate_plugin(const char *name)
+struct plugin *new_plugin(const char *name, struct plugin_type *type)
 {
-  struct plugin *p = ensure_malloc(sizeof *p);
+  struct plugin *p = malloc(sizeof *p);
+
+  if (p == NULL)
+    return NULL;
 
   p->name = strdup(name);
+
+  if (p->name == NULL) {
+    free(p);
+    return NULL;
+  }
+
+  p->context = NULL;
   p->save_disabled = false;
 
   for (size_t i = 0; i < nr_dependencies; i++)
     p->dependencies[i] = list_new();
 
-  return p;
+  p->type = type;
+
+  if (p->type->init(p)) {
+    return p;
+  } else {
+    destroy_plugin(p);
+    return NULL;
+  }
 }
 
-/* Destroy the given plugin. (Internal version.) */
-void __destroy_plugin(struct plugin *p)
+/* Destroy the given plugin. */
+void destroy_plugin(struct plugin *p)
 {
+  /* Call destroy method. */
+  p->type->destroy(p);
+
+  /* Destroy dependency lists. */
   for (size_t i = 0; i < nr_dependencies; i++) {
     list_delete_for_each(p->dependencies[i], dependency_item)
       free(dependency_item->data);
@@ -47,9 +68,7 @@ void __destroy_plugin(struct plugin *p)
   free(p);
 }
 
-/* Destroy the given plugin. (External version.) */
-void destroy_plugin(struct plugin *p)
+bool call_hook(struct plugin *p, const char *hook_name)
 {
-  p->close(p);
-  __destroy_plugin(p);
+  return p->type->call_hook(p, hook_name);
 }

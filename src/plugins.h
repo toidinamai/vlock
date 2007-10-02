@@ -13,8 +13,8 @@
 
 #include <stdbool.h>
 
-/* Load the named plugin.  This function aborts on error. */
-void load_plugin(const char *name);
+/* Load the named plugin. */
+bool load_plugin(const char *name);
 
 /* Resolve all the dependencies between all plugins.  This function *must* be
  * called after all plugins were loaded.  This function aborts on error. */
