@@ -166,7 +166,11 @@ static struct script_context *launch_script(const char *path)
     .function = NULL,
   };
 
-  create_child(&child);
+  if (!create_child(&child)) {
+    free(script);
+    return NULL;
+  }
+
   script->fd = child.stdin_fd;
   script->pid = child.pid;
 
