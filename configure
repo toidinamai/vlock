@@ -252,7 +252,7 @@ set_defaults() {
       PAM_LIBS='-lpam'
       DL_LIB=''
       CRYPT_LIB=''
-      DEFAULT_MODULES="all.so new.so"
+      MODULES="all.so new.so"
     ;;
   esac
 }
