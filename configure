@@ -43,6 +43,7 @@ Optional Features:
   --enable-pam            enable PAM authentication [enabled]
   --enable-shadow         enable shadow authentication [disabled]
   --enable-root-password  enable unlogging with root password [enabled]
+  --enable-debug          enable debugging
 
 Additional configuration:
   --with-scripts=SCRIPTS  enable the named scripts []
@@ -81,6 +82,13 @@ enable_feature() {
         AUTH_METHOD="$1"
       else
         fatal_error "cannot disable authentication"
+      fi
+    ;;
+    debug)
+      if [ "$2" = "yes" ] ; then
+        CFLAGS="${DEBUG_CFLAGS}"
+      else
+        CFLAGS="${DEFAULT_CFLAGS}"
       fi
     ;;
     *)
@@ -200,7 +208,9 @@ set_defaults() {
   MODULEDIR="\$(LIBDIR)/vlock/modules"
 
   CC=gcc
-  CFLAGS="-O2 -Wall -W -pedantic -std=gnu99"
+  DEFAULT_CFLAGS="-O2 -Wall -W -pedantic -std=gnu99"
+  DEBUG_CFLAGS="-O0 -g -Wall -W -pedantic -std=gnu99"
+  CFLAGS="${DEFAULT_FLAGS}"
   LD=ld
   LDFLAGS=""
   AUTH_METHOD="pam"
