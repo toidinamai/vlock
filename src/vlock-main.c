@@ -209,7 +209,7 @@ int main(int argc, char *const argv[])
 #ifdef USE_PLUGINS
   for (int i = 1; i < argc; i++)
     if (!load_plugin(argv[i]))
-      fatal_error("vlock-main: loading plugin '%s' failed: %s\n", argv[i], STRERROR);
+      fatal_error("vlock-main: loading plugin '%s' failed: %s", argv[i], STRERROR);
 
   ensure_atexit(unload_plugins);
   resolve_dependencies();

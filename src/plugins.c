@@ -73,7 +73,7 @@ static void sort_plugins(void);
 
 bool load_plugin(const char *name)
 {
-  return __load_plugin(name) == NULL;
+  return __load_plugin(name) != NULL;
 }
 
 void resolve_dependencies(void)
