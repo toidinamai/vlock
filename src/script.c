@@ -132,17 +132,12 @@ static void destroy_script(struct plugin *p)
 /* Invoke the hook by writing it on a single line to the scripts stdin. */
 static bool call_script_hook(struct plugin *s, const char *hook_name)
 {
+  static const char newline = '\n';
   struct script_context *context = s->context;
-  char *data;
-  ssize_t data_length;
+  ssize_t hook_name_length = strlen(hook_name);
   ssize_t length;
-  struct sigaction act, oldact;
-
-  /* Format the line. */
-  data_length = asprintf(&data, "%s\n", hook_name);
-
-  if (data_length < 0)
-    fatal_error("memory allocation failed");
+  struct sigaction act;
+  struct sigaction oldact;
 
   /* When writing to a pipe when the read end is closed the kernel invariably
    * sends SIGPIPE.   Ignore it. */
@@ -152,13 +147,14 @@ static bool call_script_hook(struct plugin *s, const char *hook_name)
   (void) sigaction(SIGPIPE, &act, &oldact);
 
   /* Send hook name and a newline through the pipe. */
-  length = write(context->fd, data, data_length);
+  length = write(context->fd, hook_name, hook_name_length);
+  length += write(context->fd, &newline, sizeof newline); 
 
   /* Restore the previous SIGPIPE handler. */
   (void) sigaction(SIGPIPE, &oldact, NULL);
 
   /* Scripts fail silently. */
-  return (length == data_length);
+  return (length == hook_name_length + 1);
 }
 
 static struct script_context *launch_script(const char *path)
