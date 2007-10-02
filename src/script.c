@@ -102,9 +102,15 @@ bool init_script(struct plugin *p)
   /* Launch the script. */
   p->context = launch_script(path);
 
-  free(path);
-
-  return true;
+  if (p->context == NULL) {
+    int errsv = errno;
+    free(path);
+    errno = errsv;
+    return false;
+  } else {
+    free(path);
+    return true;
+  }
 }
 
 static void destroy_script(struct plugin *p)
