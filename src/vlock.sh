@@ -44,11 +44,11 @@ fi
 VLOCK_MAIN="%PREFIX%/sbin/vlock-main"
 VLOCK_VERSION="%VLOCK_VERSION%"
 # If set to "y" plugin support is enabled in vlock-main.
-VLOCK_USE_PLUGINS="%VLOCK_USE_PLUGINS%"
+VLOCK_ENABLE_PLUGINS="%VLOCK_ENABLE_PLUGINS%"
 
 print_help() {
   echo >&2 "vlock: locks virtual consoles, saving your current session."
-  if [ "${VLOCK_USE_PLUGINS}" = "y" ] ; then
+  if [ "${VLOCK_ENABLE_PLUGINS}" = "yes" ] ; then
     echo >&2 "Usage: vlock [options] [plugins...]"
   else
     echo >&2 "Usage: vlock [options]"
@@ -58,7 +58,7 @@ print_help() {
   echo >&2 "       switch to other virtual consoles."
   echo >&2 "-a or --all: lock all virtual consoles by preventing other users"
   echo >&2 "       from switching virtual consoles."
-  if [ "${VLOCK_USE_PLUGINS}" = "y" ] ; then
+  if [ "${VLOCK_ENABLE_PLUGINS}" = "yes" ] ; then
     echo >&2 "-n or --new: allocate a new virtual console before locking,"
     echo >&2 "       implies --all."
     echo >&2 "-s or --disable-sysrq: disable SysRq while consoles are locked to"
@@ -87,7 +87,7 @@ main() {
   short_options="acvh"
   long_options="all,current,version,help"
 
-  if [ "${VLOCK_USE_PLUGINS}" = "y" ] ; then
+  if [ "${VLOCK_ENABLE_PLUGINS}" = "yes" ] ; then
     short_options="${short_options}nst:"
     long_options="${long_options},new,disable-sysrq,timeout:"
   fi
@@ -138,7 +138,7 @@ main() {
        exit
        ;;
       -v|--version)
-        if [ "${VLOCK_USE_PLUGINS}" = "y" ] ; then
+        if [ "${VLOCK_ENABLE_PLUGINS}" = "yes" ] ; then
           echo >&2 "vlock version ${VLOCK_VERSION}"
         else
           echo >&2 "vlock version ${VLOCK_VERSION} (no plugin support)"
@@ -161,7 +161,7 @@ main() {
   export_if_set VLOCK_TIMEOUT VLOCK_PROMPT_TIMEOUT
   export_if_set VLOCK_MESSAGE VLOCK_ALL_MESSAGE VLOCK_CURRENT_MESSAGE
 
-  if [ "${VLOCK_USE_PLUGINS}" = "y" ] ; then
+  if [ "${VLOCK_ENABLE_PLUGINS}" = "yes" ] ; then
     exec "${VLOCK_MAIN}" ${plugins} ${VLOCK_PLUGINS} "$@"
   else
     exec "${VLOCK_MAIN}" ${plugins}
