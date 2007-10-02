@@ -363,6 +363,8 @@ CC = ${CC}
 LD = ${LD}
 # mkdir
 MKDIR_P = mkdir -p
+# install
+INSTALL = install
 
 ### compiler and linker settings ###
 

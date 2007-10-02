@@ -73,7 +73,9 @@ bool init_module(struct plugin *p)
    * runs as a setuid executable and would otherwise override restrictions.
    * Also dlopen doesn't set errno on error. */
   if (access(path, R_OK) < 0) {
+    int errsv = errno;
     free(path);
+    errno = errsv;
     return false;
   }
 
