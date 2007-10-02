@@ -175,18 +175,18 @@ bool create_child(struct child_process *child)
       (void) dup2(STDIN_FILENO, child->stdin_fd);
 
     if (child->stdout_fd == REDIRECT_PIPE)
-      (void) dup2(STDIN_FILENO, stdout_pipe[1]);
+      (void) dup2(STDOUT_FILENO, stdout_pipe[1]);
     else if (child->stdout_fd == REDIRECT_DEV_NULL)
-      (void) dup2(STDIN_FILENO, open_devnull());
+      (void) dup2(STDOUT_FILENO, open_devnull());
     else if (child->stdout_fd != NO_REDIRECT)
-      (void) dup2(STDIN_FILENO, child->stdout_fd);
+      (void) dup2(STDOUT_FILENO, child->stdout_fd);
 
     if (child->stderr_fd == REDIRECT_PIPE)
-      (void) dup2(STDIN_FILENO, stderr_pipe[1]);
+      (void) dup2(STDERR_FILENO, stderr_pipe[1]);
     else if (child->stderr_fd == REDIRECT_DEV_NULL)
-      (void) dup2(STDIN_FILENO, open_devnull());
+      (void) dup2(STDERR_FILENO, open_devnull());
     else if (child->stderr_fd != NO_REDIRECT)
-      (void) dup2(STDIN_FILENO, child->stderr_fd);
+      (void) dup2(STDERR_FILENO, child->stderr_fd);
 
     (void) close_all_fds();
 
