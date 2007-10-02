@@ -349,9 +349,9 @@ MANDIR = ${MANDIR}
 # installation root
 DESTDIR =
 # path where modules will be located
-VLOCK_MODULE_DIR = ${VLOCK_MODULE_DIR}
+MODULEDIR = ${MODULEDIR}
 # path where scripts will be located
-VLOCK_SCRIPT_DIR = ${VLOCK_SCRIPT_DIR}
+SCRIPTDIR = ${SCRIPTDIR}
 
 ### programs ###
 
