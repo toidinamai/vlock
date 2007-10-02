@@ -251,7 +251,7 @@ static char *read_dependency(const char *path, const char *dependency_name)
 
     if (select(child.stdout_fd+1, &read_fds, NULL, NULL, &t) != 1) {
 timeout:
-      errno = ETIME;
+      errno = ETIMEDOUT;
       goto read_error;
     }
 
