@@ -36,8 +36,8 @@ install-nosysrq.so : MODULE_MODE=$(VLOCK_MODULE_MODE)
 
 .PHONY: install-%.so
 install-%.so: %.so
-	$(MKDIR_P) $(DESTDIR)$(VLOCK_MODULE_DIR)
-	$(INSTALL) -m $(MODULE_MODE) -o root -g $(MODULE_GROUP) $< $(DESTDIR)$(VLOCK_MODULE_DIR)/$<
+	$(MKDIR_P) $(DESTDIR)$(MODULEDIR)
+	$(INSTALL) -m $(MODULE_MODE) -o root -g $(MODULE_GROUP) $< $(DESTDIR)$(MODULEDIR)/$<
 
 .PHONY: clean
 clean:
