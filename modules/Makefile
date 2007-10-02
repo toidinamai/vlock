@@ -11,12 +11,12 @@ install: $(addprefix install-, $(MODULES))
 MODULE_GROUP = $(ROOT_GROUP)
 MODULE_MODE = 0755
 
+override CFLAGS += -I../src
+
 #special build rules
 
 caca.so : override LDFLAGS += -lcaca -lncurses
-caca.o : override CFLAGS += -I../src
 
-all.o : override CFLAGS += -I../src
 all.o: all.c ../src/console_switch.h
 
 #generic build rule
