@@ -19,6 +19,7 @@
 #include <sys/time.h>
 #include <fcntl.h>
 #include <sys/select.h>
+#include <errno.h>
 
 #include "process.h"
 
@@ -137,29 +138,45 @@ static int open_devnull(void)
 
 bool create_child(struct child_process *child)
 {
+  int errsv;
+  int child_errno = 0;
+  int status_pipe[2];
   int stdin_pipe[2];
   int stdout_pipe[2];
   int stderr_pipe[3];
 
+  if (pipe(status_pipe) < 0)
+    return false;
+
+  (void) fcntl(status_pipe[1], F_SETFD, FD_CLOEXEC);
+
   if (child->stdin_fd == REDIRECT_PIPE) {
-    if (pipe(stdin_pipe) < 0)
-      return false;
+    if (pipe(stdin_pipe) < 0) {
+      errsv = errno;
+      goto stdin_pipe_failed;
+    }
   } 
 
   if (child->stdout_fd == REDIRECT_PIPE) {
-    if (pipe(stdout_pipe) < 0)
+    if (pipe(stdout_pipe) < 0) {
+      errsv = errno;
       goto stdout_pipe_failed;
+    }
   }
 
   if (child->stderr_fd == REDIRECT_PIPE) {
-    if (pipe(stderr_pipe) < 0)
+    if (pipe(stderr_pipe) < 0) {
+      errsv = errno;
       goto stderr_pipe_failed;
+    }
   }
 
   child->pid = fork();
 
   if (child->pid == 0) {
     /* Child. */
+    fd_set except_fds;
+
     if (child->stdin_fd == REDIRECT_PIPE)
       (void) dup2(STDIN_FILENO, stdin_pipe[0]);
     else if (child->stdin_fd == REDIRECT_DEV_NULL)
@@ -181,22 +198,39 @@ bool create_child(struct child_process *child)
     else if (child->stderr_fd != NO_REDIRECT)
       (void) dup2(STDERR_FILENO, child->stderr_fd);
 
-    (void) close_all_fds();
+    FD_ZERO(&except_fds);
+    FD_SET(STDIN_FILENO, &except_fds);
+    FD_SET(STDOUT_FILENO, &except_fds);
+    FD_SET(STDERR_FILENO, &except_fds);
+    FD_SET(status_pipe[1], &except_fds);
+
+    (void) close_fds(&except_fds);
 
     (void) setgid(getgid());
     (void) setuid(getuid());
 
     if (child->function != NULL) {
+      (void) close(status_pipe[1]);
       _exit(child->function(child->argument));
     } else {
       execv(child->path, (char *const*)child->argv);
+      (void) write(status_pipe[1], &errno, sizeof errno);
     }
 
     _exit(1);
   }
 
-  if (child->pid < 0)
+  if (child->pid < 0) {
+    errsv = errno;
     goto fork_failed;
+  }
+
+  (void) close(status_pipe[1]);
+
+  if (read(status_pipe[0], &child_errno, sizeof child_errno) == sizeof child_errno) {
+    errsv = child_errno;
+    goto child_failed;
+  }
 
   if (child->stdin_fd == REDIRECT_PIPE) {
     /* Write end. */
@@ -221,6 +255,7 @@ bool create_child(struct child_process *child)
 
   return true;
 
+child_failed:
 fork_failed:
   if (child->stderr_fd == REDIRECT_PIPE) {
     (void) close(stderr_pipe[0]);
@@ -238,6 +273,12 @@ stdout_pipe_failed:
     (void) close(stdin_pipe[0]);
     (void) close(stdin_pipe[1]);
   }
+
+stdin_pipe_failed:
+  (void) close(status_pipe[0]);
+  (void) close(status_pipe[1]);
+
+  errno = errsv;
 
   return false;
 }
