@@ -74,7 +74,7 @@ print_help() {
 # on export even if it was previously unset.
 export_if_set() {
   while [ $# -gt 0 ] ; do
-    if eval [ "\"\${$1+set}\"" = "set" ] ; then
+    if ( eval [ "\"\${$1+set}\"" = "set" ] ) ; then
       eval export $1
     fi
     shift
