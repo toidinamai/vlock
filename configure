@@ -111,22 +111,22 @@ parse_arguments() {
 
     case "$1" in
       --disable-*)
-        feature=`expr "$1" : '--disable-\(.*\)'`
+        feature=`expr "x$1" : 'x--disable-\(.*\)'`
         enable_feature "$feature" no
         shift
       ;;
       --enable-*=no)
-        feature=`expr "$1" : '--enable-\(.*\)=no'`
+        feature=`expr "x$1" : 'x--enable-\(.*\)=no'`
         enable_feature "$feature" no
         shift
       ;;
       --enable-*=yes)
-        feature=`expr "$1" : '--enable-\(.*\)=yes'`
+        feature=`expr "x$1" : 'x--enable-\(.*\)=yes'`
         enable_feature "$feature" yes
         shift
       ;;
       --enable-*)
-        feature=`expr "$1" : '--enable-\(.*\)'`
+        feature=`expr "x$1" : 'x--enable-\(.*\)'`
         enable_feature "$feature" yes
         shift
       ;;
@@ -276,8 +276,8 @@ parse_config_mk() {
 
   while read line
   do
-    variable_name=`expr "${line}" : '\([[[:alpha:]_]\{1,\}\) :\{0,1\}='`
-    if variable_value=`expr "${line}" : '[[:alpha:]_]\{1,\} :\{0,1\}= \(.*\)'` ; then
+    variable_name=`expr "x${line}" : 'x\([[[:alpha:]_]\{1,\}\) :\{0,1\}='`
+    if variable_value=`expr "x${line}" : 'x[[:alpha:]_]\{1,\} :\{0,1\}= \(.*\)'` ; then
       set_variable "$variable_name" "$variable_value"
     else
       set_variable "$variable_name" ""
