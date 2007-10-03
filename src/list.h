@@ -29,8 +29,6 @@ struct list
   struct list_item *last;
 };
 
-/* All list functions abort() on memory allocation errors. */
-
 /* Create a new, empty list. */
 struct list *list_new(void);
 /* Create a (shallow) copy of the given list. */

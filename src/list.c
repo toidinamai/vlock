@@ -36,8 +36,14 @@ struct list *list_copy(struct list *l)
 {
   struct list *new_list = list_new();
 
+  if (new_list == NULL)
+    return NULL;
+
   list_for_each(l, item)
-    list_append(new_list, item->data);
+    if (!list_append(new_list, item->data)) {
+      list_free(new_list);
+      return NULL;
+    }
 
   return new_list;
 }
