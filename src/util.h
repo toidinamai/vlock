@@ -34,3 +34,8 @@ void *ensure_realloc(void *, size_t);
 void *ensure_not_null(void *, const char *);
 
 #define STRERROR (errno ? strerror(errno) : "Unknown error")
+
+#define GUARD_ERRNO(expr) \
+  do { \
+    int __errsv = errno; expr; errno = __errsv; \
+  } while (0)
