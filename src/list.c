@@ -21,7 +21,11 @@
 /* Create a new, empty list. */
 struct list *list_new(void)
 {
-  struct list *l = ensure_malloc(sizeof *l);
+  struct list *l = malloc(sizeof *l);
+
+  if (l == NULL)
+    return NULL;
+
   l->first = NULL;
   l->last = NULL;
   return l;
@@ -63,9 +67,12 @@ size_t list_length(struct list *l)
 
 /* Create a new list item with the given data and add it to the end of the
  * list. */
-void list_append(struct list *l, void *data)
+bool list_append(struct list *l, void *data)
 {
-  struct list_item *item = ensure_malloc(sizeof *item);
+  struct list_item *item = malloc(sizeof *item);
+
+  if (item == NULL)
+    return false;
 
   item->data = data;
   item->previous = l->last;
@@ -78,6 +85,8 @@ void list_append(struct list *l, void *data)
 
   if (l->first == NULL)
     l->first = item;
+
+  return true;
 }
 
 /* Remove the given item from the list.  Returns the item following the deleted
