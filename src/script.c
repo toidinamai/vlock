@@ -324,11 +324,15 @@ static bool parse_dependency(char *data, struct list *dependency_list)
 {
   for (char *s = data, *saveptr;; s = NULL) {
     char *token = strtok_r(s, "\n", &saveptr);
+    char *s;
 
     if (token == NULL)
       break;
 
-    list_append(dependency_list, ensure_not_null(strdup(token), "could not copy string"));
+    s = strdup(token);
+
+    if (s == NULL || !list_append(dependency_list, s))
+      return false;
   }
 
   return true;
