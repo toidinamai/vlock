@@ -33,7 +33,12 @@ scripts:
 ### configuration ###
 
 config.mk:
-	$(warning Creating default configuration.)
+	$(info )
+	$(info ###################################################)
+	$(info # Creating default configuration.                 #)
+	$(info # Run ./configure or edit config.mk to customize. #)
+	$(info ###################################################)
+	$(info )
 	@./configure --quiet
 
 ### installation rules ###
