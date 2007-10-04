@@ -159,7 +159,7 @@ static bool call_script_hook(struct plugin *s, const char *hook_name)
 
 static struct script_context *launch_script(const char *path)
 {
-  struct script_context *script = ensure_malloc(sizeof *script);
+  struct script_context *script = malloc(sizeof *script);
   const char *argv[] = { path, "hooks", NULL };
   struct child_process child = {
     .path = path,
@@ -169,6 +169,9 @@ static struct script_context *launch_script(const char *path)
     .stderr_fd = REDIRECT_DEV_NULL,
     .function = NULL,
   };
+
+  if (script == NULL)
+    return NULL;
 
   if (!create_child(&child)) {
     int errsv = errno;
@@ -222,8 +225,11 @@ static char *read_dependency(const char *path, const char *dependency_name)
     .function = NULL,
   };
   struct timeval timeout = {1, 0};
-  char *data = ensure_calloc(1, sizeof *data);
+  char *data = calloc(1, sizeof *data);
   size_t data_length = 0;
+
+  if (data == NULL)
+    return NULL;
 
   if (!create_child(&child)) {
     int errsv = errno;
@@ -252,7 +258,7 @@ static char *read_dependency(const char *path, const char *dependency_name)
     if (select(child.stdout_fd+1, &read_fds, NULL, NULL, &t) != 1) {
 timeout:
       errno = ETIMEDOUT;
-      goto read_error;
+      goto error;
     }
 
     /* t2 is after select. */
@@ -277,11 +283,16 @@ timeout:
 
     if (data_length+length+1 > LINE_MAX) {
       errno = EFBIG;
-      goto read_error;
+      goto error;
     }
 
+    /* Grow the data string. */
+    data = realloc(data, data_length+length);
+
+    if (data == NULL)
+      goto error;
+
     /* Append the buffer to the data string. */
-    data = ensure_realloc(data, data_length+length);
     strncpy(data+data_length, buffer, length);
     data_length += length;
   }
@@ -297,7 +308,7 @@ timeout:
 
   return data;
 
-read_error:
+error:
   {
     int errsv = errno;
     free(data);
