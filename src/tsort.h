@@ -27,4 +27,4 @@ struct list;
  * Sorts the list and deletes all edges.  If there are circles found in the
  * graph or there are edges that have no corresponding nodes the erroneous
  * edges are left. */
-void tsort(struct list *nodes, struct list *edges);
+struct list *tsort(struct list *nodes, struct list *edges);

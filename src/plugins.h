@@ -18,7 +18,7 @@ bool load_plugin(const char *name);
 
 /* Resolve all the dependencies between all plugins.  This function *must* be
  * called after all plugins were loaded.  This function aborts on error. */
-void resolve_dependencies(void);
+bool resolve_dependencies(void);
 
 /* Unload all plugins. */
 void unload_plugins(void);

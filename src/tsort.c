@@ -11,8 +11,10 @@
  */
 
 #include <stdlib.h>
+#include <errno.h>
 
 #include "list.h"
+#include "util.h"
 
 #include "tsort.h"
 
@@ -20,6 +22,9 @@
 static struct list *get_zeros(struct list *nodes, struct list *edges)
 {
   struct list *zeros = list_copy(nodes);
+
+  if (zeros == NULL)
+    return NULL;
 
   list_for_each(edges, edge_item) {
     struct edge *e = edge_item->data;
@@ -53,18 +58,29 @@ static bool is_zero(void *node, struct list *edges)
  * http://en.wikipedia.org/w/index.php?title=Topological_sorting&oldid=153157450#Algorithms
  *
  */
-void tsort(struct list *nodes, struct list *edges)
+struct list *tsort(struct list *nodes, struct list *edges)
 {
   struct list *sorted_nodes = list_new();
   /* Retrieve all zeros. */
-  struct list *zeros = get_zeros(nodes, edges);
+  struct list *zeros;
+
+  if (sorted_nodes == NULL)
+    return NULL;
+
+  zeros = get_zeros(nodes, edges);
+
+  if (zeros == NULL) {
+    GUARD_ERRNO(list_free(sorted_nodes));
+    return NULL;
+  }
 
   /* While the list of zeros is not empty, take the first zero and remove it
    * and ...  */
   list_delete_for_each(zeros, zero_item) {
     void *zero = zero_item->data;
     /* ... add it to the list of sorted nodes. */
-    list_append(sorted_nodes, zero);
+    if (!list_append(sorted_nodes, zero))
+      goto error;
 
     /* Then look at each edge ... */
     list_for_each_manual(edges, edge_item) {
@@ -78,7 +94,8 @@ void tsort(struct list *nodes, struct list *edges)
         /* If the successor has become a zero now ... */
         if (is_zero(e->successor, edges))
           /* ... add it to the list of zeros. */
-          list_append(zeros, e->successor);
+          if (!list_append(zeros, e->successor))
+            goto error;
 
         free(e);
       } else {
@@ -88,17 +105,23 @@ void tsort(struct list *nodes, struct list *edges)
   }
 
   /* If all edges were deleted the algorithm was successful. */
-  if (list_is_empty(edges)) {
-    /* Switch the given list of nodes for the list of sorted nodes. */
-    struct list_item *first = sorted_nodes->first;
-    struct list_item *last = sorted_nodes->last;
-
-    sorted_nodes->first = nodes->first;
-    sorted_nodes->last = nodes->last;
-
-    nodes->first = first;
-    nodes->last = last;
+  if (!list_is_empty(edges)) {
+    list_free(sorted_nodes);
+    sorted_nodes = NULL;
   }
 
-  list_free(sorted_nodes);
+  list_free(zeros);
+  errno = 0;
+
+  return sorted_nodes;;
+
+error:
+  {
+    int errsv = errno;
+    list_free(sorted_nodes);
+    list_free(zeros);
+
+    errno = errsv;
+    return NULL;
+  }
 }

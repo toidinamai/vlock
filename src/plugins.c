@@ -68,18 +68,17 @@ const struct hook hooks[nr_hooks] = {
 
 /* helper declarations */
 static struct plugin *__load_plugin(const char *name);
-static void __resolve_depedencies(void);
-static void sort_plugins(void);
+static bool __resolve_depedencies(void);
+static bool sort_plugins(void);
 
 bool load_plugin(const char *name)
 {
   return __load_plugin(name) != NULL;
 }
 
-void resolve_dependencies(void)
+bool resolve_dependencies(void)
 {
-  __resolve_depedencies();
-  sort_plugins();
+  return __resolve_depedencies() && sort_plugins();
 }
 
 void unload_plugins(void)
@@ -139,12 +138,16 @@ static struct plugin *__load_plugin(const char *name)
     return NULL;
 
 success:
-  list_append(plugins, p);
+  if (!list_append(plugins, p)) {
+    GUARD_ERRNO(destroy_plugin(p));
+    return NULL;
+  }
+
   return p;
 }
 
 /* Resolve the dependencies of the plugins. */
-static void __resolve_depedencies(void)
+static bool __resolve_depedencies(void)
 {
   struct list *required_plugins = list_new();
 
@@ -154,8 +157,23 @@ static void __resolve_depedencies(void)
   list_for_each(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
 
-    list_for_each(p->dependencies[REQUIRES], dependency_item)
-      list_append(required_plugins, __load_plugin(dependency_item->data));
+    list_for_each(p->dependencies[REQUIRES], dependency_item) {
+      const char *d = dependency_item->data;
+      struct plugin *q = __load_plugin(d);
+
+      if (q == NULL) {
+        int errsv = errno;
+        fprintf(stderr, "vlock-plugin: '%s' requires '%s' which could not be loaded\n", p->name, d);
+        list_free(required_plugins);
+        errno = errsv;
+        return false;
+      }
+
+      if (!list_append(required_plugins, q)) {
+        GUARD_ERRNO(list_free(required_plugins));
+        return false;
+      }
+    }
   }
 
   /* Fail if a plugins that is needed is not loaded. */
@@ -166,10 +184,17 @@ static void __resolve_depedencies(void)
       const char *d = dependency_item->data;
       struct plugin *q = get_plugin(d);
 
-      if (q == NULL)
-        fatal_error("vlock-plugins: '%s' depends on '%s' which is not loaded", p->name, d);
+      if (q == NULL) {
+        fprintf(stderr, "vlock-plugins: '%s' needs '%s' which is not loaded\n", p->name, d);
+        list_free(required_plugins);
+        errno = 0;
+        return false;
+      }
 
-      list_append(required_plugins, q);
+      if (!list_append(required_plugins, q)) {
+        GUARD_ERRNO(list_free(required_plugins));
+        return false;
+      }
     }
   }
 
@@ -187,21 +212,25 @@ static void __resolve_depedencies(void)
         dependencies_loaded = false;
 
         /* Abort if dependencies not met and plugin is required. */
-        if (list_find(required_plugins, p) != NULL)
-          fatal_error(
+        if (list_find(required_plugins, p) != NULL) {
+          fprintf(stderr, 
               "vlock-plugins: '%s' is required by some other plugin\n"
                "              but depends on '%s' which is not loaded",
                p->name, d);
+          list_free(required_plugins);
+          errno = 0;
+          return false;
+        }
 
         break;
       }
     }
 
-    if (!dependencies_loaded) {
+    if (dependencies_loaded) {
+      plugin_item = plugin_item->next;
+    } else {
       plugin_item = list_delete_item(plugins, plugin_item);
       destroy_plugin(p);
-    } else {
-      plugin_item = plugin_item->next;
     }
   }
 
@@ -213,25 +242,34 @@ static void __resolve_depedencies(void)
 
     list_for_each(p->dependencies[CONFLICTS], dependency_item) {
       const char *d = dependency_item->data;
-      if (get_plugin(d) == NULL)
-        fatal_error("vlock-plugins: '%s' and '%s' cannot be loaded at the same time", p->name, d);
+      if (get_plugin(d) == NULL) {
+        fprintf(stderr, "vlock-plugins: '%s' and '%s' cannot be loaded at the same time", p->name, d);
+        errno = 0;
+        return false;
+      }
     }
   }
+
+  return true;
 }
 
 static struct list *get_edges(void);
 
 /* Sort the list of plugins according to their "preceeds" and "succeeds"
  * dependencies.  Fails if sorting is not possible because of circles. */
-static void sort_plugins(void)
+static bool sort_plugins(void)
 {
   struct list *edges = get_edges();
-  bool circles_present;
+  struct list *sorted_plugins;
+
+  if (edges == NULL)
+    return false;
 
   /* Topological sort. */
-  tsort(plugins, edges);
+  sorted_plugins = tsort(plugins, edges);
 
-  circles_present = !list_is_empty(edges);
+  if (sorted_plugins == NULL && errno != 0)
+    return false;
 
   list_delete_for_each(edges, edge_item) {
     struct edge *e = edge_item->data;
@@ -242,16 +280,33 @@ static void sort_plugins(void)
     free(e);
   }
 
-  if (circles_present)
-    fatal_error("vlock-plugins: circular dependencies detected");
+  if (sorted_plugins != NULL) {
+    struct list *tmp = plugins;
+    plugins = sorted_plugins;
+    list_free(tmp);
+    return true;
+  } else {
+    fprintf(stderr, "vlock-plugins: circular dependencies detected\n");
+    return false;
+  }
 }
 
-static struct edge *make_edge(struct plugin *p, struct plugin *s)
+static bool append_edge(struct list *edges, struct plugin *p, struct plugin *s)
 {
-  struct edge *e = ensure_malloc(sizeof *e);
+  struct edge *e = malloc(sizeof *e);
+
+  if (e == NULL)
+    return false;
+
   e->predecessor = p;
   e->successor = s;
-  return e;
+
+  if (!list_append(edges, e)) {
+    GUARD_ERRNO(free(e));
+    return false;
+  }
+
+  return true;
 }
 
 /* Get the edges of the plugin graph specified by each plugin's "preceeds" and
@@ -260,6 +315,9 @@ static struct list *get_edges(void)
 {
   struct list *edges = list_new();
 
+  if (edges == NULL)
+    return NULL;
+
   list_for_each(plugins, plugin_item) {
     struct plugin *p = plugin_item->data;
     /* p must come after these */
@@ -267,7 +325,8 @@ static struct list *get_edges(void)
       struct plugin *q = get_plugin(predecessor_item->data);
 
       if (q != NULL)
-        list_append(edges, make_edge(q, p));
+        if (!append_edge(edges, q, p))
+          goto error;
     }
 
     /* p must come before these */
@@ -275,11 +334,16 @@ static struct list *get_edges(void)
       struct plugin *q = get_plugin(successor_item->data);
 
       if (q != NULL)
-        list_append(edges, make_edge(p, q));
+        if (!append_edge(edges, p, q))
+          goto error;
     }
   }
 
   return edges;
+
+error:
+  GUARD_ERRNO(list_free(edges));
+  return NULL;
 }
 
 /************/
