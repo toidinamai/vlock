@@ -212,7 +212,14 @@ int main(int argc, char *const argv[])
       fatal_error("vlock-main: loading plugin '%s' failed: %s", argv[i], STRERROR);
 
   ensure_atexit(unload_plugins);
-  resolve_dependencies();
+
+  if (!resolve_dependencies()) {
+    if (errno == 0)
+      exit(EXIT_FAILURE);
+    else
+      fatal_error("vlock-main: error resolving plugin dependencies: %s", STRERROR);
+  }
+
   plugin_hook("vlock_start");
   ensure_atexit(call_end_hook);
 #else /* !USE_PLUGINS */
