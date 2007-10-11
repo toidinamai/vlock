@@ -281,9 +281,19 @@ static bool sort_plugins(void)
   }
 
   if (sorted_plugins != NULL) {
-    struct list *tmp = plugins;
-    plugins = sorted_plugins;
-    list_free(tmp);
+    /* Switch the global list of plugins for the sorted list.  The global list
+     * is static and cannot be freed. */
+    struct list_item *first = sorted_plugins->first;
+    struct list_item *last = sorted_plugins->last;
+
+    sorted_plugins->first = plugins->first;
+    sorted_plugins->last = plugins->last;
+
+    plugins->first = first;
+    plugins->last = last;
+
+    list_free(sorted_plugins);
+
     return true;
   } else {
     fprintf(stderr, "vlock-plugins: circular dependencies detected\n");
