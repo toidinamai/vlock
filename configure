@@ -343,9 +343,9 @@ SCRIPTS = ${SCRIPTS}
 # root's group
 ROOT_GROUP = ${ROOT_GROUP}
 
-# group to install vlock-main with
+# group for privileged plugins
 VLOCK_GROUP = ${VLOCK_GROUP}
-# mode to install privileged plugins with
+# mode for privileged plugins
 VLOCK_MODULE_MODE = ${VLOCK_MODULE_MODE}
 
 ### paths ###
