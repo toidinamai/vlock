@@ -65,13 +65,9 @@ static char *get_username(void)
   return strdup(username);
 }
 
-static void terminate(int signum)
+static void terminate(int __attribute__((unused)) signum)
 {
-  if (signum == SIGTERM)
-    fprintf(stderr, "vlock-main: Terminated!\n");
-  else if (signum == SIGABRT)
-    fprintf(stderr, "vlock-main: Aborted!\n");
-
+  fprintf(stderr, "vlock-main: Terminated!\n");
   exit(1);
 }
 
@@ -89,11 +85,10 @@ static void block_signals(void)
   (void) sigaction(SIGQUIT, &sa, NULL);
   (void) sigaction(SIGTSTP, &sa, NULL);
 
-  /* Install special handler for TERM and ABRT. */
+  /* Install special handler for SIGTERM. */
   sa.sa_flags = SA_RESETHAND;
   sa.sa_handler = terminate;
   (void) sigaction(SIGTERM, &sa, NULL);
-  (void) sigaction(SIGABRT, &sa, NULL);
 }
 
 static struct termios term;
