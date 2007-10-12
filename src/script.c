@@ -159,6 +159,7 @@ static bool call_script_hook(struct plugin *s, const char *hook_name)
 
 static struct script_context *launch_script(const char *path)
 {
+  int fd_flags;
   struct script_context *script = malloc(sizeof *script);
   const char *argv[] = { path, "hooks", NULL };
   struct child_process child = {
@@ -182,6 +183,13 @@ static struct script_context *launch_script(const char *path)
 
   script->fd = child.stdin_fd;
   script->pid = child.pid;
+
+  fd_flags = fcntl(script->fd, F_GETFL, &fd_flags);
+
+  if (fd_flags != -1) {
+    fd_flags |= O_NONBLOCK;
+    (void) fcntl(script->fd, F_SETFL, fd_flags);
+  }
 
   return script;
 }
