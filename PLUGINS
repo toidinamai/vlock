@@ -90,3 +90,38 @@ Note: Hooks should not block.  Screensavers should be executed in a
 background process or thread.  The only exception would be hooks that
 suspend the machine (though these technically do not block in the common
 sense).
+
+MODULES
+=======
+
+Modules are shared objects that are loaded into vlock's address space.
+They export hook functions and dependencies as global functions.  To
+ensure definitions modules should include vlock_plugin.h from the module
+subdirectory of the vlock source distribution.
+
+dependencies
+------------
+
+Dependencies are declared as NULL terminated arrays of const char
+pointers.  Empty lists can be just left out.  Example::
+
+  /* From nosysrq.c */
+  const char *preceeds[] = { "new", "all", NULL };
+  const char *depends[] = { "all", NULL };
+
+hooks
+-----
+
+Hooks are boolean functions that take a void pointer pointer.  Their
+return status indicates success or failure.  The argument points to a
+void pointer that may be set freely.  It may be used to maintain state
+between the different hooks.  It is initialized to NULL.  Hook functions
+must not block and not terminate the program.  On error they may print
+the cause of the error to stderr in addition to returning false.
+
+example
+-------
+
+Please see modules/nosysrc.c for an example plugin.  It's purpose is to
+disable the Linux SysRQ mechanism at vlock startup and reenable it at
+the end.
