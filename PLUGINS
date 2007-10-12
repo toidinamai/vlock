@@ -4,7 +4,7 @@ OVERVIEW
 Plugins are a way to extend vlock's functionality.  They can define
 hooks that are called at certain points in a vlock session.
 
-Plugins are separated into two groups:  modules and scripts.  Modules
+There are two separate types of plugins:  modules and scripts.  Modules
 are shared objects that are loaded into vlock's address space.  They run
 with the same privileges as vlock and thus are very powerful but also
 dangerous.  Scripts may be any kind of executables located in vlock's
@@ -19,9 +19,9 @@ DEPENDENCIES
 ============
 
 Plugins may depend on each other in several ways.  There are six
-different types of dependencies,  each a list of plugin names.  The way
-of declaring them is different for modules and scripts but their names
-are the same.
+different types of dependencies. Each dependency type is represented by
+a list of plugin names.  The way of declaring them is different for
+modules and scripts but their names and meaning are the same.
 
 Resolving the dependencies is done after all initially requested plugins
 are loaded and may fail if dependencies cannot be met.
@@ -29,29 +29,34 @@ are loaded and may fail if dependencies cannot be met.
 The names and meaning of the dependencies are as follows:
 
 requires:
-  The plugins listed here are automatically loaded after the declaring
-  plugin is loaded.
+  The plugins listed here must be loaded for the declaring plugin to
+  work.  If any of the plugins is not loaded yet it will be loaded
+  automatically.  Dependency resolving fails if a plugin cannot be
+  loaded.
 
 needs:
-  Dependency resolving fails if any of the plugins listed here is not
-  loaded.
+  The plugins listed here must be loaded for the declaring plugin to
+  work.  Dependency resolving fails if any of the plugins listed here is
+  not loaded.
 
 depends:
-  If any of the plugins listed here is not loaded the declaring plugin
-  is automatically unloaded.  This may fail if the plugin is already
-  required by some other plugin.
+  The plugins listed here must be loaded for the declaring plugin to
+  work.  If any of the plugins listed here is not loaded the declaring
+  plugin is automatically unloaded.  Dependency resolving fails if the
+  declaring plugin is already required by some other plugin.
 
 conflicts:
-  Dependency resolving fails if any of the plugins listed here is
-  loaded.
+  The plugins listed here must not be loaded at the same time as the
+  declaring plugin.  Dependency resolving fails if any of the plugins
+  listed here is loaded.
 
-The last two dependencies are used to specify the order of the plugins:
+The other two dependencies are used to specify the order of the plugins:
 
 preceeds:
-  The declaring plugin must come before the plugins listed here.
+  The plugins listed here must come after the declaring plugin.
 
 succeeds:
-  The declaring plugin must come after the plugins listed here.
+  The plugins listed here must come before the declaring plugin.
 
 Sorting the plugins may fail if the "preceeds" and "succeeds"
 dependencies introduce circles.
@@ -83,4 +88,5 @@ vlock_save_abort:
 
 Note: Hooks should not block.  Screensavers should be executed in a
 background process or thread.  The only exception would be hooks that
-suspend the machine (though these technically do not block either).
+suspend the machine (though these technically do not block in the common
+sense).
