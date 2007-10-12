@@ -17,8 +17,8 @@
  * the ones listed in the respective arrays.  If
  * set, the arrays must be terminated by NULL.
  */
-extern const char *before[];
-extern const char *after[];
+extern const char *preceeds[];
+extern const char *succeeds[];
 
 /* A plugin might define this array to indicate
  * that the listed plugins should also be loaded
