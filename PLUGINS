@@ -14,3 +14,73 @@ privileges, i.e. the same as the user who started vlock.
 For simple tasks scripts should be preferred over modules.  They are
 easier to develop and test and have a lower impact on security and
 stability.
+
+DEPENDENCIES
+============
+
+Plugins may depend on each other in several ways.  There are six
+different types of dependencies,  each a list of plugin names.  The way
+of declaring them is different for modules and scripts but their names
+are the same.
+
+Resolving the dependencies is done after all initially requested plugins
+are loaded and may fail if dependencies cannot be met.
+
+The names and meaning of the dependencies are as follows:
+
+requires:
+  The plugins listed here are automatically loaded after the declaring
+  plugin is loaded.
+
+needs:
+  Dependency resolving fails if any of the plugins listed here is not
+  loaded.
+
+depends:
+  If any of the plugins listed here is not loaded the declaring plugin
+  is automatically unloaded.  This may fail if the plugin is already
+  required by some other plugin.
+
+conflicts:
+  Dependency resolving fails if any of the plugins listed here is
+  loaded.
+
+The last two dependencies are used to specify the order of the plugins:
+
+preceeds:
+  The declaring plugin must come before the plugins listed here.
+
+succeeds:
+  The declaring plugin must come after the plugins listed here.
+
+Sorting the plugins may fail if the "preceeds" and "succeeds"
+dependencies introduce circles.
+
+HOOKS
+=====
+
+There are four different hooks that plugins may declare:
+
+vlock_start:
+  This hook is called once immediately after vlock is initialized and
+  before any authentication prompt.  If a plugin signals an error in
+  this hook vlock aborts.
+
+vlock_end:
+  This hook is called once after successful authentication or if vlock
+  is killed by SIGTERM.  Errors in this hook are ignored.
+
+vlock_save:
+  This hook is called after the vlock message is displayed every time
+  the timeout expires or the escape key is pressed.  If a plugin signals
+  an error in this hook its vlock_save_abort hook is called and both
+  hooks are not called again afterwards.
+
+vlock_save_abort:
+  This hook is called after vlock_save was called and any key was
+  pressed.  If a plugin signals an error in this hook both this hook and
+  the vlock_save hook are not called again.
+
+Note: Hooks should not block.  Screensavers should be executed in a
+background process or thread.  The only exception would be hooks that
+suspend the machine (though these technically do not block either).
