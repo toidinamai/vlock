@@ -102,14 +102,14 @@ bool init_script(struct plugin *p)
   /* Launch the script. */
   p->context = launch_script(path);
 
-  if (p->context == NULL) {
+  if (p->context != NULL) {
+    free(path);
+    return true;
+  } else {
     int errsv = errno;
     free(path);
     errno = errsv;
     return false;
-  } else {
-    free(path);
-    return true;
   }
 }
 
@@ -148,7 +148,9 @@ static bool call_script_hook(struct plugin *s, const char *hook_name)
 
   /* Send hook name and a newline through the pipe. */
   length = write(context->fd, hook_name, hook_name_length);
-  length += write(context->fd, &newline, sizeof newline); 
+
+  if (length > 0)
+    length += write(context->fd, &newline, sizeof newline); 
 
   /* Restore the previous SIGPIPE handler. */
   (void) sigaction(SIGPIPE, &oldact, NULL);
