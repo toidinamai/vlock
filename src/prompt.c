@@ -59,7 +59,7 @@
 char *prompt(const char *msg, const struct timespec *timeout)
 {
   char buffer[PROMPT_BUFFER_SIZE];
-  char *result;
+  char *result = NULL;
   ssize_t len;
   struct termios term;
   struct timeval *timeout_val = NULL;
@@ -100,18 +100,24 @@ char *prompt(const char *msg, const struct timespec *timeout)
   FD_ZERO(&readfds);
   FD_SET(STDIN_FILENO, &readfds);
 
+
+before_select:
   /* Reset errno. */
   errno = 0;
 
   /* Wait until a string was entered. */
   if (select(STDIN_FILENO + 1, &readfds, NULL, NULL, timeout_val) != 1) {
-    if (errno != 0)
-      perror("vlock-auth: select() on stdin failed");
-    else
-      fprintf(stderr, "timeout!\n");
-
-    result = NULL;
-    goto out;
+    switch (errno) {
+      case 0:
+        fprintf(stderr, "timeout!\n");
+        goto out;
+      case EINTR:
+        /* A signal was caught. Restart. */
+        goto before_select;
+      default:
+        perror("vlock-auth: select() on stdin failed");
+        goto out;
+    }
   }
 
   /* Read the string from stdin.  At most buffer length - 1 bytes, to
