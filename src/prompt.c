@@ -122,24 +122,21 @@ before_select:
 
   /* Read the string from stdin.  At most buffer length - 1 bytes, to
    * leave room for the terminating zero byte. */
-  if ((len = read(STDIN_FILENO, buffer, sizeof buffer - 1)) < 0) {
-    result = NULL;
+  if ((len = read(STDIN_FILENO, buffer, sizeof buffer - 1)) < 0)
     goto out;
-  }
 
   /* Terminate the string. */
   buffer[len] = '\0';
 
   /* Strip trailing newline characters. */
-  for (len = strlen(buffer); len > 0; --len) {
+  for (len = strlen(buffer); len > 0; --len)
     if (buffer[len - 1] != '\r' && buffer[len - 1] != '\n')
       break;
-  }
 
   /* Terminate the string, again. */
   buffer[len] = '\0';
 
-  /* Copy the string. */
+  /* Copy the string.  Success and error paths are the same. */
   result = strdup(buffer);
 
   /* Clear our buffer. */
