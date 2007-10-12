@@ -1,0 +1,16 @@
+OVERVIEW
+========
+
+Plugins are a way to extend vlock's functionality.  They can define
+hooks that are called at certain points in a vlock session.
+
+Plugins are separated into two groups:  modules and scripts.  Modules
+are shared objects that are loaded into vlock's address space.  They run
+with the same privileges as vlock and thus are very powerful but also
+dangerous.  Scripts may be any kind of executables located in vlock's
+script directory.  They are run in separate processes with lowered
+privileges, i.e. the same as the user who started vlock.
+
+For simple tasks scripts should be preferred over modules.  They are
+easier to develop and test and have a lower impact on security and
+stability.
