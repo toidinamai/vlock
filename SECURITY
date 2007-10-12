@@ -6,21 +6,17 @@ virtual console to lock the system completely.  vlock takes this one step
 further and potenially grants this ability (and potentially other, even more
 hazardous ones) to any user through the use of plugins.
 
-The default installation sets permission that allow only users in the root
-group (or wheel on FreeBSD) to run dangerous modules and therefore prefers
-security over usability.  To override this you may set the VLOCK_GROUP variable
-while installing vlock like so::
+The default installation sets permission that allow only users in the vlock
+group to run dangerous modules.  Others will still be able to lock their own
+console or terminal and run plugins that are considered secure.
 
-  make VLOCK_GROUP=vlock install
-
-This way only members of the vlock group will be able to use potentially
-dangerous modules.  Others will still be able to lock their own console or
-terminal and run plugins that are considered secure.
+This behavior is configurabe through ./configure option or by editing
+config.mk.
 
 DETAILS
 =======
 
-vlock-main allows plugins to extend its functionality.  These plugins a
+vlock-main allows plugins to extend its functionality.  These plugins are
 separated into two groups:  modules and scripts.  Both are only loaded from
 locations that are specified at compile time.  It is extremely important that
 these directories are only writable by privileged users.
@@ -44,6 +40,6 @@ They are run with with lowered privileges, i.e. the same as the user who
 started vlock, in a separate process.  They also don't have direct access to
 the terminal vlock runs on and thus may be considered a relatively secure
 alternative to modules.  For any privileged operations they want to perform
-they have to use helpers such as sudo or (not recommended) be setuid binaries
-themselves.  Although less dangerous as modules vlock's script directory must
-also be protected to prevent stealing privileges from other users.
+they have to use helpers such as sudo.  Although less dangerous than modules
+vlock's script directory must still be protected the same as the module
+directory.
