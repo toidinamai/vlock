@@ -122,16 +122,14 @@ the cause of the error to stderr in addition to returning false.
 example
 -------
 
-Please see modules/nosysrc.c for an example plugin.  It's purpose is to
-disable the Linux SysRQ mechanism at vlock startup and reenable it at
-the end.
+Please see modules/example_module.c in the vlock source distribution.
 
 SCRIPTS
 =======
 
 Scripts are executables that are started as child processes of vlock.
-They run with the same privileges as the user starting vlock as opposed
-to the privileges of the vlock process.  They communicate with vlock
+They run with the same privileges as the user starting vlock instead of
+the privileges of the vlock process.  They communicate with vlock
 through command line arguments and pipes.
 
 dependencies
@@ -140,9 +138,9 @@ dependencies
 To get the dependencies of a script it is run once for each dependency
 item with the dependency name as the single command line argument.  Its
 standard output is redirected to a pipe that is read by vlock.  The
-plugin should print the dependency items, if any.  The items are
-separated by arbitrary white space (carriage return, space or newline).
-No errors are detected at this point.
+plugin should print the dependency items, if any, separated by arbitrary
+white space (carriage return, space or newline) and then exit.  No
+errors are detected in this process.
 
 hooks
 -----
@@ -154,4 +152,11 @@ Whenever a hook should be executed its name followed by a new line
 character are written to the pipe.  The script's standard output and
 standard error are redirected to /dev/null.  The script should only exit
 if end-of-file is detected on standard in even in cases where no
-subsequent hooks need to be executed.
+subsequent hooks need to be executed.  Error detection is limited to
+detecting if the script exits prematurely.  There is currently no way
+for a script what kind of error happened.
+
+example
+-------
+
+Please see scripts/example_script.sh in the vlock source distribution.
