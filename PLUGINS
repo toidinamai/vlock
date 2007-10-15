@@ -125,3 +125,33 @@ example
 Please see modules/nosysrc.c for an example plugin.  It's purpose is to
 disable the Linux SysRQ mechanism at vlock startup and reenable it at
 the end.
+
+SCRIPTS
+=======
+
+Scripts are executables that are started as child processes of vlock.
+They run with the same privileges as the user starting vlock as opposed
+to the privileges of the vlock process.  They communicate with vlock
+through command line arguments and pipes.
+
+dependencies
+------------
+
+To get the dependencies of a script it is run once for each dependency
+item with the dependency name as the single command line argument.  Its
+standard output is redirected to a pipe that is read by vlock.  The
+plugin should print the dependency items, if any.  The items are
+separated by arbitrary white space (carriage return, space or newline).
+No errors are detected at this point.
+
+hooks
+-----
+
+After the dependencies are read the script is run one last time this
+time with the string "hooks" as the single command line argument.  Its
+standard input is redirected from a pipe that is written to by vlock.
+Whenever a hook should be executed its name followed by a new line
+character are written to the pipe.  The script's standard output and
+standard error are redirected to /dev/null.  The script should only exit
+if end-of-file is detected on standard in even in cases where no
+subsequent hooks need to be executed.
