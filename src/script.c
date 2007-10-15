@@ -285,7 +285,7 @@ timeout:
     timersub(&timeout, &t2, &timeout);
 
     /* Read dependency data from the script. */
-    length = read(child.stdout_fd+1, buffer, sizeof buffer - 1);
+    length = read(child.stdout_fd, buffer, sizeof buffer - 1);
 
     /* Did the script close its stdin or exit? */
     if (length <= 0)
