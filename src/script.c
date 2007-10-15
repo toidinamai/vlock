@@ -332,9 +332,9 @@ error:
 
 static bool parse_dependency(char *data, struct list *dependency_list)
 {
-  for (char *saveptr, *token = strtok_r(data, "\n", &saveptr);
+  for (char *saveptr, *token = strtok_r(data, " \r\n", &saveptr);
       token != NULL;
-      token = strtok_r(NULL, "\n", &saveptr)) {
+      token = strtok_r(NULL, " \r\n", &saveptr)) {
     char *s = strdup(token);
 
     if (s == NULL || !list_append(dependency_list, s))
