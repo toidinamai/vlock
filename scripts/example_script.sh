@@ -71,4 +71,8 @@ case "$1" in
   conflicts)
     echo "${CONFLICTS}"
   ;;
+  *)
+    echo >&2 "$0: unknown command '$1'"
+    exit 1
+  ;;
 esac
