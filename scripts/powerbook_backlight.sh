@@ -1,6 +1,6 @@
 #!/bin/sh
 ###########################################################################
-# powerbook_light.sh, version 0.1.1
+# powerbook_backlight.sh, version 0.1.1
 # 2007-10-15
 #
 # This vlock plugin script switches off the backlight on Apple Powerbook 
