@@ -77,8 +77,8 @@ void (*fn[])(enum action, cucul_canvas_t *) =
 /* Global variables */
 static int frame = 0;
 static bool abort_requested = false;
-/* The minimum length of one frame.  40ms equals 25 FPS. */
-static struct timeval frame_length = {0, 40000};
+/* The minimum length of one frame.  40ms corresponds to 25 FPS. */
+static struct timeval frame_min_length = {0, 40000};
 
 void handle_sigterm(int __attribute__((unused)) signum)
 {
@@ -163,10 +163,12 @@ static int caca_main(void __attribute__((unused)) *argument)
     {
         struct timeval frame_start;
         struct timeval frame_end;
+        struct timeval frame_length;
 
         if (abort_requested)
           goto end;
 
+        /* Remember the start of the frame. */
         (void) gettimeofday(&frame_start, NULL);
 
         /* Resize the spare canvas, just in case the main one changed */
@@ -222,11 +224,17 @@ static int caca_main(void __attribute__((unused)) *argument)
                                    " -=[ Powered by libcaca ]=- ");
         caca_refresh_display(dp);
 
+        /* Get the current time. */
         (void) gettimeofday(&frame_end, NULL);
-        timersub(&frame_end, &frame_start, &frame_end);
 
-        if (timercmp(&frame_length, &frame_end, >))
-          (void) select(0, NULL, NULL, NULL, &frame_end);
+        /* Calculate time elapsed in the current frame. */
+        timersub(&frame_end, &frame_start, &frame_length);
+
+        if (timercmp(&frame_length, &frame_min_length, <)) {
+          /* Calculate the remaining time. */
+          timersub(&frame_min_length, &frame_length, &frame_length);
+          (void) select(0, NULL, NULL, NULL, &frame_length);
+        }
     }
 end:
     if(next != -1)
