@@ -26,6 +26,8 @@
 
 set -e
 
+DEPENDS="all"
+
 saved_frequencies=()
 saved_governors=()
 cpu_n=()
@@ -77,7 +79,26 @@ case "$1" in
   hooks)
     hooks
   ;;
+  preceeds)
+    echo "${PRECEEDS}"
+  ;;
+  succeeds)
+    echo "${SUCCEEDS}"
+  ;;
+  requires)
+    echo "${REQUIRES}"
+  ;;
+  needs)
+    echo "${NEEDS}"
+  ;;
   depends)
-    echo "all"
+    echo "${DEPENDS}"
+  ;;
+  conflicts)
+    echo "${CONFLICTS}"
+  ;;
+  *)
+    echo >&2 "$0: unknown command '$1'"
+    exit 1
   ;;
 esac
