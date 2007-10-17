@@ -44,8 +44,35 @@ if [ $# -ne 1 ] ; then
   exit 1
 fi
 
+if [ $# -ne 1 ] ; then
+  echo >&2 "Usage: $0 <command>"
+  exit 1
+fi
+
 case "$1" in
   hooks)
     hooks
+  ;;
+  preceeds)
+    echo "${PRECEEDS}"
+  ;;
+  succeeds)
+    echo "${SUCCEEDS}"
+  ;;
+  requires)
+    echo "${REQUIRES}"
+  ;;
+  needs)
+    echo "${NEEDS}"
+  ;;
+  depends)
+    echo "${DEPENDS}"
+  ;;
+  conflicts)
+    echo "${CONFLICTS}"
+  ;;
+  *)
+    echo >&2 "$0: unknown command '$1'"
+    exit 1
   ;;
 esac
