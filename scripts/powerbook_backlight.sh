@@ -32,10 +32,10 @@ hooks() {
   while read hook_name ; do
     case "${hook_name}" in
       vlock_save)
-        fblevel off >/dev/null
+        sudo fblevel off >/dev/null
       ;;
       vlock_save_abort)
-        fblevel on >/dev/null
+        sudo fblevel on >/dev/null
       ;;
     esac
   done
