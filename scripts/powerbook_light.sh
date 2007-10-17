@@ -26,6 +26,8 @@
 
 set -e
 
+DEPENDS="all"
+
 hooks() {
   while read hook_name ; do
     case "${hook_name}" in
