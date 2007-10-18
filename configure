@@ -54,6 +54,8 @@ Some influential environment variables:
   CFLAGS      C compiler flags
   LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
               nonstandard directory <lib dir>
+  VLOCK_GROUP group for restricted modules (default: vlock)
+  VLOCK_MODE  mode for restricted modules (default: 0750)
 
 Use these variables to override the choices made by \`configure' or to help
 it to find libraries and programs with nonstandard names/locations.
