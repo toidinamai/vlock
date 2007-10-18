@@ -146,7 +146,8 @@ static int caca_main(void __attribute__((unused)) *argument)
     cucul_set_canvas_size(mask, cucul_get_canvas_width(frontcv),
                                 cucul_get_canvas_height(frontcv));
 
-    caca_set_display_time(dp, 20000);
+    /* Set refresh delay.  40ms corresponds to 25 FPS. */
+    caca_set_display_time(dp, 40000);
 
     /* Initialise all demos' lookup tables */
     for(i = 0; i < DEMOS; i++)
