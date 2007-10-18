@@ -372,9 +372,6 @@ void handle_vlock_start(const char *hook_name)
         (void) call_hook(r, "vlock_end");
       }
 
-      if (errno != 0)
-        fprintf(stderr, "vlock-plugins: hook '%s' of plugin '%s' failed: %s\n", hook_name, p->name, strerror(errno));
-
       exit(EXIT_FAILURE);
     }
   }
