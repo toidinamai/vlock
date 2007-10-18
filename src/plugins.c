@@ -93,10 +93,8 @@ void plugin_hook(const char *hook_name)
     /* Get the handler and call it. */
     if (strcmp(hook_name, hooks[i].name) == 0) {
       hooks[i].handler(hook_name);
-      return;
+      break;
     }
-
-  fatal_error("vlock-plugins: invalid hook name '%s'", hook_name);
 }
 
 /********************/
