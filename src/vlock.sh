@@ -82,36 +82,28 @@ export_if_set() {
 }
 
 main() {
-  local options long_options short_options plugins
+  while [ $# -gt 0 ] ; do
+    echo "\$@: $@"
 
-  short_options="acvh"
-  long_options="all,current,version,help"
-
-  if [ "${VLOCK_ENABLE_PLUGINS}" = "yes" ] ; then
-    short_options="${short_options}nst:"
-    long_options="${long_options},new,disable-sysrq,timeout:"
-  fi
-
-  # Test for GNU getopt.
-  ( getopt -T >/dev/null )
-
-  if [ $? -eq 4 ] ; then
-    # GNU getopt.
-    options=`getopt -o "${short_options}" --long "${long_options}" -n vlock -- "$@"` || getopt_error=1
-  else
-    # Other getopt, e.g. BSD.
-    options=`getopt "${short_options}" "$@"` || getopt_error=1
-  fi
-
-  if [ -n "${getopt_error}" ] ; then
-    print_help
-    exit 1
-  fi
-
-  eval set -- "${options}"
-
-  while : ; do
     case "$1" in
+      -[!-]?*)
+        # convert things clashed arguments like "-foobar" to "-f -o -o -b -a -r"
+        local options
+
+        # strip "-" to get a list of option characters
+        options="${1#-}"
+        # pop $1 from $@
+        shift
+
+        while [ -n "${options}" ] ; do
+          # get last option character
+          option="$(expr substr "${options}" "${#options}" 1)"
+          # strip it from the list of option characters
+          options="${options%?}"
+          # prepend option "-" plus option character to $@
+          set -- "-${option}" "$@"
+        done
+      ;;
       -a|--all)
         plugins="${plugins} all"
         shift
@@ -145,14 +137,32 @@ main() {
         fi
         exit
         ;;
+      -[!-]|--?*)
+        echo >&1 "$0: unknown option '$1'"
+        print_help
+        exit 1
+      ;;
       --)
         # End of option list.
         shift
         break
         ;;
       *)
-        echo >&2 "getopt error: $1"
-        exit 1
+        local argument has_double_dash
+        for argument ; do
+          if [ "${argument}" = "--" ] ; then
+            has_double_dash="yes"
+            break
+          fi
+        done
+
+        if [ -n "${has_double_dash}" ] ; then
+          set -- "$@" "$1"
+        else
+          set -- "$@" -- "$1"
+        fi
+
+        shift
         ;;
     esac
   done
