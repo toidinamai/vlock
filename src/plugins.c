@@ -399,7 +399,7 @@ void handle_vlock_save(const char *hook_name)
 
     if (!call_hook(p, hook_name)) {
       p->save_disabled = true;
-      call_hook(p, "vlock_save_abort");
+      (void) call_hook(p, "vlock_save_abort");
     }
   }
 }
