@@ -82,25 +82,80 @@ export_if_set() {
 }
 
 main() {
+  short_options_with_arguments="t"
+  long_options_with_arguments="timeout"
+
+  # Parse command line arguments.
   while [ $# -gt 0 ] ; do
     case "$1" in
       -[!-]?*)
-        # convert things clashed arguments like "-foobar" to "-f -o -o -b -a -r"
-        local options
-
-        # strip "-" to get a list of option characters
+        # Strip "-" to get the list of option characters.
         options="${1#-}"
-        # pop $1 from $@
         shift
 
+        last_option_argument="${options}"
+        last_option_index=0
+
+        # If an option character takes an argument all characters after it
+        # become the argument if it isn't already the last one.  E.g. if "x"
+        # takes an argument "-fooxbar" becomes "-foo -x bar".
+        while [ -n "${last_option_argument}" ] ; do
+          # Get first option character.
+          option="$(expr substr "${last_option_argument}" 1 1)"
+          # Strip it from the list of option characters.
+          last_option_argument="${last_option_argument#?}"
+          last_option_index=$((${last_option_index} + 1))
+
+          if expr "${short_options_with_arguments}" : "${option}" >/dev/null ; then
+            # Prepend "-" plus option character and rest of option string to $@.
+            set -- "-${option}" "${last_option_argument}" "$@"
+
+            # Remove all characters after the option character.
+            if [ "${last_option_index}" -gt 1 ] ; then
+              options="$(expr substr "${options}" 1 "$((${last_option_index}-1))")"
+            else
+              options=""
+            fi
+
+            break
+          fi
+        done
+
+        # Convert clashed arguments like "-foobar" to "-f -o -o -b -a -r".
         while [ -n "${options}" ] ; do
-          # get last option character
+          # Get last option character.
           option="$(expr substr "${options}" "${#options}" 1)"
-          # strip it from the list of option characters
+          # Strip it from the list of option characters.
           options="${options%?}"
-          # prepend option "-" plus option character to $@
+          # Prepend "-" plus option character to $@.
           set -- "-${option}" "$@"
         done
+      ;;
+      --?*=?*)
+        # Extract option name and argument.
+        option="$(expr "x$1" : 'x--\([^=]*\)=.*')"
+        option_argument="$(expr "x$1" : 'x--[^=]*=\(.*\)')"
+        shift
+
+        compare_options="${long_options_with_arguments}"
+
+        # Find the option in the list of options that take an argument.
+        while [ -n "${compare_options}" ] ; do
+          compare_option="${compare_options%%,*}"
+          compare_options="${compare_options#"${compare_option}"}"
+          compare_options="${compare_options#,}"
+
+          if [ "${option}" = "${compare_option}" ] ; then
+            set -- "--${option}" "${option_argument}" "$@"
+            unset option option_argument
+            break
+          fi
+        done
+
+        if [ -n "${option}" ] ; then
+          echo >&2 "$0: option '--${option}' does not allow an argument"
+          exit 1
+        fi
       ;;
       -a|--all)
         plugins="${plugins} all"
@@ -119,9 +174,11 @@ main() {
         shift
         ;;
       -t|--timeout)
-        shift
-        VLOCK_TIMEOUT="$1"
-        shift
+        VLOCK_TIMEOUT="$2"
+        if ! shift 2 ; then
+          echo >&2 "$0: option '$1' requires an argument"
+          exit 1
+        fi
         ;;
       -h|--help)
        print_help
@@ -146,7 +203,6 @@ main() {
         break
         ;;
       *)
-        local argument has_double_dash
         for argument ; do
           if [ "${argument}" = "--" ] ; then
             has_double_dash="yes"
