@@ -83,8 +83,6 @@ export_if_set() {
 
 main() {
   while [ $# -gt 0 ] ; do
-    echo "\$@: $@"
-
     case "$1" in
       -[!-]?*)
         # convert things clashed arguments like "-foobar" to "-f -o -o -b -a -r"
