@@ -101,7 +101,7 @@ main() {
         # takes an argument "-fooxbar" becomes "-foo -x bar".
         while [ -n "${last_option_argument}" ] ; do
           # Get first option character.
-          option="$(expr substr "${last_option_argument}" 1 1)"
+          option="$(expr "${last_option_argument}" : '\(.\)')"
           # Strip it from the list of option characters.
           last_option_argument="${last_option_argument#?}"
           last_option_index=$((${last_option_index} + 1))
@@ -112,7 +112,7 @@ main() {
 
             # Remove all characters after the option character.
             if [ "${last_option_index}" -gt 1 ] ; then
-              options="$(expr substr "${options}" 1 "$((${last_option_index}-1))")"
+              options="$(expr "${options}" : "\(.\{$((${last_option_index}-1))\}\)")"
             else
               options=""
             fi
@@ -124,7 +124,7 @@ main() {
         # Convert clashed arguments like "-foobar" to "-f -o -o -b -a -r".
         while [ -n "${options}" ] ; do
           # Get last option character.
-          option="$(expr substr "${options}" "${#options}" 1)"
+          option="$(expr "${options}" : '.*\(.\)')"
           # Strip it from the list of option characters.
           options="${options%?}"
           # Prepend "-" plus option character to $@.
