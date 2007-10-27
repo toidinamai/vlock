@@ -240,8 +240,8 @@ static bool __resolve_depedencies(void)
 
     list_for_each(p->dependencies[CONFLICTS], dependency_item) {
       const char *d = dependency_item->data;
-      if (get_plugin(d) == NULL) {
-        fprintf(stderr, "vlock-plugins: '%s' and '%s' cannot be loaded at the same time", p->name, d);
+      if (get_plugin(d) != NULL) {
+        fprintf(stderr, "vlock-plugins: '%s' and '%s' cannot be loaded at the same time\n", p->name, d);
         errno = 0;
         return false;
       }
