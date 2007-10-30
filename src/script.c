@@ -64,6 +64,8 @@ struct script_context
   int fd;
   /* The PID of the script. */
   pid_t pid;
+  /* Did the script die? */
+  bool dead;
 };
 
 /* Get the dependency from the script. */ 
@@ -139,6 +141,10 @@ static bool call_script_hook(struct plugin *s, const char *hook_name)
   struct sigaction act;
   struct sigaction oldact;
 
+  if (context->dead)
+    /* Nothing to do. */
+    return false;
+
   /* When writing to a pipe when the read end is closed the kernel invariably
    * sends SIGPIPE.   Ignore it. */
   (void) sigemptyset(&(act.sa_mask));
@@ -155,8 +161,10 @@ static bool call_script_hook(struct plugin *s, const char *hook_name)
   /* Restore the previous SIGPIPE handler. */
   (void) sigaction(SIGPIPE, &oldact, NULL);
 
-  /* Scripts fail silently. */
-  return (length == hook_name_length + 1);
+  /* If write fails the script is considered dead. */
+  context->dead = (length == hook_name_length + 1);
+
+  return !context->dead;
 }
 
 static struct script_context *launch_script(const char *path)
@@ -185,6 +193,7 @@ static struct script_context *launch_script(const char *path)
 
   script->fd = child.stdin_fd;
   script->pid = child.pid;
+  script->dead = false;
 
   fd_flags = fcntl(script->fd, F_GETFL, &fd_flags);
 
