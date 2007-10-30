@@ -8,7 +8,6 @@ medium
 ------
 
 - generate error on invalid script
-- improve script code: check for failures in call_hook only once
 - document ./configure options better
 - help distributors when vlock group is not avaiable at installation time
 
