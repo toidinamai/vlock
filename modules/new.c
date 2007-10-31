@@ -18,6 +18,7 @@
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <errno.h>
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #include <sys/consio.h>
@@ -193,6 +194,7 @@ bool vlock_start(void **ctx_ptr)
   return true;
 
 err:
+  errno = 0;
   free(ctx);
   return false;
 }
