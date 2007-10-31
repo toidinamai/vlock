@@ -38,7 +38,7 @@ int vlock_debug = 0;
 #define ensure_atexit(func) \
   do { \
     if (atexit(func) != 0) \
-      fatal_perror("vlock-main: atexit() failed"); \
+      fatal_perror("vlock: atexit() failed"); \
   } while (0)
 
 static char *get_username(void)
@@ -67,7 +67,7 @@ static char *get_username(void)
 
 static void terminate(int __attribute__((unused)) signum)
 {
-  fprintf(stderr, "vlock-main: Terminated!\n");
+  fprintf(stderr, "vlock: Terminated!\n");
   exit(1);
 }
 
@@ -199,12 +199,12 @@ int main(int argc, char *const argv[])
   username = get_username();
 
   if (username == NULL)
-    fatal_perror("vlock-main: could not get username");
+    fatal_perror("vlock: could not get username");
 
 #ifdef USE_PLUGINS
   for (int i = 1; i < argc; i++)
     if (!load_plugin(argv[i]))
-      fatal_error("vlock-main: loading plugin '%s' failed: %s", argv[i], STRERROR);
+      fatal_error("vlock: loading plugin '%s' failed: %s", argv[i], STRERROR);
 
   ensure_atexit(unload_plugins);
 
@@ -212,7 +212,7 @@ int main(int argc, char *const argv[])
     if (errno == 0)
       exit(EXIT_FAILURE);
     else
-      fatal_error("vlock-main: error resolving plugin dependencies: %s", STRERROR);
+      fatal_error("vlock: error resolving plugin dependencies: %s", STRERROR);
   }
 
   plugin_hook("vlock_start");
@@ -222,14 +222,14 @@ int main(int argc, char *const argv[])
   if (argc == 2 && (strcmp(argv[1], "all") == 0)) {
     if (!lock_console_switch()) {
       if (errno)
-        perror("vlock-main: could not disable console switching");
+        perror("vlock: could not disable console switching");
 
       exit(EXIT_FAILURE);
     }
 
     ensure_atexit((void (*)(void))unlock_console_switch);
   } else if (argc > 1) {
-    fatal_error("vlock-main: plugin support disabled");
+    fatal_error("vlock: plugin support disabled");
   }
 #endif
 
