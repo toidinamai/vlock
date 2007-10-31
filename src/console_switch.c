@@ -66,8 +66,15 @@ bool lock_console_switch(void)
   struct sigaction sa;
 
   /* Get the virtual console mode. */
-  if (ioctl(STDIN_FILENO, VT_GETMODE, &vtm) < 0)
+  if (ioctl(STDIN_FILENO, VT_GETMODE, &vtm) < 0) {
+    if (errno == ENOTTY || errno == EINVAL)
+      fprintf(stderr, "vlock: this terminal is not a virtual console\n");
+    else
+      perror("vlock: could not get virtual console mode");
+
+    errno = 0;
     return false;
+  }
 
   /* Copy the current virtual console mode. */
   lock_vtm = vtm;
@@ -92,10 +99,12 @@ bool lock_console_switch(void)
   /* Set virtual console mode to be process governed thus disabling console
    * switching through the signal handlers above. */
   if (ioctl(STDIN_FILENO, VT_SETMODE, &lock_vtm) < 0) {
-    int errsv = errno;
+    perror("vlock: disabling console switching failed");
+
+    /* Reset signal handlers. */
     (void) sigaction(SIGUSR1, &sa_usr1, NULL);
     (void) sigaction(SIGUSR2, &sa_usr2, NULL);
-    errno = errsv;
+    errno = 0;
     return false;
   }
 
@@ -106,15 +115,15 @@ bool lock_console_switch(void)
 /* Reenable console switching if it was previously disabled. */
 bool unlock_console_switch(void)
 {
-  if (console_switch_locked) {
-    console_switch_locked = (ioctl(STDIN_FILENO, VT_SETMODE, &vtm) < 0);
-
-    if (console_switch_locked)
-      return false;
-
+  if (ioctl(STDIN_FILENO, VT_SETMODE, &vtm) == 0) {
+    /* Reset signal handlers. */
     (void) sigaction(SIGUSR1, &sa_usr1, NULL);
     (void) sigaction(SIGUSR2, &sa_usr2, NULL);
-  }
 
-  return true;
+    return true;
+  } else {
+    perror("vlock: reenabling console switch failed");
+    errno = 0;
+    return false;
+  }
 }

@@ -221,10 +221,10 @@ int main(int argc, char *const argv[])
   /* Emulate pseudo plugin "all". */
   if (argc == 2 && (strcmp(argv[1], "all") == 0)) {
     if (!lock_console_switch()) {
-      if (errno == ENOTTY || errno == EINVAL)
-        fatal_error("vlock-main: this terminal is not a virtual console");
-      else
-        fatal_perror("vlock-main: could not disable console switching");
+      if (errno)
+        perror("vlock-main: could not disable console switching");
+
+      exit(EXIT_FAILURE);
     }
 
     ensure_atexit((void (*)(void))unlock_console_switch);
