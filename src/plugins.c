@@ -369,7 +369,7 @@ void handle_vlock_start(const char *hook_name)
     if (!call_hook(p, hook_name)) {
       int errsv = errno;
 
-      list_for_each_reverse_from(plugins, reverse_item, plugin_item) {
+      list_for_each_reverse_from(plugins, reverse_item, plugin_item->previous) {
         struct plugin *r = reverse_item->data;
         (void) call_hook(r, "vlock_end");
       }

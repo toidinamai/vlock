@@ -69,7 +69,8 @@ There are four different hooks that plugins may declare:
 vlock_start:
   This hook is called once immediately after vlock is initialized and
   before any authentication prompt.  If a plugin signals an error in
-  this hook vlock aborts.
+  this hook vlock aborts and calls the vlock_end hooks of all previously
+  called modules.
 
 vlock_end:
   This hook is called once after successful authentication or if vlock
