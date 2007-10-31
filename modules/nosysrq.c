@@ -85,6 +85,7 @@ nothing_to_do:
   return true;
 
 err:
+  errno = 0;
   free(ctx);
   return false;
 }
