@@ -162,7 +162,7 @@ static bool call_script_hook(struct plugin *s, const char *hook_name)
   (void) sigaction(SIGPIPE, &oldact, NULL);
 
   /* If write fails the script is considered dead. */
-  context->dead = (length == hook_name_length + 1);
+  context->dead = (length != hook_name_length + 1);
 
   return !context->dead;
 }
