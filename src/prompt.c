@@ -115,7 +115,7 @@ before_select:
         /* A signal was caught. Restart. */
         goto before_select;
       default:
-        perror("vlock-auth: select() on stdin failed");
+        perror("vlock: select() on stdin failed");
         goto out;
     }
   }

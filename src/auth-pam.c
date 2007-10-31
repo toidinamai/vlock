@@ -121,7 +121,7 @@ bool auth(const char *user, struct timespec *timeout)
   pam_status = pam_start("vlock", user, &pamc, &pamh);
 
   if (pam_status != PAM_SUCCESS) {
-    fprintf(stderr, "vlock-auth: %s\n", pam_strerror(pamh, pam_status));
+    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
     goto end;
   }
 
@@ -132,7 +132,7 @@ bool auth(const char *user, struct timespec *timeout)
   pam_status = pam_authenticate(pamh, 0);
 
   if (pam_status != PAM_SUCCESS) {
-    fprintf(stderr, "vlock-auth: %s\n", pam_strerror(pamh, pam_status));
+    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
   }
 
 end:
@@ -140,7 +140,7 @@ end:
   pam_end_status = pam_end(pamh, pam_status);
 
   if (pam_end_status != PAM_SUCCESS) {
-    fprintf(stderr, "vlock-auth: %s\n", pam_strerror(pamh, pam_end_status));
+    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_end_status));
   }
 
   return (pam_status == PAM_SUCCESS);

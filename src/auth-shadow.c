@@ -53,7 +53,7 @@ bool auth(const char *user, struct timespec *timeout)
 
   /* hash the password */
   if ((cryptpw = crypt(pwd, spw->sp_pwdp)) == NULL) {
-    perror("vlock-auth: crypt()");
+    perror("vlock: crypt()");
     goto out_shadow;
   }
 
@@ -61,7 +61,7 @@ bool auth(const char *user, struct timespec *timeout)
 
   if (!result) {
     sleep(1);
-    fprintf(stderr, "vlock-auth: Authentication error\n");
+    fprintf(stderr, "vlock: Authentication error\n");
   }
 
 out_shadow:
