@@ -11,7 +11,7 @@ install: $(addprefix install-, $(MODULES))
 MODULE_GROUP = $(ROOT_GROUP)
 MODULE_MODE = 0755
 
-override CFLAGS += -I../src
+override CFLAGS += -I../src -fPIC
 
 #special build rules
 
