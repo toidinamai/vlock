@@ -1,8 +1,16 @@
+2007-11-04 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.2 beta2
+
+	* Improved error handling and error messages.
+	* Fixed portability bugs.
+	* Fixed dependency handling bug.
+
 2007-10-16 Frank Benkstein <frank-vlock@benkstein.net>
 
 	vlock 2.2 beta1
 
-	* Documentation update.	
+	* Documentation update.
 	* Improved error handling.
 
 2007-10-03 Frank Benkstein <frank-vlock@benkstein.net>
