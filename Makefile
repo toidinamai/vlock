@@ -30,6 +30,10 @@ modules:
 scripts:
 	@$(MAKE) -C scripts
 
+.PHONY: tests
+tests:
+	@$(MAKE) -C tests
+
 ### configuration ###
 
 config.mk:
