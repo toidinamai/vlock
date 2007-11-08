@@ -25,8 +25,8 @@
 
 /* Parse the given string (interpreted as seconds) into a
  * timespec.  On error NULL is returned.  The caller is responsible
- * to free the result.   The string may be NULL, in which case NULL
- * is returned, too. */
+ * to free the result.   The argument may be NULL, in which case NULL
+ * is returned, too.  "0" is also parsed as NULL. */
 struct timespec *parse_seconds(const char *s)
 {
   if (s == NULL) {
