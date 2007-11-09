@@ -1,0 +1,15 @@
+.TH VLOCK-PLUGINS 5 "10 November 2007" "Linux" "Linux Programmer's Manual"
+.SH NAME
+vlock-plugins \- plugin support for vlock
+.SH DESCRIPTION
+If vlock-main(8) is compiled with plugin support its default features are very
+limited: it can only lock the current session and ask for authenticiaton.
+However it is possible to extend this functions through plugins.  These plugins
+are loaded when vlock-main starts and can provide hooks that are called at
+certain points during the lifetime of the vlock-main process.
+.PP
+.SH "SEE ALSO"
+.BR vlock (1),
+.BR vlock-main (8)
+.SH AUTHORS
+Frank Benkstein <frank-vlock@benkstein.net>
