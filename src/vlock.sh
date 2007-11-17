@@ -62,7 +62,7 @@ print_help() {
     echo >&2 "-n or --new: allocate a new virtual console before locking,"
     echo >&2 "       implies --all."
     echo >&2 "-s or --disable-sysrq: disable SysRq while consoles are locked to"
-    echo >&2 "       prevent killing vlock with SAK, implies --all."
+    echo >&2 "       prevent killing vlock with SAK"
     echo >&2 "-t <seconds> or --timeout <seconds>: run screen saver plugins"
     echo >&2 "       after the given amount of time."
   fi
