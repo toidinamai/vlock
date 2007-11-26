@@ -1,3 +1,9 @@
+2007-11-26 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.2 rc2
+
+	* Fixed man page installation error.
+
 2007-11-17 Frank Benkstein <frank-vlock@benkstein.net>
 
 	vlock 2.2 rc1
