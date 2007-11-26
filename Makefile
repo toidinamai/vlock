@@ -52,9 +52,9 @@ endif
 
 .PHONY: install-programs
 install-programs: $(PROGRAMS)
-	$(MKDIR_P) $(DESTDIR)$(PREFIX)/bin
+	$(MKDIR_P) -m 755 $(DESTDIR)$(PREFIX)/bin
 	$(INSTALL) -m 755 -o root -g $(ROOT_GROUP) vlock $(DESTDIR)$(BINDIR)/vlock
-	$(MKDIR_P) $(DESTDIR)$(PREFIX)/sbin
+	$(MKDIR_P) -m 755 $(DESTDIR)$(PREFIX)/sbin
 	$(INSTALL) -m 4711 -o root -g $(ROOT_GROUP) vlock-main $(DESTDIR)$(SBINDIR)/vlock-main
 
 .PHONY: install-plugins
