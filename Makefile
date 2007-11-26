@@ -70,9 +70,9 @@ install-scripts:
 
 .PHONY: install-man
 install-man:
-	$(MKDIR_P) $(DESTDIR)$(PREFIX)/share/man/man1
+	$(MKDIR_P) -m 755 $(DESTDIR)$(MANDIR)/man1
 	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock.1 $(DESTDIR)$(MANDIR)/man1/vlock.1
-	$(MKDIR_P) $(DESTDIR)$(PREFIX)/share/man/man8
+	$(MKDIR_P) -m 755 $(DESTDIR)$(MANDIR)/man8
 	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock-main.8 $(DESTDIR)$(MANDIR)/man8/vlock-main.8
 
 
