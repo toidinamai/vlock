@@ -74,6 +74,8 @@ install-man:
 	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock.1 $(DESTDIR)$(MANDIR)/man1/vlock.1
 	$(MKDIR_P) -m 755 $(DESTDIR)$(MANDIR)/man8
 	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock-main.8 $(DESTDIR)$(MANDIR)/man8/vlock-main.8
+	$(MKDIR_P) -m 755 $(DESTDIR)$(MANDIR)/man5
+	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock-plugins.5 $(DESTDIR)$(MANDIR)/man5/vlock-plugins.5
 
 
 ### build rules ###
