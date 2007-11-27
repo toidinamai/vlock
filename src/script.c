@@ -218,7 +218,7 @@ static bool get_dependency(const char *path, const char *dependency_name,
   data = read_dependency(path, dependency_name);
 
   if (data == NULL)  {
-    return errno != 0;
+    return errno == 0;
   } else {
     /* Parse the dependency data. */
     bool result = parse_dependency(data, dependency_list);
