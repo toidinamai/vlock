@@ -13,6 +13,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "list.h"
 
@@ -31,6 +32,12 @@ struct plugin *new_plugin(const char *name, struct plugin_type *type)
 
   if (p->name == NULL) {
     free(p);
+    return NULL;
+  } else if (strchr(p->name, '/') != NULL) {
+    /* For security plugin names must not contain a slash. */
+    free(p->name);
+    free(p);
+    errno = EINVAL;
     return NULL;
   }
 
