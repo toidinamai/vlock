@@ -95,15 +95,8 @@ bool init_script(struct plugin *p)
     return false;
   }
 
-  /* Test for access.  This must be done manually because vlock most likely
-   * runs as a setuid executable and would otherwise override restrictions.
-   *
-   * Also there is currently no error detection in case exec() fails later.
-   */
-  if (access(context->path, X_OK) < 0)
-    goto error;
-
-  /* Get the dependency information. */
+  /* Get the dependency information.  Whether the script is executable or not
+   * is also detected here. */
   for (size_t i = 0; i < nr_dependencies; i++)
     if (!get_dependency(context->path, dependency_names[i], p->dependencies[i]))
       goto error;
