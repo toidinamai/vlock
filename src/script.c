@@ -60,26 +60,37 @@ struct plugin_type *script = &(struct plugin_type){
 
 struct script_context 
 {
+  /* The path to the script. */
+  char *path;
+  /* Was the script launched? */
+  bool launched;
+  /* Did the script die? */
+  bool dead;
   /* The pipe file descriptor that is connected to the script's stdin. */
   int fd;
   /* The PID of the script. */
   pid_t pid;
-  /* Did the script die? */
-  bool dead;
 };
 
 /* Get the dependency from the script. */ 
 static bool get_dependency(const char *path, const char *dependency_name,
     struct list *dependency_list);
-/* Launch the script creating a new script_context.  No error detection aborts
- * on fatal errors. */
-static struct script_context *launch_script(const char *path);
+/* Launch the script creating a new script_context. */
+static bool launch_script(struct script_context *script);
 
 bool init_script(struct plugin *p)
 {
-  char *path;
+  int errsv;
+  struct script_context *context = malloc(sizeof *context);
 
-  if (asprintf(&path, "%s/%s", VLOCK_SCRIPT_DIR, p->name) < 0) {
+  if (context == NULL)
+    return false;
+
+  context->dead = false;
+  context->launched = false;
+
+  if (asprintf(&context->path, "%s/%s", VLOCK_SCRIPT_DIR, p->name) < 0) {
+    free(context);
     errno = ENOMEM;
     return false;
   }
@@ -89,30 +100,23 @@ bool init_script(struct plugin *p)
    *
    * Also there is currently no error detection in case exec() fails later.
    */
-  if (access(path, X_OK) < 0) {
-    int errsv = errno;
-    free(path);
-    errno = errsv;
-    return false;
-  }
+  if (access(context->path, X_OK) < 0)
+    goto error;
 
   /* Get the dependency information. */
   for (size_t i = 0; i < nr_dependencies; i++)
-    if (!get_dependency(path, dependency_names[i], p->dependencies[i]))
-      return false;
+    if (!get_dependency(context->path, dependency_names[i], p->dependencies[i]))
+      goto error;
 
-  /* Launch the script. */
-  p->context = launch_script(path);
+  p->context = context;
+  return true;
 
-  if (p->context != NULL) {
-    free(path);
-    return true;
-  } else {
-    int errsv = errno;
-    free(path);
-    errno = errsv;
-    return false;
-  }
+error:
+  errsv = errno;
+  free(context->path);
+  free(context);
+  errno = errsv;
+  return false;
 }
 
 static void destroy_script(struct plugin *p)
@@ -120,6 +124,8 @@ static void destroy_script(struct plugin *p)
   struct script_context *context = p->context;
 
   if (context != NULL) {
+    free(context->path);
+
     /* Close the pipe. */
     (void) close(context->fd);
 
@@ -140,6 +146,14 @@ static bool call_script_hook(struct plugin *s, const char *hook_name)
   ssize_t length;
   struct sigaction act;
   struct sigaction oldact;
+
+  if (!context->launched) {
+    /* Launch script. */
+    context->launched = launch_script(context);
+
+    if (!context->launched)
+      return false;
+  }
 
   if (context->dead)
     /* Nothing to do. */
@@ -167,13 +181,12 @@ static bool call_script_hook(struct plugin *s, const char *hook_name)
   return !context->dead;
 }
 
-static struct script_context *launch_script(const char *path)
+static bool launch_script(struct script_context *script)
 {
   int fd_flags;
-  struct script_context *script = malloc(sizeof *script);
-  const char *argv[] = { path, "hooks", NULL };
+  const char *argv[] = { script->path, "hooks", NULL };
   struct child_process child = {
-    .path = path,
+    .path = script->path,
     .argv = argv,
     .stdin_fd = REDIRECT_PIPE,
     .stdout_fd = REDIRECT_DEV_NULL,
@@ -181,19 +194,11 @@ static struct script_context *launch_script(const char *path)
     .function = NULL,
   };
 
-  if (script == NULL)
-    return NULL;
-
-  if (!create_child(&child)) {
-    int errsv = errno;
-    free(script);
-    errno = errsv;
-    return NULL;
-  }
+  if (!create_child(&child))
+    return false;
 
   script->fd = child.stdin_fd;
   script->pid = child.pid;
-  script->dead = false;
 
   fd_flags = fcntl(script->fd, F_GETFL, &fd_flags);
 
@@ -202,7 +207,7 @@ static struct script_context *launch_script(const char *path)
     (void) fcntl(script->fd, F_SETFL, fd_flags);
   }
 
-  return script;
+  return true;
 }
 
 static char *read_dependency(const char *path, const char *dependency_name);
