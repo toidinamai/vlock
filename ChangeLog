@@ -2,12 +2,12 @@ XXXX-XX-XX Frank Benkstein <frank-vlock@benkstein.net>
 
 	vlock 2.2 rc3
 
-	* A critical security problem was fixed:
+	* A critical security problem (local root exploit) was fixed:
 		Previous versions of vlock (since 2.2 alpha1) contained a serious flaw
-		that allowed any user to execute arbitrary code as root (local root
-		exploit).  This was possible because plugin names could contain "../" thus
-		escaping the pre-defined plugin directory.  All users of vlock 2.2
-		development versions are advised to update.
+		that allowed any user to execute arbitrary code as root .  This was
+		possible because plugin names could contain "../" thus escaping the
+		pre-defined plugin directory.  All users of vlock 2.2 development versions
+		are advised to update.
 
 2007-11-26 Frank Benkstein <frank-vlock@benkstein.net>
 
