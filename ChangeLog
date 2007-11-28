@@ -1,4 +1,4 @@
-XXXX-XX-XX Frank Benkstein <frank-vlock@benkstein.net>
+2007-11-28 Frank Benkstein <frank-vlock@benkstein.net>
 
 	vlock 2.2 rc3
 
@@ -8,6 +8,8 @@ XXXX-XX-XX Frank Benkstein <frank-vlock@benkstein.net>
 		possible because plugin names could contain "../" thus escaping the
 		pre-defined plugin directory.  All users of vlock 2.2 development versions
 		are advised to update.
+	* Improved script handling.
+	* Added two more scripts.
 
 2007-11-26 Frank Benkstein <frank-vlock@benkstein.net>
 
