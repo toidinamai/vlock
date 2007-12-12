@@ -233,6 +233,9 @@ int main(int argc, char *const argv[])
   }
 #endif
 
+  if (!isatty(STDIN_FILENO))
+    fatal_error("vlock: stdin is not a terminal");
+
   secure_terminal();
   ensure_atexit(restore_terminal);
 
