@@ -4,7 +4,7 @@ include config.mk
 
 VPATH = src
 
-VLOCK_VERSION = 2.2 beta2
+VLOCK_VERSION = 2.2 rc2
 
 PROGRAMS = vlock vlock-main
 
@@ -56,9 +56,9 @@ endif
 
 .PHONY: install-programs
 install-programs: $(PROGRAMS)
-	$(MKDIR_P) $(DESTDIR)$(PREFIX)/bin
+	$(MKDIR_P) -m 755 $(DESTDIR)$(PREFIX)/bin
 	$(INSTALL) -m 755 -o root -g $(ROOT_GROUP) vlock $(DESTDIR)$(BINDIR)/vlock
-	$(MKDIR_P) $(DESTDIR)$(PREFIX)/sbin
+	$(MKDIR_P) -m 755 $(DESTDIR)$(PREFIX)/sbin
 	$(INSTALL) -m 4711 -o root -g $(ROOT_GROUP) vlock-main $(DESTDIR)$(SBINDIR)/vlock-main
 
 .PHONY: install-plugins
@@ -74,10 +74,12 @@ install-scripts:
 
 .PHONY: install-man
 install-man:
-	$(MKDIR_P) $(DESTDIR)$(PREFIX)/share/man/man1
+	$(MKDIR_P) -m 755 $(DESTDIR)$(MANDIR)/man1
 	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock.1 $(DESTDIR)$(MANDIR)/man1/vlock.1
-	$(MKDIR_P) $(DESTDIR)$(PREFIX)/share/man/man8
+	$(MKDIR_P) -m 755 $(DESTDIR)$(MANDIR)/man8
 	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock-main.8 $(DESTDIR)$(MANDIR)/man8/vlock-main.8
+	$(MKDIR_P) -m 755 $(DESTDIR)$(MANDIR)/man5
+	$(INSTALL) -m 644 -o root -g $(ROOT_GROUP) man/vlock-plugins.5 $(DESTDIR)$(MANDIR)/man5/vlock-plugins.5
 
 
 ### build rules ###

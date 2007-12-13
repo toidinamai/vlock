@@ -1,6 +1,12 @@
 #!/bin/sh
-# thinkpad_light.sh -- ThinkLight script for vlock,
-#                      the VT locking program for linux
+# mplayer.sh -- mplayer pausing script for vlock,
+#               the VT locking program for linux
+#
+# To use this script do run the following command
+# $ mkfifo ~/.mplayer/control
+# and add
+# input=file=/home/<user>/.mplayer/control
+# to your ~/.mplayer/config.
 # 
 # This program is copyright (C) 2007 Frank Benkstein, and is free software.  It
 # comes without any warranty, to the extent permitted by applicable law.  You
@@ -15,16 +21,14 @@ DEPENDS="all"
 hooks() {
   while read hook_name ; do
     case "${hook_name}" in
-      vlock_save)
-        light_status=$(awk '/^status:/ {print $2}' /proc/acpi/ibm/light)
-
-        if [ "${light_status}" = "on" ] ; then
-          echo off | sudo tee /proc/acpi/ibm/light >/dev/null
+      vlock_start)
+        if fuser "${HOME}/.mplayer/control" > /dev/null 2>&1 ; then
+          echo "pausing seek -4" > "${HOME}/.mplayer/control"
         fi
       ;;
-      vlock_save_abort)
-        if [ "${light_status}" = "on" ] ; then
-          echo on | sudo tee /proc/acpi/ibm/light >/dev/null
+      vlock_end)
+        if fuser "${HOME}/.mplayer/control" > /dev/null 2>&1 ; then
+          echo "pause" > "${HOME}/.mplayer/control"
         fi
       ;;
     esac

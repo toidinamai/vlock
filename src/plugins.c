@@ -161,7 +161,7 @@ static bool __resolve_depedencies(void)
 
       if (q == NULL) {
         int errsv = errno;
-        fprintf(stderr, "vlock-plugin: '%s' requires '%s' which could not be loaded\n", p->name, d);
+        fprintf(stderr, "vlock-plugins: '%s' requires '%s' which could not be loaded\n", p->name, d);
         list_free(required_plugins);
         errno = errsv;
         return false;
@@ -375,7 +375,7 @@ void handle_vlock_start(const char *hook_name)
       }
 
       if (errsv)
-        (void) fprintf(stderr, "vlock: plugin '%s' failed: %s\n", p->name, strerror(errsv));
+        fprintf(stderr, "vlock: plugin '%s' failed: %s\n", p->name, strerror(errsv));
 
       exit(EXIT_FAILURE);
     }

@@ -227,10 +227,13 @@ bool create_child(struct child_process *child)
 
   (void) close(status_pipe[1]);
 
+  /* Get the error status from the child, if any. */
   if (read(status_pipe[0], &child_errno, sizeof child_errno) == sizeof child_errno) {
     errsv = child_errno;
     goto child_failed;
   }
+
+  (void) close(status_pipe[0]);
 
   if (child->stdin_fd == REDIRECT_PIPE) {
     /* Write end. */
