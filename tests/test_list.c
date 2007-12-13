@@ -53,9 +53,31 @@ void test_list_free(void)
   CU_PASS("list_free() didn't crash");
 }
 
+void test_list_length(void)
+{
+  struct list *l = list_new();
+
+  CU_ASSERT(list_length(l) == 0);
+
+  list_append(l, (void *)1);
+  CU_ASSERT(list_length(l) == 1);
+
+  list_append(l, (void *)2);
+  CU_ASSERT(list_length(l) == 2);
+
+  list_append(l, (void *)3);
+  CU_ASSERT(list_length(l) == 3);
+
+  list_append(l, (void *)4);
+  CU_ASSERT(list_length(l) == 4);
+
+  list_free(l);
+}
+
 CU_TestInfo list_tests[] = {
   { "test_list_new", test_list_new },
   { "test_list_copy", test_list_copy },
   { "test_list_free", test_list_free },
+  { "test_list_length", test_list_length },
   CU_TEST_INFO_NULL,
 };
