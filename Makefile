@@ -143,3 +143,4 @@ clean:
 	$(RM) $(PROGRAMS) $(wildcard *.o)
 	@$(MAKE) -C modules clean
 	@$(MAKE) -C scripts clean
+	@$(MAKE) -C tests clean
