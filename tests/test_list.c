@@ -40,8 +40,22 @@ void test_list_copy(void)
   list_free(l);
 }
 
+void test_list_free(void)
+{
+  struct list *l = list_new();
+
+  list_append(l, (void *)1);
+  list_append(l, (void *)2);
+  list_append(l, (void *)3);
+
+  list_free(l);
+
+  CU_PASS("list_free() didn't crash");
+}
+
 CU_TestInfo list_tests[] = {
   { "test_list_new", test_list_new },
   { "test_list_copy", test_list_copy },
+  { "test_list_free", test_list_free },
   CU_TEST_INFO_NULL,
 };
