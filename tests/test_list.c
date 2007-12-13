@@ -134,6 +134,32 @@ void test_list_delete_item(void)
   list_free(l);
 }
 
+void test_list_delete(void)
+{
+  struct list *l = list_new();
+
+  list_append(l, (void *)1);
+  list_append(l, (void *)2);
+  list_append(l, (void *)3);
+
+  list_delete(l, (void *)2);
+
+  CU_ASSERT_PTR_EQUAL(l->first->next, l->last);
+  CU_ASSERT_PTR_EQUAL(l->last->previous, l->first);
+
+  CU_ASSERT_PTR_EQUAL(l->first->data, (void *)1)
+  CU_ASSERT_PTR_EQUAL(l->last->data, (void *)3)
+
+  list_delete(l, (void *)1);
+  list_delete(l, (void *)3);
+
+  CU_ASSERT(list_length(l) == 0);
+
+  list_delete(l, (void *)4);
+
+  list_free(l);
+}
+
 CU_TestInfo list_tests[] = {
   { "test_list_new", test_list_new },
   { "test_list_copy", test_list_copy },
@@ -141,5 +167,6 @@ CU_TestInfo list_tests[] = {
   { "test_list_length", test_list_length },
   { "test_list_append", test_list_append },
   { "test_list_delete_item", test_list_delete_item },
+  { "test_list_delete", test_list_delete },
   CU_TEST_INFO_NULL,
 };
