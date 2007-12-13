@@ -11,3 +11,7 @@ vlock-test: vlock-test.o
 .PHONY: run-tests
 run-tests: vlock-test
 	./vlock-test
+
+.PHONY: clean
+clean:
+	$(RM) vlock-test $(wildcard *.o)
