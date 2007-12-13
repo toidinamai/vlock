@@ -4,11 +4,19 @@
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
 
+CU_SuiteInfo vlock_test_suites[] = {
+  CU_SUITE_INFO_NULL,
+};
+
 int main(int __attribute__((unused)) argc, const char *argv[])
 {
   if (CU_initialize_registry() != CUE_SUCCESS) {
     fprintf(stderr, "%s: CUnit initialization failed\n", argv[0]);
     exit(EXIT_FAILURE);
+  }
+
+  if (CU_register_suites(vlock_test_suites) != CUE_SUCCESS) {
+    fprintf(stderr, "%s: registering test suites failed: %s\n", argv[0], CU_get_error_msg());
   }
 
   if (CU_basic_run_tests() != CUE_SUCCESS) {
