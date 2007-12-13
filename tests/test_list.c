@@ -28,13 +28,13 @@ void test_list_copy(void)
 
   CU_ASSERT_EQUAL(list_length(l), list_length(m));
   CU_ASSERT_PTR_NOT_EQUAL(l, m);
-  CU_ASSERT_PTR_NOT_EQUAL(l->first, m->first);
-  CU_ASSERT_PTR_NOT_EQUAL(l->last, m->last);
 
   for (struct list_item *item_l = l->first, *item_m = m->first;
       item_l != NULL && item_m != NULL;
-      item_l = item_l->next, item_m = item_m->next)
+      item_l = item_l->next, item_m = item_m->next) {
     CU_ASSERT_PTR_EQUAL(item_l->data, item_m->data);
+    CU_ASSERT_PTR_NOT_EQUAL(item_l, item_m);
+  }
 
   list_free(m);
   list_free(l);
