@@ -4,7 +4,10 @@
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
 
+#include "test_list.h"
+
 CU_SuiteInfo vlock_test_suites[] = {
+  { "test_list" , NULL, NULL, list_tests },
   CU_SUITE_INFO_NULL,
 };
 
