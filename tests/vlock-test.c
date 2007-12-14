@@ -22,6 +22,8 @@ int main(int __attribute__((unused)) argc, const char *argv[])
     fprintf(stderr, "%s: registering test suites failed: %s\n", argv[0], CU_get_error_msg());
   }
 
+  CU_basic_set_mode(CU_BRM_VERBOSE);
+
   if (CU_basic_run_tests() != CUE_SUCCESS) {
     fprintf(stderr, "%s: running tests failed\n", argv[0]);
     goto error;
