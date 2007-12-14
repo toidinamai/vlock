@@ -15,6 +15,8 @@ CU_SuiteInfo vlock_test_suites[] = {
 
 int main(int __attribute__((unused)) argc, const char *argv[])
 {
+  char *output_mode = getenv("VLOCK_TEST_OUTPUT_MODE");
+
   if (CU_initialize_registry() != CUE_SUCCESS) {
     fprintf(stderr, "%s: CUnit initialization failed\n", argv[0]);
     exit(EXIT_FAILURE);
@@ -24,7 +26,14 @@ int main(int __attribute__((unused)) argc, const char *argv[])
     fprintf(stderr, "%s: registering test suites failed: %s\n", argv[0], CU_get_error_msg());
   }
 
-  CU_basic_set_mode(CU_BRM_VERBOSE);
+  if (output_mode != NULL) {
+    if (strcmp(output_mode, "verbose") == 0)
+      CU_basic_set_mode(CU_BRM_VERBOSE);
+    else if (strcmp(output_mode, "normal") == 0)
+      CU_basic_set_mode(CU_BRM_NORMAL);
+    else if (strcmp(output_mode, "silent") == 0)
+      CU_basic_set_mode(CU_BRM_SILENT);
+  }
 
   if (CU_basic_run_tests() != CUE_SUCCESS) {
     fprintf(stderr, "%s: running tests failed\n", argv[0]);
