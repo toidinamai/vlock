@@ -11,9 +11,12 @@ vlock-test : LDFLAGS += -lcunit
 vlock-test: \
 	list.o \
 	test_list.o \
+	tsort.o \
+	test_tsort.o \
 	vlock-test.o
 
 test_list.o: test_list.c test_list.h list.h
+test_sort.o: test_tsort.c test_tsort.h tsort.h
 
 .PHONY: run-tests
 run-tests: vlock-test

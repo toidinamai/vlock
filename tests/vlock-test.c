@@ -5,9 +5,11 @@
 #include <CUnit/Basic.h>
 
 #include "test_list.h"
+#include "test_tsort.h"
 
 CU_SuiteInfo vlock_test_suites[] = {
   { "test_list" , NULL, NULL, list_tests },
+  { "test_tsort", NULL, NULL, tsort_tests },
   CU_SUITE_INFO_NULL,
 };
 
