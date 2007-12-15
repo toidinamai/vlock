@@ -16,10 +16,13 @@ vlock-test: \
 	test_list.o \
 	tsort.o \
 	test_tsort.o \
+	util.o \
+	test_util.o \
 	vlock-test.o
 
 test_list.o: test_list.c test_list.h list.h
 test_tsort.o: test_tsort.c test_tsort.h tsort.h
+test_util.o: test_util.c test_util.h util.h
 
 .PHONY: run-tests
 run-tests: vlock-test
