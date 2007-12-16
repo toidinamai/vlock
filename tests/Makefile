@@ -18,11 +18,14 @@ vlock-test: \
 	test_tsort.o \
 	util.o \
 	test_util.o \
+	process.o \
+	test_process.o \
 	vlock-test.o
 
 test_list.o: test_list.c test_list.h list.h
 test_tsort.o: test_tsort.c test_tsort.h tsort.h
 test_util.o: test_util.c test_util.h util.h
+test_process.o: test_process.c test_process.h process.h
 
 .PHONY: run-tests
 run-tests: vlock-test

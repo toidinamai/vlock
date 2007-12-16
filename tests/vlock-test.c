@@ -7,11 +7,13 @@
 #include "test_list.h"
 #include "test_tsort.h"
 #include "test_util.h"
+#include "test_process.h"
 
 CU_SuiteInfo vlock_test_suites[] = {
   { "test_list" , NULL, NULL, list_tests },
   { "test_tsort", NULL, NULL, tsort_tests },
   { "test_util", NULL, NULL, util_tests },
+  { "test_process", NULL, NULL, process_tests },
   CU_SUITE_INFO_NULL,
 };
 
