@@ -12,12 +12,12 @@ void test_wait_for_death(void)
   pid_t pid = fork();
 
   if (pid == 0) {
-    usleep(6000);
+    usleep(10000);
     _exit(0);
   }
 
-  CU_ASSERT(!wait_for_death(pid, 0, 4000));
-  CU_ASSERT(wait_for_death(pid, 0, 4000));
+  CU_ASSERT(!wait_for_death(pid, 0, 2000));
+  CU_ASSERT(wait_for_death(pid, 0, 20000));
 }
 
 CU_TestInfo process_tests[] = {
