@@ -28,6 +28,7 @@ int main(int __attribute__((unused)) argc, const char *argv[])
 
   if (CU_register_suites(vlock_test_suites) != CUE_SUCCESS) {
     fprintf(stderr, "%s: registering test suites failed: %s\n", argv[0], CU_get_error_msg());
+    goto error;
   }
 
   if (output_mode != NULL) {
