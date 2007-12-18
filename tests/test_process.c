@@ -13,7 +13,8 @@ void test_wait_for_death(void)
 
   if (pid == 0) {
     usleep(10000);
-    _exit(0);
+    execl("/bin/true", "/bin/true", NULL);
+    _exit(1);
   }
 
   CU_ASSERT(!wait_for_death(pid, 0, 2000));
