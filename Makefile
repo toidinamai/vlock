@@ -30,9 +30,9 @@ modules:
 scripts:
 	@$(MAKE) -C scripts
 
-.PHONY: tests
-tests:
-	@$(MAKE) -C tests
+.PHONY: check memcheck
+check memcheck:
+	@$(MAKE) -C tests $@
 
 ### configuration ###
 

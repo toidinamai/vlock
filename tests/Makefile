@@ -27,13 +27,13 @@ test_tsort.o: test_tsort.c test_tsort.h tsort.h
 test_util.o: test_util.c test_util.h util.h
 test_process.o: test_process.c test_process.h process.h
 
-.PHONY: run-tests
-run-tests: vlock-test
+.PHONY: check
+check:
 	@./vlock-test
 
-.PHONY: run-valgrind
-run-valgrind : VLOCK_TEST_OUTPUT_MODE=silent
-run-valgrind: vlock-test
+.PHONY: memcheck
+memcheck : VLOCK_TEST_OUTPUT_MODE=silent
+memcheck: vlock-test
 	@valgrind \
 		--tool=memcheck \
 		--suppressions=.valgrind-supressions \
