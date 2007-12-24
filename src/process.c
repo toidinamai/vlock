@@ -143,7 +143,7 @@ bool create_child(struct child_process *child)
   int status_pipe[2];
   int stdin_pipe[2];
   int stdout_pipe[2];
-  int stderr_pipe[3];
+  int stderr_pipe[2];
 
   if (pipe(status_pipe) < 0)
     return false;
