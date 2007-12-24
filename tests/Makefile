@@ -8,7 +8,7 @@ export VLOCK_TEST_OUTPUT_MODE
 VLOCK_TEST_OUTPUT_MODE = verbose
 
 .PHONY: all
-all: run-tests
+all: check
 
 vlock-test : LDFLAGS += -lcunit
 vlock-test: \
@@ -28,7 +28,7 @@ test_util.o: test_util.c test_util.h util.h
 test_process.o: test_process.c test_process.h process.h
 
 .PHONY: check
-check:
+check: vlock-test
 	@./vlock-test
 
 .PHONY: memcheck
