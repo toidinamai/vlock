@@ -19,7 +19,6 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <errno.h>
-#include <limits.h>
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #include <sys/consio.h>
@@ -75,7 +74,7 @@ static int get_active_console(int consfd)
  * Returns the device name or NULL on error. */
 static char *get_console_name(int n)
 {
-  static char name[TTY_NAME_MAX];
+  static char name[sizeof VTNAME + 2];
   size_t namelen;
 
   if (n <= 0)
