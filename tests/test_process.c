@@ -1,8 +1,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
 #include <errno.h>
+#include <limits.h>
 
 #include <CUnit/CUnit.h>
 
@@ -41,8 +43,72 @@ void test_ensure_death(void)
   CU_ASSERT(errno == ECHILD);
 }
 
+int child_function(void *a)
+{
+  char *s = a;
+  ssize_t l = strlen(s);
+  char buffer[LINE_MAX];
+  ssize_t l_in;
+  ssize_t l_out;
+
+  if (write(STDOUT_FILENO, s, l) < l)
+    return 1;
+
+  l_in = read(STDIN_FILENO, buffer, sizeof buffer);
+
+  if (l_in <= 0)
+    return 1;
+
+  l_out = write(STDOUT_FILENO, buffer, l_in);
+
+  if (l_out != l_in)
+    return 1;
+
+  return 0;
+}
+
+void test_create_child_function(void)
+{
+  char *s1 = "hello";
+  char *s2 = "world";
+  ssize_t l1 = strlen(s1);
+  ssize_t l2 = strlen(s2);
+  struct child_process child = {
+    .function = child_function,
+    .argument = s1,
+    .stdin_fd = REDIRECT_PIPE,
+    .stdout_fd = REDIRECT_PIPE,
+    .stderr_fd = REDIRECT_DEV_NULL,
+  };
+  int status;
+  char buffer[LINE_MAX];
+
+  CU_ASSERT(create_child(&child));
+
+  CU_ASSERT(child.pid > 0);
+
+  CU_ASSERT(read(child.stdout_fd, buffer, sizeof buffer) == l1);
+  CU_ASSERT(strncmp(buffer, s1, l1) == 0);
+
+  CU_ASSERT(waitpid(child.pid, NULL, WNOHANG) == 0);
+
+  CU_ASSERT(write(child.stdin_fd, s2, l2) == l2);
+  CU_ASSERT(read(child.stdout_fd, buffer, sizeof buffer) == l2);
+
+  CU_ASSERT(strncmp(buffer, s2, l2) == 0);
+
+  CU_ASSERT(waitpid(child.pid, &status, 0) == child.pid);
+
+  CU_ASSERT(WIFEXITED(status));
+  CU_ASSERT(WEXITSTATUS(status) == 0);
+
+  (void) close(child.stdin_fd);
+  (void) close(child.stdout_fd);
+}
+
 CU_TestInfo process_tests[] = {
   { "test_wait_for_death", test_wait_for_death },
   { "test_ensure_death", test_ensure_death },
+  { "test_create_child_function", test_create_child_function },
   CU_TEST_INFO_NULL,
 };
