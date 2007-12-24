@@ -40,6 +40,8 @@ memcheck: vlock-test
 		--error-exitcode=1 \
 		--leak-check=full \
 		--show-reachable=yes \
+		--track-fds=yes \
+		--child-silent-after-fork=yes \
 		./vlock-test
 
 .PHONY: clean
