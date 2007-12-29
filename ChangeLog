@@ -1,3 +1,14 @@
+2007-12-29 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.2 rc4
+
+	* Slightly changed the fix for the previous security issue: directory parts
+	are now silently stripped from erronous names instead of reported as errors.
+	* Fixed a file descriptor leak in script handling.
+	* Fixed a bug where vlock would run in an infinite loop if not started from
+	a terminal.  Now it simply exits.
+	* Added unit tests (using cunit).
+
 2007-11-28 Frank Benkstein <frank-vlock@benkstein.net>
 
 	vlock 2.2 rc3
