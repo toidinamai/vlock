@@ -17,9 +17,12 @@ TEST_SOURCES = $(TESTED_SOURCES:%=test_%)
 TEST_OBJECTS = $(TEST_SOURCES:.c=.o)
 
 vlock-test : override LDFLAGS+=-lcunit
+vlock-test : override LDFLAGS+=--coverage
 vlock-test: vlock-test.o $(TEST_OBJECTS) $(TESTED_OBJECTS)
 
 vlock-test.o: $(TEST_SOURCES:.c=.h)
+
+$(TESTED_OBJECTS) : override CFLAGS+=--coverage
 
 .PHONY: check
 check: vlock-test
@@ -41,3 +44,4 @@ memcheck: vlock-test
 .PHONY: clean
 clean:
 	$(RM) vlock-test $(wildcard *.o)
+	$(RM) $(wildcard *.gcno) $(wildcard *.gcno) $(wildcard *.gcov)
