@@ -17,12 +17,14 @@ TEST_SOURCES = $(TESTED_SOURCES:%=test_%)
 TEST_OBJECTS = $(TEST_SOURCES:.c=.o)
 
 vlock-test : override LDFLAGS+=-lcunit
-vlock-test : override LDFLAGS+=--coverage
 vlock-test: vlock-test.o $(TEST_OBJECTS) $(TESTED_OBJECTS)
 
 vlock-test.o: $(TEST_SOURCES:.c=.h)
 
+ifeq ($(COVERAGE),y)
+vlock-test : override LDFLAGS+=--coverage
 $(TESTED_OBJECTS) : override CFLAGS+=--coverage
+endif
 
 .PHONY: check
 check: vlock-test
