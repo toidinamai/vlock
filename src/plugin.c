@@ -24,20 +24,21 @@
 struct plugin *new_plugin(const char *name, struct plugin_type *type)
 {
   struct plugin *p = malloc(sizeof *p);
+  char *last_slash;
 
   if (p == NULL)
     return NULL;
+
+  /* For security plugin names must not contain a slash. */
+  last_slash = strrchr(name, '/');
+
+  if (last_slash != NULL)
+    name = last_slash+1;
 
   p->name = strdup(name);
 
   if (p->name == NULL) {
     free(p);
-    return NULL;
-  } else if (strchr(p->name, '/') != NULL) {
-    /* For security plugin names must not contain a slash. */
-    free(p->name);
-    free(p);
-    errno = EINVAL;
     return NULL;
   }
 
