@@ -106,9 +106,40 @@ void test_create_child_function(void)
   (void) close(child.stdout_fd);
 }
 
+void test_create_child_process(void)
+{
+  const char *s1 = "hello\n";
+  const char *s2 = "olleh\n";
+  ssize_t l1 = strlen(s1);
+  ssize_t l2 = strlen(s2);
+  const char *argv[] = { "sh", "-c", "rev", NULL };
+  struct child_process child = {
+    .path = "/bin/sh",
+    .argv = argv,
+    .stdin_fd = REDIRECT_PIPE,
+    .stdout_fd = REDIRECT_PIPE,
+    .stderr_fd = REDIRECT_DEV_NULL,
+    .function = NULL,
+  };
+  char buffer[LINE_MAX];
+
+  CU_ASSERT(create_child(&child));
+
+  CU_ASSERT(write(child.stdin_fd, s1, l1) == l1);
+  (void) close(child.stdin_fd);
+
+  CU_ASSERT(read(child.stdout_fd, buffer, sizeof buffer) == l2);
+  (void) close(child.stdout_fd);
+
+  CU_ASSERT(strncmp(buffer, s2, l2) == 0);
+
+  CU_ASSERT(wait_for_death(child.pid, 0, 0));
+}
+
 CU_TestInfo process_tests[] = {
   { "test_wait_for_death", test_wait_for_death },
   { "test_ensure_death", test_ensure_death },
   { "test_create_child_function", test_create_child_function },
+  { "test_create_child_process", test_create_child_process },
   CU_TEST_INFO_NULL,
 };
