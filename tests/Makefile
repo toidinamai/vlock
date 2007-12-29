@@ -46,4 +46,4 @@ memcheck: vlock-test
 .PHONY: clean
 clean:
 	$(RM) vlock-test $(wildcard *.o)
-	$(RM) $(wildcard *.gcno) $(wildcard *.gcno) $(wildcard *.gcov)
+	$(RM) $(wildcard *.gcno) $(wildcard *.gcda) $(wildcard *.gcov)
