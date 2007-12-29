@@ -10,22 +10,16 @@ VLOCK_TEST_OUTPUT_MODE = verbose
 .PHONY: all
 all: check
 
-vlock-test : LDFLAGS += -lcunit
-vlock-test: \
-	list.o \
-	test_list.o \
-	tsort.o \
-	test_tsort.o \
-	util.o \
-	test_util.o \
-	process.o \
-	test_process.o \
-	vlock-test.o
+TESTED_SOURCES = list.c tsort.c util.c process.c
+TESTED_OBJECTS = $(TESTED_SOURCES:.c=.o)
 
-test_list.o: test_list.c test_list.h list.h
-test_tsort.o: test_tsort.c test_tsort.h tsort.h
-test_util.o: test_util.c test_util.h util.h
-test_process.o: test_process.c test_process.h process.h
+TEST_SOURCES = $(TESTED_SOURCES:%=test_%)
+TEST_OBJECTS = $(TEST_SOURCES:.c=.o)
+
+vlock-test : override LDFLAGS+=-lcunit
+vlock-test: vlock-test.o $(TEST_OBJECTS) $(TESTED_OBJECTS)
+
+vlock-test.o: $(TEST_SOURCES:.c=.h)
 
 .PHONY: check
 check: vlock-test
