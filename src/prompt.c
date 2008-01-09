@@ -66,17 +66,6 @@ char *prompt(const char *msg, const struct timespec *timeout)
   tcflag_t lflag;
   fd_set readfds;
 
-  /* copy timeout */
-  if (timeout != NULL) {
-    timeout_val = malloc(sizeof *timeout_val);
-
-    if (timeout_val == NULL)
-      return NULL;
-
-    timeout_val->tv_sec = timeout->tv_sec;
-    timeout_val->tv_usec = timeout->tv_nsec / 1000;
-  }
-
   if (msg != NULL) {
     /* Write out the prompt. */
     (void) fputs(msg, stderr);
@@ -102,6 +91,17 @@ char *prompt(const char *msg, const struct timespec *timeout)
 
 
 before_select:
+  /* copy timeout */
+  if (timeout != NULL) {
+    timeout_val = malloc(sizeof *timeout_val);
+
+    if (timeout_val == NULL)
+      return NULL;
+
+    timeout_val->tv_sec = timeout->tv_sec;
+    timeout_val->tv_usec = timeout->tv_nsec / 1000;
+  }
+
   /* Reset errno. */
   errno = 0;
 
