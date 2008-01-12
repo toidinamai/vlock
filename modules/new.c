@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -75,7 +76,7 @@ static int get_active_console(int consfd)
 static char *get_console_name(int n)
 {
   static char name[sizeof VTNAME + 2];
-  size_t namelen;
+  ssize_t namelen;
 
   if (n <= 0)
     return NULL;
@@ -87,8 +88,11 @@ static char *get_console_name(int n)
   namelen = snprintf(name, sizeof name, VTNAME, n);
 #endif
 
-  if (namelen > sizeof name) {
+  if (namelen > (ssize_t) sizeof name) {
     fprintf(stderr, "vlock-new: virtual terminal number too large\n");
+    return NULL;
+  } else if (namelen < 0) {
+    fprintf(stderr, "vlock-new: error calculating terminal device name: %s\n", strerror(errno));
     return NULL;
   } else {
     return name;
