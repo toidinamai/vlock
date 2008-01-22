@@ -110,8 +110,9 @@ static void restore_terminal(void)
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
 
-static void auth_loop(const char *username)
+static int auth_loop(const char *username)
 {
+  int tries = 0;
   struct timespec *prompt_timeout;
   struct timespec *wait_timeout;
   char *vlock_message;
@@ -173,11 +174,15 @@ static void auth_loop(const char *username)
     else
       sleep(1);
 #endif
+
+    tries++;
   }
 
   /* Free timeouts memory. */
   free(wait_timeout);
   free(prompt_timeout);
+
+  return tries;
 }
 
 #ifdef USE_PLUGINS
@@ -190,6 +195,7 @@ static void call_end_hook(void)
 /* Lock the current terminal until proper authentication is received. */
 int main(int argc, char *const argv[])
 {
+  int tries;
   char *username;
 
   vlock_debug = (getenv("VLOCK_DEBUG") != NULL);
@@ -239,7 +245,10 @@ int main(int argc, char *const argv[])
   secure_terminal();
   ensure_atexit(restore_terminal);
 
-  auth_loop(username);
+  tries = auth_loop(username);
+
+  if (tries > 0)
+    fprintf(stderr, "%d %s needed to unlock.\n", tries, tries > 1 ? "tries" : "try");
 
   free(username);
 
