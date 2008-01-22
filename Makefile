@@ -4,7 +4,7 @@ include config.mk
 
 VPATH = src
 
-VLOCK_VERSION = 2.2 rc4
+VLOCK_VERSION = 2.2 rc5
 
 PROGRAMS = vlock vlock-main
 
