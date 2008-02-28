@@ -15,6 +15,10 @@ For simple tasks scripts should be preferred over modules.  They are
 easier to develop and test and have a lower impact on security and
 stability.
 
+NB:  The following interface is not yet declared stable.  It is not guaranteed
+that plugins (modules or scripts) that work with vlock 2.2 will work with
+future versions.
+
 DEPENDENCIES
 ============
 
