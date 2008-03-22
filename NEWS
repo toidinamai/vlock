@@ -1,0 +1,21 @@
+2007-09-08 Frank Benkstein <frank-vlock@benkstein.net>
+	vlock 2.1
+
+	FreeBSD and Debian/kFreeBSD are now supported platforms.  Timeout support
+	was added to the password prompt.  "vlock --new" now works even if stdin is
+	not a terminal, e.g. from an X run command dialog.
+
+2007-09-08 Frank Benkstein <frank-vlock@benkstein.net>
+	vlock 2.0
+
+	A major rewrite was undertaken, though the user interface is nearly the
+	same.  A new "-n,--new" command line switch was added.  This makes vlock
+	switch to a new virtual console before locking and thus makes it possible to
+	use vlock from an X session.
+
+2007-07-21 Frank Benkstein <frank-vlock@benkstein.net>
+	vlock 1.4
+
+	vlock 1.4 now supports optionally disabling the SysRQ keys while the entire
+	console display is locked.  All other changes are merely cosmetical,
+	cleaning up license statements, includes, and makefile rules.
