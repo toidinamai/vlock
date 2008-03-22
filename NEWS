@@ -1,3 +1,13 @@
+2008-03-21 Frank Benkstein <frank-vlock@benkstein.net>
+	vlock 2.2
+
+	Vlock's architecture was again changed from using multiple executables to a
+	single one with plugin support.  The main helpers "vlock-all", "vlock-new"
+	and "vlock-nosysrq" were all converted to plugins to keep filesystem based
+	permission checking.  Plugins may be scripts or shared objects and add
+	functions like muting the sound, pausing music or movie playback and even
+	eye candy screen savers.
+
 2007-09-08 Frank Benkstein <frank-vlock@benkstein.net>
 	vlock 2.1
 
