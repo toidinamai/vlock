@@ -119,12 +119,14 @@ static void destroy_script(struct plugin *p)
   if (context != NULL) {
     free(context->path);
 
-    /* Close the pipe. */
-    (void) close(context->fd);
+    if (context->launched) {
+      /* Close the pipe. */
+      (void) close(context->fd);
 
-    /* Kill the child process. */
-    if (!wait_for_death(context->pid, 0, 500000L))
-      ensure_death(context->pid);
+      /* Kill the child process. */
+      if (!wait_for_death(context->pid, 0, 500000L))
+        ensure_death(context->pid);
+    }
 
     free(context);
   }
