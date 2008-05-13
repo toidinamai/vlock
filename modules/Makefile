@@ -15,7 +15,7 @@ override CFLAGS += -I../src -fPIC
 
 #special build rules
 
-caca.so : override LDFLAGS += -lcaca -lncurses
+caca.so : override LDLIBS += -lcaca -lncurses
 
 all.o: all.c ../src/console_switch.h
 

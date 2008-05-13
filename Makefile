@@ -119,17 +119,18 @@ vlock-main.o : override CFLAGS += -DNO_ROOT_PASS
 endif
 
 ifeq ($(AUTH_METHOD),pam)
-vlock-main : override LDFLAGS += $(PAM_LIBS)
+vlock-main : override LDLIBS += $(PAM_LIBS)
 endif
 
 ifeq ($(AUTH_METHOD),shadow)
-vlock-main : override LDFLAGS += $(CRYPT_LIB)
+vlock-main : override LDLIBS += $(CRYPT_LIB)
 endif
 
 ifeq ($(ENABLE_PLUGINS),yes)
 vlock-main: plugins.o plugin.o module.o process.o script.o tsort.o list.o
 # -rdynamic is needed so that the all plugin can access the symbols from console_switch.o
-vlock-main : override LDFLAGS += $(DL_LIB) -rdynamic
+vlock-main : override LDFLAGS += -rdynamic
+vlock-main : override LDLIBS += $(DL_LIB)
 vlock-main.o : override CFLAGS += -DUSE_PLUGINS
 vlock-main.o: plugins.h
 endif
