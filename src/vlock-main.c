@@ -164,16 +164,20 @@ static void auth_loop(const char *username)
 #endif
     }
 
+    /* Try authentication as user. */
     if (auth(username, prompt_timeout))
       break;
     else
       sleep(1);
 
 #ifndef NO_ROOT_PASS
-    if (auth("root", prompt_timeout))
-      break;
-    else
-      sleep(1);
+    if (strcmp(username, "root") != 0) {
+      /* Try authentication as root. */
+      if (auth("root", prompt_timeout))
+        break;
+      else
+        sleep(1);
+    }
 #endif
 
     auth_tries++;
