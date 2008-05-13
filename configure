@@ -191,11 +191,11 @@ parse_arguments() {
         verbose=0
         shift
       ;;
-      --help)
+      --help|-h)
         show_usage
         exit
       ;;
-      --*)
+      -*)
         error "unrecognized option: $1"
         echo >&2 "Try \`$0 --help' for more information."
         exit 1
