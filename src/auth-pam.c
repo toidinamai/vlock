@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <security/pam_appl.h>
 
@@ -109,6 +110,7 @@ fail:
 
 bool auth(const char *user, struct timespec *timeout)
 {
+  char *pam_tty;
   pam_handle_t *pamh;
   int pam_status;
   int pam_end_status;
@@ -123,6 +125,19 @@ bool auth(const char *user, struct timespec *timeout)
   if (pam_status != PAM_SUCCESS) {
     fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
     goto end;
+  }
+
+  /* get the name of stdin's tty device, if any */
+  pam_tty = ttyname(STDIN_FILENO);
+
+  /* set PAM_TTY */
+  if (pam_tty != NULL) {
+    pam_status = pam_set_item(pamh, PAM_TTY, pam_tty);
+
+    if (pam_status != PAM_SUCCESS) {
+      fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
+      goto end;
+    }
   }
 
   /* put the username before the password prompt */
