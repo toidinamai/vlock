@@ -1,3 +1,15 @@
+2008-03-26 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.2.1
+
+	* Fix a script handling bug.
+
+2008-03-21 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.2
+
+	* Small plugin documentation update.
+
 2008-01-15 Frank Benkstein <frank-vlock@benkstein.net>
 
 	vlock 2.2 rc5
