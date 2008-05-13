@@ -271,9 +271,9 @@ parse_config_mk() {
   tmpdir=`mktemp -d -t vlock-configure.XXXXXX`
 
   $MAKE -rR -f config.mk -p -q . 2>/dev/null | awk > "$tmpdir/config.mk" '
-    /^# makefile .from .config\.mk., line/ { p=1; next }
+    /^# makefile/ { p=1; next }
     /^#/ { p=0; next }
-    p==1 && $1 != "MAKEFILE_LIST" && /^[[:alpha:]_]+ :?= .*/ { print }
+    p==1 && $1 != "MAKEFILE_LIST" && /^[A-Za-z_]+ :?= .*/ { print }
   '
 
   while read line
