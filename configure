@@ -50,12 +50,14 @@ Additional configuration:
   --with-modules=MODULES  enable the named modules [<architecture depedent>]
 
 Some influential environment variables:
-  CC          C compiler command
-  CFLAGS      C compiler flags
-  LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
-              nonstandard directory <lib dir>
-  VLOCK_GROUP group for restricted modules (default: vlock)
-  VLOCK_MODE  mode for restricted modules (default: 0750)
+  CC            C compiler command
+  CFLAGS        C compiler flags
+  EXTRA_CFLAGS  additional C compiler flags (extends default)
+  LDFLAGS       linker flags, e.g. -L<lib dir> if you have libraries in a
+                nonstandard directory <lib dir>
+  EXTRA_LDFLAGS additional linker flags (extends default)
+  VLOCK_GROUP   group for restricted modules (default: vlock)
+  VLOCK_MODE    mode for restricted modules (default: 0750)
 
 Use these variables to override the choices made by \`configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -172,6 +174,14 @@ parse_arguments() {
       --with-scripts)
         SCRIPTS="$2"
         shift 2 || fatal_error "$1 argument missing"
+      ;;
+      EXTRA_CFLAGS)
+        CFLAGS="${CFLAGS} $2"
+        shift 2 || fatal_error "$1 value missing"
+      ;;
+      EXTRA_LDFLAGS)
+        LDFLAGS="${LDFLAGS} $2"
+        shift 2 || fatal_error "$1 value missing"
       ;;
       [A-Z]*)
         set_variable "$1" "$2"
@@ -315,6 +325,7 @@ build configuration:
   gnu make:         $MAKE
   c compiler:       $CC
   compiler flags:   $CFLAGS
+  linker flags      $LDFLAGS
   pam libs:         $PAM_LIBS
   dl libs:          $DL_LIB
   crypt lib:        $CRYPT_LIB
