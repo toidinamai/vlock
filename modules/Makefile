@@ -23,7 +23,7 @@ all.o: all.c ../src/console_switch.h
 
 %.so : override LDFLAGS += -shared
 %.so: %.o
-	$(LD) $(LDFLAGS) -o $@ $^
+	$(LINK.o) -shared $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 # special installation rules
 
