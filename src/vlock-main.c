@@ -68,7 +68,8 @@ static char *get_username(void)
 static void terminate(int signum)
 {
   fprintf(stderr, "vlock: Terminated!\n");
-  raise(signum);
+  /* Call exit here to ensure atexit handlers are called. */
+  exit(1);
 }
 
 static void block_signals(void)
