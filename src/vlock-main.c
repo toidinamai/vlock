@@ -191,7 +191,7 @@ static void auth_loop(const char *username)
 void display_auth_tries(void)
 {
   if (auth_tries > 0)
-    fprintf(stderr, "%d %s needed to unlock.\n", auth_tries, auth_tries > 1 ? "tries" : "try");
+    fprintf(stderr, "%d failed authentication %s.\n", auth_tries, auth_tries > 1 ? "tries" : "try");
 }
 
 #ifdef USE_PLUGINS
