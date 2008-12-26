@@ -90,9 +90,9 @@ enable_feature() {
     ;;
     debug)
       if [ "$2" = "yes" ] ; then
-        CFLAGS="${DEBUG_CFLAGS}"
+        CFLAGS="${DEBUG_CFLAGS} ${GLIB_CFLAGS}"
       else
-        CFLAGS="${DEFAULT_CFLAGS}"
+        CFLAGS="${DEFAULT_CFLAGS} ${GLIB_CFLAGS}"
       fi
     ;;
     *)
@@ -219,12 +219,17 @@ set_defaults() {
   SCRIPTDIR="\$(LIBDIR)/vlock/scripts"
   MODULEDIR="\$(LIBDIR)/vlock/modules"
 
+  # glib
+  GLIB_CFLAGS="$(pkg-config --cflags glib-2.0)"
+  GLIB_LIBS="$(pkg-config --libs glib-2.0)"
+
   CC=gcc
   DEFAULT_CFLAGS="-O2 -Wall -W -pedantic -std=gnu99"
   DEBUG_CFLAGS="-O0 -g -Wall -W -pedantic -std=gnu99"
-  CFLAGS="${DEFAULT_CFLAGS}"
+  CFLAGS="${DEFAULT_CFLAGS} ${GLIB_CFLAGS}"
   LD=ld
   LDFLAGS=""
+  LDLIBS="${GLIB_LIBS}"
   AUTH_METHOD="pam"
   ENABLE_ROOT_PASSWORD="yes"
   ENABLE_PLUGINS="yes"
@@ -325,7 +330,8 @@ build configuration:
   gnu make:         $MAKE
   c compiler:       $CC
   compiler flags:   $CFLAGS
-  linker flags      $LDFLAGS
+  libraries:        $LDLIBS
+  linker flags:     $LDFLAGS
   pam libs:         $PAM_LIBS
   dl libs:          $DL_LIB
   crypt lib:        $CRYPT_LIB
@@ -393,6 +399,8 @@ INSTALL = install
 
 # C compiler flags
 CFLAGS = ${CFLAGS}
+# libraries
+LDLIBS = ${LDLIBS}
 # linker flags
 LDFLAGS = ${LDFLAGS}
 # linker flags needed for dlopen and friends
