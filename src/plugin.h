@@ -12,6 +12,7 @@
  */
 
 #include <stdbool.h>
+#include <glib.h>
 
 /* Names of dependencies plugins may specify. */
 #define nr_dependencies 6
@@ -40,7 +41,7 @@ struct plugin
    * strings.  The dependencies must be stored in the same order as the
    * dependency names above.  The strings a freed when the plugin is destroyed
    * thus must be stored as copies. */
-  struct list *dependencies[nr_dependencies];
+  GList *dependencies[nr_dependencies];
 
   /* Did one of the save hooks fail? */
   bool save_disabled;

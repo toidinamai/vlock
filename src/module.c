@@ -28,7 +28,8 @@
 
 #include <sys/types.h>
 
-#include "list.h"
+#include <glib.h>
+
 #include "util.h"
 
 #include "plugin.h"
@@ -117,7 +118,7 @@ bool init_module(struct plugin *p)
       if (s == NULL)
         return false;
 
-      list_append(p->dependencies[i], s);
+      p->dependencies[i] = g_list_append(p->dependencies[i], s);
     }
   }
 

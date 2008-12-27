@@ -13,31 +13,31 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "list.h"
 #include "util.h"
 
 #include "tsort.h"
 
 /* Get the zeros of the graph, i.e. nodes with no incoming edges. */
-static struct list *get_zeros(struct list *nodes, struct list *edges)
+static GList *get_zeros(GList *nodes, GList *edges)
 {
-  struct list *zeros = list_copy(nodes);
+  GList *zeros = g_list_copy(nodes);
 
-  if (zeros == NULL)
-    return NULL;
-
-  list_for_each(edges, edge_item) {
+  for (GList *edge_item = edges;
+      edge_item != NULL;
+      edge_item = g_list_next(edge_item)) {
     struct edge *e = edge_item->data;
-    list_delete(zeros, e->successor);
+    zeros = g_list_remove(zeros, e->successor);
   }
 
   return zeros;
 }
 
 /* Check if the given node is a zero. */
-static bool is_zero(void *node, struct list *edges)
+static bool is_zero(void *node, GList *edges)
 {
-  list_for_each(edges, edge_item) {
+  for (GList *edge_item = edges;
+      edge_item != NULL;
+      edge_item = g_list_next(edge_item)) {
     struct edge *e = edge_item->data;
 
     if (e->successor == node)
@@ -58,70 +58,53 @@ static bool is_zero(void *node, struct list *edges)
  * http://en.wikipedia.org/w/index.php?title=Topological_sorting&oldid=153157450#Algorithms
  *
  */
-struct list *tsort(struct list *nodes, struct list *edges)
+GList *tsort(GList *nodes, GList **edges)
 {
-  struct list *sorted_nodes = list_new();
   /* Retrieve all zeros. */
-  struct list *zeros;
+  GList *zeros = get_zeros(nodes, *edges);
 
-  if (sorted_nodes == NULL)
-    return NULL;
+  GList *sorted_nodes = NULL;
 
-  zeros = get_zeros(nodes, edges);
+  /* While the list of zeros is not empty ... */
+  while (zeros != NULL) {
+    /* ... take the first zero and remove it and ...*/
+    void *zero = zeros->data;
+    zeros = g_list_delete_link(zeros, zeros);
 
-  if (zeros == NULL) {
-    GUARD_ERRNO(list_free(sorted_nodes));
-    return NULL;
-  }
-
-  /* While the list of zeros is not empty, take the first zero and remove it
-   * and ...  */
-  list_delete_for_each(zeros, zero_item) {
-    void *zero = zero_item->data;
     /* ... add it to the list of sorted nodes. */
-    if (!list_append(sorted_nodes, zero))
-      goto error;
+    sorted_nodes = g_list_append(sorted_nodes, zero);
 
     /* Then look at each edge ... */
-    list_for_each_manual(edges, edge_item) {
+    for (GList *edge_item = *edges;
+        edge_item != NULL;) {
       struct edge *e = edge_item->data;
+
+      GList *tmp = g_list_next(edge_item);
 
       /* ... that has this zero as its predecessor ... */
       if (e->predecessor == zero) {
         /* ... and remove it. */
-        edge_item = list_delete_item(edges, edge_item);
+        *edges = g_list_delete_link(*edges, edge_item);
 
         /* If the successor has become a zero now ... */
-        if (is_zero(e->successor, edges))
+        if (is_zero(e->successor, *edges))
           /* ... add it to the list of zeros. */
-          if (!list_append(zeros, e->successor))
-            goto error;
+          zeros = g_list_append(zeros, e->successor);
 
         free(e);
-      } else {
-        edge_item = edge_item->next;
       }
+
+      edge_item = tmp;
     }
   }
 
   /* If all edges were deleted the algorithm was successful. */
-  if (!list_is_empty(edges)) {
-    list_free(sorted_nodes);
+  if (*edges != NULL) {
+    g_list_free(sorted_nodes);
     sorted_nodes = NULL;
   }
 
-  list_free(zeros);
-  errno = 0;
+  g_list_free(zeros);
 
   return sorted_nodes;;
-
-error:
-  {
-    int errsv = errno;
-    list_free(sorted_nodes);
-    list_free(zeros);
-
-    errno = errsv;
-    return NULL;
-  }
 }

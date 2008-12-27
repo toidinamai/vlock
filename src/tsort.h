@@ -12,6 +12,7 @@
  */
 
 #include <stdbool.h>
+#include <glib.h>
 
 /* An edge of the graph, specifying that predecessor must come before
  * successor. */
@@ -20,11 +21,20 @@ struct edge {
   void *successor;
 };
 
-struct list;
+static inline struct edge *make_edge(void *p, void *s)
+{
+  struct edge *e = g_malloc(sizeof *e);
+
+  e->predecessor = p;
+  e->successor = s;
+
+  return e;
+}
 
 /* For the given directed graph, generate a topological sort of the nodes.
  *
  * Sorts the list and deletes all edges.  If there are circles found in the
- * graph or there are edges that have no corresponding nodes the erroneous
- * edges are left. */
-struct list *tsort(struct list *nodes, struct list *edges);
+ * graph or there are edges that have no corresponding nodes NULL is returned
+ * and the erroneous edges are left. */
+/* XXX: sort the list in place and return a boolean for success */
+GList *tsort(GList *nodes, GList **edges);

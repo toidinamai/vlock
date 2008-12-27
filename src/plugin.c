@@ -15,7 +15,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "list.h"
+#include <glib.h>
 
 #include "plugin.h"
 #include "util.h"
@@ -46,7 +46,7 @@ struct plugin *new_plugin(const char *name, struct plugin_type *type)
   p->save_disabled = false;
 
   for (size_t i = 0; i < nr_dependencies; i++)
-    p->dependencies[i] = list_new();
+    p->dependencies[i] = NULL;
 
   p->type = type;
 
@@ -66,10 +66,10 @@ void destroy_plugin(struct plugin *p)
 
   /* Destroy dependency lists. */
   for (size_t i = 0; i < nr_dependencies; i++) {
-    list_delete_for_each(p->dependencies[i], dependency_item)
-      free(dependency_item->data);
-
-    list_free(p->dependencies[i]);
+    while (p->dependencies[i] != NULL) {
+      free(p->dependencies[i]->data);
+      p->dependencies[i] = g_list_delete_link(p->dependencies[i], p->dependencies[i]);
+    }
   }
 
   free(p->name);

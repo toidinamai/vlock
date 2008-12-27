@@ -42,7 +42,8 @@
 #include <sys/time.h>
 #include <time.h>
 
-#include "list.h"
+#include <glib.h>
+
 #include "process.h"
 #include "util.h"
 
@@ -74,7 +75,7 @@ struct script_context
 
 /* Get the dependency from the script. */ 
 static bool get_dependency(const char *path, const char *dependency_name,
-    struct list *dependency_list);
+    GList **dependency_list);
 /* Launch the script creating a new script_context. */
 static bool launch_script(struct script_context *script);
 
@@ -98,7 +99,7 @@ bool init_script(struct plugin *p)
   /* Get the dependency information.  Whether the script is executable or not
    * is also detected here. */
   for (size_t i = 0; i < nr_dependencies; i++)
-    if (!get_dependency(context->path, dependency_names[i], p->dependencies[i]))
+    if (!get_dependency(context->path, dependency_names[i], &p->dependencies[i]))
       goto error;
 
   p->context = context;
@@ -206,11 +207,11 @@ static bool launch_script(struct script_context *script)
 }
 
 static char *read_dependency(const char *path, const char *dependency_name);
-static bool parse_dependency(char *data, struct list *dependency_list);
+static bool parse_dependency(char *data, GList **dependency_list);
 
 /* Get the dependency from the script. */
 static bool get_dependency(const char *path, const char *dependency_name,
-    struct list *dependency_list)
+    GList **dependency_list)
 {
   /* Read the dependency data. */
   char *data;
@@ -339,15 +340,17 @@ error:
   }
 }
 
-static bool parse_dependency(char *data, struct list *dependency_list)
+static bool parse_dependency(char *data, GList **dependency_list)
 {
   for (char *saveptr, *token = strtok_r(data, " \r\n", &saveptr);
       token != NULL;
       token = strtok_r(NULL, " \r\n", &saveptr)) {
     char *s = strdup(token);
 
-    if (s == NULL || !list_append(dependency_list, s))
+    if (s == NULL)
       return false;
+
+    *dependency_list = g_list_append(*dependency_list, s);
   }
 
   return true;

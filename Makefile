@@ -127,7 +127,7 @@ vlock-main : override LDLIBS += $(CRYPT_LIB)
 endif
 
 ifeq ($(ENABLE_PLUGINS),yes)
-vlock-main: plugins.o plugin.o module.o process.o script.o tsort.o list.o
+vlock-main: plugins.o plugin.o module.o process.o script.o tsort.o
 # -rdynamic is needed so that the all plugin can access the symbols from console_switch.o
 vlock-main : override LDFLAGS += -rdynamic
 vlock-main : override LDLIBS += $(DL_LIB)

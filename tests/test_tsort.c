@@ -1,8 +1,9 @@
 #include <stdlib.h>
 
+#include <glib.h>
+
 #include <CUnit/CUnit.h>
 
-#include "list.h"
 #include "tsort.h"
 
 #include "test_tsort.h"
@@ -16,43 +17,21 @@
 #define G ((void *)7)
 #define H ((void *)8)
 
-struct edge *make_edge(void *p, void *s)
-{
-  struct edge *e = malloc(sizeof *e);
-
-  e->predecessor = p;
-  e->successor = s;
-
-  return e;
-}
-
-bool item_preceeds(struct list_item *first, struct list_item *second)
-{
-  for (struct list_item *item = first->next; item != NULL; item = item->next)
-    if (item == second)
-      return true;
-
-  return false;
-}
-
 void test_tsort(void)
 {
-  struct list *list = list_new();
-  struct list *edges = list_new();
-  struct list *faulty_edges = list_new();
-  struct list *sorted_list;
+  GList *list = NULL;
+  GList *edges = NULL;
+  GList *faulty_edges = NULL;
+  GList *sorted_list;
 
-  list_append(list, A);
-  list_append(list, B);
-  list_append(list, C);
-  list_append(list, D);
-  list_append(list, E);
-  list_append(list, F);
-  list_append(list, G);
-  list_append(list, H);
-
-  /* Check item_preceeds: */
-  CU_ASSERT(item_preceeds(list_find(list, A), list_find(list, H)));
+  list = g_list_append(list, A);
+  list = g_list_append(list, B);
+  list = g_list_append(list, C);
+  list = g_list_append(list, D);
+  list = g_list_append(list, E);
+  list = g_list_append(list, F);
+  list = g_list_append(list, G);
+  list = g_list_append(list, H);
 
   /* Edges:
    *
@@ -62,53 +41,55 @@ void test_tsort(void)
    *   \|/    |
    *    A   F G
    */
-  list_append(edges, make_edge(A, B));
-  list_append(edges, make_edge(A, C));
-  list_append(edges, make_edge(A, D));
-  list_append(edges, make_edge(B, E));
-  list_append(edges, make_edge(G, H));
+  edges = g_list_append(edges, make_edge(A, B));
+  edges = g_list_append(edges, make_edge(A, C));
+  edges = g_list_append(edges, make_edge(A, D));
+  edges = g_list_append(edges, make_edge(B, E));
+  edges = g_list_append(edges, make_edge(G, H));
 
-  sorted_list = tsort(list, edges);
+  sorted_list = tsort(list, &edges);
 
-  CU_ASSERT(list_length(edges) == 0);
+  CU_ASSERT(edges == NULL);
 
   CU_ASSERT_PTR_NOT_NULL(sorted_list);
 
-  CU_ASSERT_EQUAL(list_length(list), list_length(sorted_list));
+  CU_ASSERT_EQUAL(g_list_length(list), g_list_length(sorted_list));
 
   /* Check that all items from the original list are in the
    * sorted list. */
-  list_for_each(list, item)
-    CU_ASSERT_PTR_NOT_NULL(list_find(sorted_list, item->data));
+  for (GList *item = list; item != NULL; item = g_list_next(item))
+    CU_ASSERT_PTR_NOT_NULL(g_list_find(sorted_list, item->data));
 
-  CU_ASSERT(item_preceeds(list_find(list, A), list_find(list, B)));
-  CU_ASSERT(item_preceeds(list_find(list, A), list_find(list, C)));
-  CU_ASSERT(item_preceeds(list_find(list, A), list_find(list, D)));
+  CU_ASSERT(g_list_index(list, A) < g_list_index(list, B));
+  CU_ASSERT(g_list_index(list, A) < g_list_index(list, C));
+  CU_ASSERT(g_list_index(list, A) < g_list_index(list, D));
 
-  CU_ASSERT(item_preceeds(list_find(list, B), list_find(list, E)));
+  CU_ASSERT(g_list_index(list, B) < g_list_index(list, E));
 
-  CU_ASSERT(item_preceeds(list_find(list, G), list_find(list, H)));
+  CU_ASSERT(g_list_index(list, G) < g_list_index(list, H));
 
   /* Faulty edges: same as above but F wants to be below A and above E. */
-  list_append(faulty_edges, make_edge(A, B));
-  list_append(faulty_edges, make_edge(A, C));
-  list_append(faulty_edges, make_edge(A, D));
-  list_append(faulty_edges, make_edge(B, E));
-  list_append(faulty_edges, make_edge(E, F));
-  list_append(faulty_edges, make_edge(F, A));
-  list_append(faulty_edges, make_edge(G, H));
+  faulty_edges = g_list_append(faulty_edges, make_edge(A, B));
+  faulty_edges = g_list_append(faulty_edges, make_edge(A, C));
+  faulty_edges = g_list_append(faulty_edges, make_edge(A, D));
+  faulty_edges = g_list_append(faulty_edges, make_edge(B, E));
+  faulty_edges = g_list_append(faulty_edges, make_edge(E, F));
+  faulty_edges = g_list_append(faulty_edges, make_edge(F, A));
+  faulty_edges = g_list_append(faulty_edges, make_edge(G, H));
 
-  CU_ASSERT_PTR_NULL(tsort(list, faulty_edges));
+  CU_ASSERT_PTR_NULL(tsort(list, &faulty_edges));
 
-  CU_ASSERT(list_length(faulty_edges) > 0);
+  CU_ASSERT(g_list_length(faulty_edges) > 0);
 
-  list_delete_for_each(faulty_edges, edge_item)
-    free(edge_item->data);
+  while (faulty_edges != NULL) {
+    free(faulty_edges->data);
+    faulty_edges = g_list_delete_link(faulty_edges, faulty_edges);
+  }
 
-  list_free(sorted_list);
-  list_free(edges);
-  list_free(faulty_edges);
-  list_free(list);
+  g_list_free(sorted_list);
+  g_list_free(edges);
+  g_list_free(faulty_edges);
+  g_list_free(list);
 }
 
 CU_TestInfo tsort_tests[] = {
