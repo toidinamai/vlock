@@ -10,7 +10,7 @@ VLOCK_TEST_OUTPUT_MODE = verbose
 .PHONY: all
 all: check
 
-TESTED_SOURCES = list.c tsort.c util.c process.c
+TESTED_SOURCES = tsort.c util.c process.c
 TESTED_OBJECTS = $(TESTED_SOURCES:.c=.o)
 
 TEST_SOURCES = $(TESTED_SOURCES:%=test_%)
