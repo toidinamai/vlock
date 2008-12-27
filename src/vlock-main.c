@@ -65,7 +65,7 @@ static char *get_username(void)
   return strdup(username);
 }
 
-static void terminate(int signum)
+static void terminate(int __attribute__((unused)) signum)
 {
   fprintf(stderr, "vlock: Terminated!\n");
   /* Call exit here to ensure atexit handlers are called. */
