@@ -52,6 +52,11 @@
 #include "auth.h"
 #include "prompt.h"
 
+GQuark vlock_auth_error_quark(void)
+{
+  return g_quark_from_static_string("vlock-auth-pam-error-quark");
+}
+
 static int conversation(int num_msg, const struct pam_message **msg, struct
                         pam_response **resp, void *appdata_ptr)
 {
@@ -108,7 +113,7 @@ fail:
   return PAM_CONV_ERR;
 }
 
-bool auth(const char *user, struct timespec *timeout)
+bool auth(const char *user, struct timespec *timeout, GError **error)
 {
   char *pam_tty;
   pam_handle_t *pamh;
@@ -119,11 +124,17 @@ bool auth(const char *user, struct timespec *timeout)
     .appdata_ptr = timeout,
   };
 
+  g_return_val_if_fail(error == NULL || *error == NULL, false);
+
   /* initialize pam */
   pam_status = pam_start("vlock", user, &pamc, &pamh);
 
   if (pam_status != PAM_SUCCESS) {
-    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
+    g_set_error(error,
+        VLOCK_AUTH_ERROR,
+        VLOCK_AUTH_ERROR_FAILED,
+        "%s",
+        pam_strerror(pamh, pam_status));
     goto end;
   }
 
@@ -135,7 +146,11 @@ bool auth(const char *user, struct timespec *timeout)
     pam_status = pam_set_item(pamh, PAM_TTY, pam_tty);
 
     if (pam_status != PAM_SUCCESS) {
-      fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
+      g_set_error(error,
+          VLOCK_AUTH_ERROR,
+          VLOCK_AUTH_ERROR_FAILED,
+          "%s",
+          pam_strerror(pamh, pam_status));
       goto end;
     }
   }
@@ -147,16 +162,24 @@ bool auth(const char *user, struct timespec *timeout)
   pam_status = pam_authenticate(pamh, 0);
 
   if (pam_status != PAM_SUCCESS) {
-    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
+    g_set_error(error,
+        VLOCK_AUTH_ERROR,
+        VLOCK_AUTH_ERROR_FAILED,
+        "%s",
+        pam_strerror(pamh, pam_status));
   }
 
 end:
   /* finish pam */
   pam_end_status = pam_end(pamh, pam_status);
 
-  if (pam_end_status != PAM_SUCCESS) {
-    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_end_status));
+  if (pam_end_status != PAM_SUCCESS && (error == NULL || *error == NULL)) {
+    g_set_error(error,
+        VLOCK_AUTH_ERROR,
+        VLOCK_AUTH_ERROR_FAILED,
+        "%s",
+        pam_strerror(pamh, pam_status));
   }
 
-  return (pam_status == PAM_SUCCESS);
+  return (pam_end_status == PAM_SUCCESS && pam_status == PAM_SUCCESS);
 }

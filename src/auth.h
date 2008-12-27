@@ -12,13 +12,21 @@
  */
 
 #include <stdbool.h>
+#include <glib.h>
 
 /* forward declaration */
 struct timespec;
+
+#define VLOCK_AUTH_ERROR vlock_auth_error_quark()
+GQuark vlock_auth_error_quark(void);
+
+enum {
+  VLOCK_AUTH_ERROR_FAILED
+};
 
 /* Try to authenticate the user.  When the user is successfully authenticated
  * this function returns true.  When the authentication fails for whatever
  * reason the function returns false.  The timeout is passed to the prompt
  * functions below if they are called.
  */
-bool auth(const char *user, struct timespec *timeout);
+bool auth(const char *user, struct timespec *timeout, GError **error);

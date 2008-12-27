@@ -115,6 +115,7 @@ static int auth_tries;
 
 static void auth_loop(const char *username)
 {
+  GError *err = NULL;
   struct timespec *prompt_timeout;
   struct timespec *wait_timeout;
   char *vlock_message;
@@ -166,18 +167,26 @@ static void auth_loop(const char *username)
     }
 
     /* Try authentication as user. */
-    if (auth(username, prompt_timeout))
-      break;
-    else
+    if (!auth(username, prompt_timeout, &err)) {
+      g_assert(err != NULL);
+      fprintf(stderr, "vlock: %s\n", err->message);
+      g_clear_error(&err);
       sleep(1);
+    } else {
+      break;
+    }
 
 #ifndef NO_ROOT_PASS
     if (strcmp(username, "root") != 0) {
       /* Try authentication as root. */
-      if (auth("root", prompt_timeout))
-        break;
-      else
+      if (!auth("root", prompt_timeout, &err)) {
+        g_assert(err != NULL);
+        fprintf(stderr, "vlock: %s\n", err->message);
+        g_clear_error(&err);
         sleep(1);
+      } else {
+        break;
+      }
     }
 #endif
 
