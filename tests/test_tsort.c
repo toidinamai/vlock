@@ -17,21 +17,25 @@
 #define G ((void *)7)
 #define H ((void *)8)
 
-void test_tsort(void)
+GList *get_test_list(void)
 {
   GList *list = NULL;
-  GList *edges = NULL;
-  GList *faulty_edges = NULL;
-  GList *sorted_list;
 
-  list = g_list_append(list, A);
-  list = g_list_append(list, B);
-  list = g_list_append(list, C);
-  list = g_list_append(list, D);
-  list = g_list_append(list, E);
-  list = g_list_append(list, F);
-  list = g_list_append(list, G);
-  list = g_list_append(list, H);
+  list = g_list_prepend(list, A);
+  list = g_list_prepend(list, B);
+  list = g_list_prepend(list, C);
+  list = g_list_prepend(list, D);
+  list = g_list_prepend(list, E);
+  list = g_list_prepend(list, F);
+  list = g_list_prepend(list, G);
+  list = g_list_prepend(list, H);
+
+  return list;
+}
+
+GList *get_test_edges(void)
+{
+  GList *edges = NULL;
 
   /* Edges:
    *
@@ -47,52 +51,88 @@ void test_tsort(void)
   edges = g_list_append(edges, make_edge(B, E));
   edges = g_list_append(edges, make_edge(G, H));
 
-  sorted_list = tsort(list, &edges);
+  return edges;  
+}
 
-  CU_ASSERT(edges == NULL);
+GList *get_faulty_test_edges(void)
+{
+  GList *edges = NULL;
+
+  /* Edges:
+   *
+   *  F
+   *  |
+   *  E
+   *  |
+   *  B C D   H
+   *   \|/    |
+   *    A     G
+   *    |
+   *    F
+   *
+   */
+
+  edges = g_list_append(edges, make_edge(A, B));
+  edges = g_list_append(edges, make_edge(A, C));
+  edges = g_list_append(edges, make_edge(A, D));
+  edges = g_list_append(edges, make_edge(B, E));
+  edges = g_list_append(edges, make_edge(E, F));
+  edges = g_list_append(edges, make_edge(F, A));
+  edges = g_list_append(edges, make_edge(G, H));
+
+  return edges;
+}
+
+void test_tsort_succeed(void)
+{
+  GList *list = get_test_list();
+  GList *edges = get_test_edges();
+  GList *sorted_list = tsort(list, &edges);
+
+  CU_ASSERT_PTR_NULL(edges);
 
   CU_ASSERT_PTR_NOT_NULL(sorted_list);
 
   CU_ASSERT_EQUAL(g_list_length(list), g_list_length(sorted_list));
 
-  /* Check that all items from the original list are in the
-   * sorted list. */
+  /* Check that all items from the original list are in the sorted list. */
   for (GList *item = list; item != NULL; item = g_list_next(item))
     CU_ASSERT_PTR_NOT_NULL(g_list_find(sorted_list, item->data));
 
-  CU_ASSERT(g_list_index(list, A) < g_list_index(list, B));
-  CU_ASSERT(g_list_index(list, A) < g_list_index(list, C));
-  CU_ASSERT(g_list_index(list, A) < g_list_index(list, D));
+  /* Check that all items are in the order that is given by the edges. */
+  edges = get_test_edges();
 
-  CU_ASSERT(g_list_index(list, B) < g_list_index(list, E));
-
-  CU_ASSERT(g_list_index(list, G) < g_list_index(list, H));
-
-  /* Faulty edges: same as above but F wants to be below A and above E. */
-  faulty_edges = g_list_append(faulty_edges, make_edge(A, B));
-  faulty_edges = g_list_append(faulty_edges, make_edge(A, C));
-  faulty_edges = g_list_append(faulty_edges, make_edge(A, D));
-  faulty_edges = g_list_append(faulty_edges, make_edge(B, E));
-  faulty_edges = g_list_append(faulty_edges, make_edge(E, F));
-  faulty_edges = g_list_append(faulty_edges, make_edge(F, A));
-  faulty_edges = g_list_append(faulty_edges, make_edge(G, H));
-
-  CU_ASSERT_PTR_NULL(tsort(list, &faulty_edges));
-
-  CU_ASSERT(g_list_length(faulty_edges) > 0);
-
-  while (faulty_edges != NULL) {
-    free(faulty_edges->data);
-    faulty_edges = g_list_delete_link(faulty_edges, faulty_edges);
+  while (edges != NULL) {
+    struct edge *e = edges->data;
+    CU_ASSERT(g_list_index(sorted_list, e->predecessor) < g_list_index(sorted_list, e->successor));
+    free(e);
+    edges = g_list_delete_link(edges, edges);
   }
 
   g_list_free(sorted_list);
-  g_list_free(edges);
-  g_list_free(faulty_edges);
+  g_list_free(list);
+}
+
+void test_tsort_fail(void)
+{
+  GList *list = get_test_list();
+  GList *edges = get_faulty_test_edges();
+  GList *sorted_list = tsort(list, &edges);
+
+  CU_ASSERT_PTR_NULL(sorted_list);
+
+  CU_ASSERT(edges != NULL);
+
+  while (edges != NULL) {
+    free(edges->data);
+    edges = g_list_delete_link(edges, edges);
+  }
+
   g_list_free(list);
 }
 
 CU_TestInfo tsort_tests[] = {
-  { "test_tsort", test_tsort },
+  { "test_tsort_succeed", test_tsort_succeed },
+  { "test_tsort_fail", test_tsort_fail },
   CU_TEST_INFO_NULL,
 };
