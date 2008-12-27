@@ -3,6 +3,12 @@ high
 
 - comments
 - documentation
+- use more glib functions:
+  - GError
+  - GModule?
+  - g_spawn?
+  - string functions
+  - memory allocation
 
 medium
 ------
