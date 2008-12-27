@@ -113,6 +113,7 @@ before_select:
         goto out;
       case EINTR:
         /* A signal was caught. Restart. */
+        free(timeout_val);
         goto before_select;
       default:
         perror("vlock: select() on stdin failed");
