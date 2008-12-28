@@ -41,10 +41,10 @@ static GList *atexit_functions;
 
 static void invoke_atexit_functions(void)
 {
-  for (GList *item = atexit_functions;
-      item != NULL;
-      item = g_list_next(item)) {
-    (*(void (**)())&item->data)();
+  while (atexit_functions != NULL) {
+    (*(void (**)())&atexit_functions->data)();
+    atexit_functions = g_list_remove_link(atexit_functions,
+        atexit_functions);
   }
 }
 
