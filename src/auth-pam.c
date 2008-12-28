@@ -57,14 +57,26 @@ GQuark vlock_auth_error_quark(void)
   return g_quark_from_static_string("vlock-auth-pam-error-quark");
 }
 
+struct conversation_data {
+  GError *error;
+  struct timespec *timeout;
+};
+
+/* PAM conversation function.  Assumes that a pointer to struct
+ * conversation_data is passed as the as appdata_ptr argument.  In case of a
+ * normal error conversation_data's error field is set accordingly and
+ * PAM_CONV_ERR is returned while in case of a memory allocation error
+ * PAM_BUF_ERR is returned and the error field is left untouched.  On success
+ * PAM_SUCCESS is returned.
+ */
 static int conversation(int num_msg, const struct pam_message **msg, struct
                         pam_response **resp, void *appdata_ptr)
 {
   struct pam_response *aresp;
-  struct timespec *timeout = appdata_ptr;
+  struct conversation_data *conv_data = appdata_ptr;
 
-  if (num_msg <= 0 || num_msg > PAM_MAX_NUM_MSG)
-    return PAM_CONV_ERR;
+  g_return_val_if_fail(conv_data->error == NULL, PAM_CONV_ERR);
+  g_return_val_if_fail(num_msg > 0 && num_msg < PAM_MAX_NUM_MSG, PAM_CONV_ERR);
 
   if ((aresp = calloc((size_t) num_msg, sizeof *aresp)) == NULL)
     return PAM_BUF_ERR;
@@ -72,12 +84,12 @@ static int conversation(int num_msg, const struct pam_message **msg, struct
   for (int i = 0; i < num_msg; i++) {
     switch (msg[i]->msg_style) {
       case PAM_PROMPT_ECHO_OFF:
-        aresp[i].resp = prompt_echo_off(msg[i]->msg, timeout);
+        aresp[i].resp = prompt_echo_off(msg[i]->msg, conv_data->timeout, &conv_data->error);
         if (aresp[i].resp == NULL)
           goto fail;
         break;
       case PAM_PROMPT_ECHO_ON:
-        aresp[i].resp = prompt(msg[i]->msg, timeout);
+        aresp[i].resp = prompt(msg[i]->msg, conv_data->timeout, &conv_data->error);
         if (aresp[i].resp == NULL)
           goto fail;
         break;
@@ -110,6 +122,8 @@ fail:
   free(aresp);
   *resp = NULL;
 
+  g_warn_if_fail(conv_data->error != NULL, PAM_CONV_ERR);
+
   return PAM_CONV_ERR;
 }
 
@@ -119,9 +133,13 @@ bool auth(const char *user, struct timespec *timeout, GError **error)
   pam_handle_t *pamh;
   int pam_status;
   int pam_end_status;
+  struct conversation_data conv_data = {
+    .error = NULL,
+    .timeout = timeout,
+  };
   struct pam_conv pamc = {
     .conv = conversation,
-    .appdata_ptr = timeout,
+    .appdata_ptr = &conv_data,
   };
 
   g_return_val_if_fail(error == NULL || *error == NULL, false);
@@ -130,11 +148,11 @@ bool auth(const char *user, struct timespec *timeout, GError **error)
   pam_status = pam_start("vlock", user, &pamc, &pamh);
 
   if (pam_status != PAM_SUCCESS) {
-    g_set_error(error,
-        VLOCK_AUTH_ERROR,
-        VLOCK_AUTH_ERROR_FAILED,
-        "%s",
-        pam_strerror(pamh, pam_status));
+    g_propagate_error(error,
+        g_error_new_literal(
+          VLOCK_AUTH_ERROR,
+          VLOCK_AUTH_ERROR_FAILED,
+          pam_strerror(pamh, pam_status)));
     goto end;
   }
 
@@ -146,11 +164,11 @@ bool auth(const char *user, struct timespec *timeout, GError **error)
     pam_status = pam_set_item(pamh, PAM_TTY, pam_tty);
 
     if (pam_status != PAM_SUCCESS) {
-      g_set_error(error,
-          VLOCK_AUTH_ERROR,
-          VLOCK_AUTH_ERROR_FAILED,
-          "%s",
-          pam_strerror(pamh, pam_status));
+      g_propagate_error(error,
+          g_error_new_literal(
+            VLOCK_AUTH_ERROR,
+            VLOCK_AUTH_ERROR_FAILED,
+            pam_strerror(pamh, pam_status)));
       goto end;
     }
   }
@@ -158,27 +176,33 @@ bool auth(const char *user, struct timespec *timeout, GError **error)
   /* put the username before the password prompt */
   fprintf(stderr, "%s's ", user);
   fflush(stderr);
+
   /* authenticate the user */
   pam_status = pam_authenticate(pamh, 0);
 
-  if (pam_status != PAM_SUCCESS) {
-    g_set_error(error,
-        VLOCK_AUTH_ERROR,
-        VLOCK_AUTH_ERROR_FAILED,
-        "%s",
-        pam_strerror(pamh, pam_status));
+  if (pam_status == PAM_CONV_ERR) {
+    g_assert(conv_data.error != NULL);
+    g_propagate_error(error, conv_data.error);
+  } else if (pam_status != PAM_SUCCESS) {
+    g_assert(conv_data.error == NULL);
+
+    g_propagate_error(error,
+        g_error_new_literal(
+          VLOCK_AUTH_ERROR,
+          VLOCK_AUTH_ERROR_FAILED,
+          pam_strerror(pamh, pam_status)));
   }
 
 end:
   /* finish pam */
   pam_end_status = pam_end(pamh, pam_status);
 
-  if (pam_end_status != PAM_SUCCESS && (error == NULL || *error == NULL)) {
-    g_set_error(error,
-        VLOCK_AUTH_ERROR,
-        VLOCK_AUTH_ERROR_FAILED,
-        "%s",
-        pam_strerror(pamh, pam_status));
+  if (pam_end_status != PAM_SUCCESS && error != NULL && *error == NULL)) {
+    g_propagate_error(error,
+        g_error_new_literal(
+          VLOCK_AUTH_ERROR,
+          VLOCK_AUTH_ERROR_FAILED,
+          pam_strerror(pamh, pam_status)));
   }
 
   return (pam_end_status == PAM_SUCCESS && pam_status == PAM_SUCCESS);

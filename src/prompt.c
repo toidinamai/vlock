@@ -49,14 +49,21 @@
 #include <sys/select.h>
 #include <errno.h>
 
+#include <glib.h>
+
 #include "prompt.h"
 
 #define PROMPT_BUFFER_SIZE 512
 
+GQuark vlock_prompt_error_quark(void)
+{
+  return g_quark_from_static_string("vlock-prompt-error-quark");
+}
+
 /* Prompt with the given string for a single line of input.  The read string is
  * returned in a new buffer that should be freed by the caller.  If reading
  * fails or the timeout (if given) occurs NULL is retured. */
-char *prompt(const char *msg, const struct timespec *timeout)
+char *prompt(const char *msg, const struct timespec *timeout, GError **error)
 {
   char buffer[PROMPT_BUFFER_SIZE];
   char *result = NULL;
@@ -95,8 +102,14 @@ before_select:
   if (timeout != NULL) {
     timeout_val = malloc(sizeof *timeout_val);
 
-    if (timeout_val == NULL)
+    if (timeout_val == NULL) {
+      g_propagate_error(error,
+          g_error_new_literal(
+            VLOCK_PROMPT_ERROR,
+            VLOCK_PROMPT_ERROR_FAILED,
+            g_strerror(errno)));
       return NULL;
+    }
 
     timeout_val->tv_sec = timeout->tv_sec;
     timeout_val->tv_usec = timeout->tv_nsec / 1000;
@@ -109,14 +122,20 @@ before_select:
   if (select(STDIN_FILENO + 1, &readfds, NULL, NULL, timeout_val) != 1) {
     switch (errno) {
       case 0:
-        fprintf(stderr, "timeout!\n");
+        g_propagate_error(error,
+            g_error_new_literal(
+              VLOCK_PROMPT_ERROR, VLOCK_PROMPT_ERROR_TIMEOUT, ""));
         goto out;
       case EINTR:
         /* A signal was caught. Restart. */
         free(timeout_val);
         goto before_select;
       default:
-        perror("vlock: select() on stdin failed");
+        g_propagate_error(error,
+            g_error_new_literal(
+              VLOCK_PROMPT_ERROR,
+              VLOCK_PROMPT_ERROR_FAILED,
+              g_strerror(errno)));
         goto out;
     }
   }
@@ -137,8 +156,13 @@ before_select:
   /* Terminate the string, again. */
   buffer[len] = '\0';
 
-  /* Copy the string.  Success and error paths are the same. */
-  result = strdup(buffer);
+  /* Copy the string. */
+  if ((result = strdup(buffer)) == NULL)
+    g_propagate_error(error,
+        g_error_new_literal(
+          VLOCK_PROMPT_ERROR,
+          VLOCK_PROMPT_ERROR_FAILED,
+          g_strerror(errno)));
 
   /* Clear our buffer. */
   memset(buffer, 0, sizeof buffer);
@@ -154,7 +178,7 @@ out:
 }
 
 /* Same as prompt except that the characters entered are not echoed. */
-char *prompt_echo_off(const char *msg, const struct timespec *timeout)
+char *prompt_echo_off(const char *msg, const struct timespec *timeout, GError **error)
 {
   struct termios term;
   tcflag_t lflag;
@@ -165,7 +189,7 @@ char *prompt_echo_off(const char *msg, const struct timespec *timeout)
   term.c_lflag &= ~ECHO;
   (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
 
-  result = prompt(msg, timeout);
+  result = prompt(msg, timeout, error);
 
   term.c_lflag = lflag;
   (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);

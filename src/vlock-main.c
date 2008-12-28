@@ -119,6 +119,14 @@ static void auth_loop(const char *username)
   struct timespec *prompt_timeout;
   struct timespec *wait_timeout;
   char *vlock_message;
+  const char *auth_names[] = { username, "root", NULL };
+
+  /* If NO_ROOT_PASS is defined or the username is "root" ... */
+#ifndef NO_ROOT_PASS
+  if (strcmp(username, "root") == 0)
+#endif
+    /* ... do not fall back to "root". */
+    auth_names[1] = NULL;
 
   /* Get the vlock message from the environment. */
   vlock_message = getenv("VLOCK_MESSAGE");
@@ -166,33 +174,27 @@ static void auth_loop(const char *username)
 #endif
     }
 
-    /* Try authentication as user. */
-    if (!auth(username, prompt_timeout, &err)) {
+    for (size_t i = 0; auth_names[i] != NULL; i++) {
+      if (auth(auth_names[i], prompt_timeout, &err))
+        goto auth_success;
+
       g_assert(err != NULL);
-      fprintf(stderr, "vlock: %s\n", err->message);
+
+      if (g_error_matches(err,
+            VLOCK_PROMPT_ERROR,
+            VLOCK_PROMPT_ERROR_TIMEOUT))
+        fprintf(stderr, "Timeout!\n");
+      else
+        fprintf(stderr, "vlock: %s\n", err->message);
+
       g_clear_error(&err);
       sleep(1);
-    } else {
-      break;
     }
-
-#ifndef NO_ROOT_PASS
-    if (strcmp(username, "root") != 0) {
-      /* Try authentication as root. */
-      if (!auth("root", prompt_timeout, &err)) {
-        g_assert(err != NULL);
-        fprintf(stderr, "vlock: %s\n", err->message);
-        g_clear_error(&err);
-        sleep(1);
-      } else {
-        break;
-      }
-    }
-#endif
 
     auth_tries++;
   }
 
+auth_success:
   /* Free timeouts memory. */
   free(wait_timeout);
   free(prompt_timeout);
