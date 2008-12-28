@@ -122,7 +122,7 @@ fail:
   free(aresp);
   *resp = NULL;
 
-  g_warn_if_fail(conv_data->error != NULL, PAM_CONV_ERR);
+  g_warn_if_fail(conv_data->error != NULL);
 
   return PAM_CONV_ERR;
 }
@@ -197,7 +197,7 @@ end:
   /* finish pam */
   pam_end_status = pam_end(pamh, pam_status);
 
-  if (pam_end_status != PAM_SUCCESS && error != NULL && *error == NULL)) {
+  if (pam_end_status != PAM_SUCCESS && error != NULL && *error == NULL) {
     g_propagate_error(error,
         g_error_new_literal(
           VLOCK_AUTH_ERROR,
