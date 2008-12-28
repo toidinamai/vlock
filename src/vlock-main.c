@@ -81,11 +81,11 @@ static char *get_username(void)
   return strdup(username);
 }
 
-static void terminate(int __attribute__((unused)) signum)
+static void terminate(int signum)
 {
   fprintf(stderr, "vlock: Terminated!\n");
-  /* Call exit here to ensure atexit handlers are called. */
-  exit(1);
+  invoke_atexit_functions();
+  raise(signum);
 }
 
 static void block_signals(void)
