@@ -24,6 +24,8 @@
 #include <errno.h>
 #include <time.h>
 
+#include <glib.h>
+
 #include "prompt.h"
 #include "auth.h"
 #include "console_switch.h"
@@ -35,11 +37,25 @@
 
 int vlock_debug = 0;
 
-#define ensure_atexit(func) \
-  do { \
-    if (atexit(func) != 0) \
-      fatal_perror("vlock: atexit() failed"); \
-  } while (0)
+static GList *atexit_functions;
+
+static void invoke_atexit_functions(void)
+{
+  for (GList *item = atexit_functions;
+      item != NULL;
+      item = g_list_next(item)) {
+    (*(void (**)())&item->data)();
+  }
+}
+
+static void ensure_atexit(void (*function)(void))
+{
+  if (atexit_functions == NULL)
+    atexit(invoke_atexit_functions);
+
+  atexit_functions = g_list_prepend(atexit_functions,
+      *(void **)&function);
+}
 
 static char *get_username(void)
 {
