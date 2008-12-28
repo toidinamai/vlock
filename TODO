@@ -17,6 +17,9 @@ medium
 - document ./configure options better
 - help distributors when vlock group is not avaiable at installation time
 - plugin to ensure that vlock is run only once on a machine
+- change the prompt timeout so it measures inactivity instead of the whole time
+  to enter a password (this means even with a timeout of one second it would
+  still be possible to authenticate)
 
 low
 ---
