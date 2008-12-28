@@ -94,7 +94,7 @@ auth_error:
     g_propagate_error(error,
         g_error_new_literal(
           VLOCK_AUTH_ERROR,
-          VLOCK_AUTH_ERROR_FAILED,
+          VLOCK_AUTH_ERROR_DENIED,
           "Authentication failure"));
   }
 

@@ -21,7 +21,8 @@ struct timespec;
 GQuark vlock_auth_error_quark(void);
 
 enum {
-  VLOCK_AUTH_ERROR_FAILED
+  VLOCK_AUTH_ERROR_FAILED,
+  VLOCK_AUTH_ERROR_DENIED
 };
 
 /* Try to authenticate the user.  When the user is successfully authenticated

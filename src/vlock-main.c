@@ -198,10 +198,24 @@ static void auth_loop(const char *username)
 
       if (g_error_matches(err,
             VLOCK_PROMPT_ERROR,
-            VLOCK_PROMPT_ERROR_TIMEOUT))
+            VLOCK_PROMPT_ERROR_TIMEOUT)) {
         fprintf(stderr, "Timeout!\n");
-      else
+      } else {
         fprintf(stderr, "vlock: %s\n", err->message);
+
+        if (g_error_matches(err,
+              VLOCK_AUTH_ERROR,
+              VLOCK_AUTH_ERROR_FAILED)) {
+          fputc('\n', stderr);
+          fprintf(stderr, "******************************************************************\n");
+          fprintf(stderr, "*** You may not be able to able to unlock your terminal now.   ***\n");
+          fprintf(stderr, "***                                                            ***\n");
+          fprintf(stderr, "*** Log into another terminal and kill the vlock-main process. ***\n");
+          fprintf(stderr, "******************************************************************\n");
+          fputc('\n', stderr);
+          sleep(3);
+        }
+      }
 
       g_clear_error(&err);
       sleep(1);
