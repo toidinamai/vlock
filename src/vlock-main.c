@@ -11,6 +11,7 @@
  *
  */
 
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -83,29 +84,32 @@ static char *get_username(void)
 
 static void terminate(int signum)
 {
-  fprintf(stderr, "vlock: Terminated!\n");
   invoke_atexit_functions();
+  fprintf(stderr, "vlock: Killed by signal %d (%s)!\n", signum, strsignal(signum));
   raise(signum);
 }
 
-static void block_signals(void)
+static void install_signal_handlers(void)
 {
   struct sigaction sa;
 
   /* Ignore some signals. */
-  /* These signals shouldn't be delivered anyway, because terminal signals are
-   * disabled below. */
   (void) sigemptyset(&(sa.sa_mask));
   sa.sa_flags = SA_RESTART;
   sa.sa_handler = SIG_IGN;
-  (void) sigaction(SIGINT, &sa, NULL);
-  (void) sigaction(SIGQUIT, &sa, NULL);
   (void) sigaction(SIGTSTP, &sa, NULL);
 
-  /* Install special handler for SIGTERM. */
+  /* Handle termination signals.  None of these should be delivered in a normal
+   * run of the program because terminal signals (INT, QUIT) are disabled
+   * below. */
   sa.sa_flags = SA_RESETHAND;
   sa.sa_handler = terminate;
+  (void) sigaction(SIGINT, &sa, NULL);
+  (void) sigaction(SIGQUIT, &sa, NULL);
   (void) sigaction(SIGTERM, &sa, NULL);
+  (void) sigaction(SIGHUP, &sa, NULL);
+  (void) sigaction(SIGABRT, &sa, NULL);
+  (void) sigaction(SIGSEGV, &sa, NULL);
 }
 
 static struct termios term;
@@ -250,7 +254,7 @@ int main(int argc, char *const argv[])
 
   vlock_debug = (getenv("VLOCK_DEBUG") != NULL);
 
-  block_signals();
+  install_signal_handlers();
 
   username = get_username();
 
