@@ -36,8 +36,6 @@
 #include "plugins.h"
 #endif
 
-int vlock_debug = 0;
-
 static GList *atexit_functions;
 
 static void invoke_atexit_functions(void)
@@ -56,30 +54,6 @@ static void ensure_atexit(void (*function)(void))
 
   atexit_functions = g_list_prepend(atexit_functions,
       *(void **)&function);
-}
-
-static char *get_username(void)
-{
-  uid_t uid = getuid();
-  char *username = NULL;
-
-  /* Get the user name from the environment if started as root. */
-  if (uid == 0)
-    username = getenv("USER");
-
-  if (username == NULL) {
-    struct passwd *pw;
-
-    /* Get the password entry. */
-    pw = getpwuid(uid);
-
-    if (pw == NULL)
-      return NULL;
-
-    username = pw->pw_name;
-  }
-
-  return strdup(username);
 }
 
 static void terminate(int signum)
@@ -250,16 +224,19 @@ static void call_end_hook(void)
 /* Lock the current terminal until proper authentication is received. */
 int main(int argc, char *const argv[])
 {
-  char *username;
+  const char *username = NULL;
 
-  vlock_debug = (getenv("VLOCK_DEBUG") != NULL);
+  g_set_application_name("VLock");
+  g_set_prgname(argv[0]);
 
   install_signal_handlers();
 
-  username = get_username();
+  /* Get the user name from the environment if started as root. */
+  if (getuid() == 0)
+    username = g_getenv("USER");
 
   if (username == NULL)
-    fatal_perror("vlock: could not get username");
+    username = g_get_user_name();
 
   ensure_atexit(display_auth_tries);
 
@@ -302,8 +279,6 @@ int main(int argc, char *const argv[])
   ensure_atexit(restore_terminal);
 
   auth_loop(username);
-
-  free(username);
 
   exit(0);
 }
