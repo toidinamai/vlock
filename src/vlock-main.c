@@ -44,7 +44,7 @@ static void invoke_atexit_functions(void)
 {
   while (atexit_functions != NULL) {
     (*(void (**)())&atexit_functions->data)();
-    atexit_functions = g_list_remove_link(atexit_functions,
+    atexit_functions = g_list_delete_link(atexit_functions,
         atexit_functions);
   }
 }
