@@ -18,7 +18,6 @@
 
 #include <pwd.h>
 
-#include <termios.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <signal.h>
@@ -31,6 +30,7 @@
 #include "prompt.h"
 #include "auth.h"
 #include "console_switch.h"
+#include "terminal.h"
 #include "util.h"
 #include "logging.h"
 
@@ -86,25 +86,6 @@ static void install_signal_handlers(void)
   (void) sigaction(SIGHUP, &sa, NULL);
   (void) sigaction(SIGABRT, &sa, NULL);
   (void) sigaction(SIGSEGV, &sa, NULL);
-}
-
-static struct termios term;
-static tcflag_t lflag;
-
-static void secure_terminal(void)
-{
-  /* Disable terminal echoing and signals. */
-  (void) tcgetattr(STDIN_FILENO, &term);
-  lflag = term.c_lflag;
-  term.c_lflag &= ~(ECHO | ISIG);
-  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
-}
-
-static void restore_terminal(void)
-{
-  /* Restore the terminal. */
-  term.c_lflag = lflag;
-  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
 
 static int auth_tries;

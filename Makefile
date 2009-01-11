@@ -101,6 +101,7 @@ VLOCK_MAIN_SOURCES = \
 	prompt.c \
 	auth-$(AUTH_METHOD).c \
 	console_switch.c \
+	terminal.c \
 	util.c \
 	logging.c
 
