@@ -122,7 +122,7 @@ fail:
   free(aresp);
   *resp = NULL;
 
-  g_warn_if_fail(conv_data->error != NULL);
+  g_return_val_if_fail(conv_data->error != NULL, PAM_CONV_ERR);
 
   return PAM_CONV_ERR;
 }
