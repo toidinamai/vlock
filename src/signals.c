@@ -5,11 +5,12 @@
 
 #include <string.h>
 
-void invoke_atexit_functions(void);
+#include "signals.h"
+#include "util.h"
 
 static void terminate(int signum)
 {
-  invoke_atexit_functions();
+  vlock_invoke_atexit();
   fprintf(stderr, "vlock: Killed by signal %d (%s)!\n", signum, strsignal(signum));
   raise(signum);
 }

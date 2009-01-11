@@ -38,26 +38,6 @@
 #include "plugins.h"
 #endif
 
-static GList *atexit_functions;
-
-void invoke_atexit_functions(void)
-{
-  while (atexit_functions != NULL) {
-    (*(void (**)())&atexit_functions->data)();
-    atexit_functions = g_list_delete_link(atexit_functions,
-        atexit_functions);
-  }
-}
-
-static void ensure_atexit(void (*function)(void))
-{
-  if (atexit_functions == NULL)
-    atexit(invoke_atexit_functions);
-
-  atexit_functions = g_list_prepend(atexit_functions,
-      *(void **)&function);
-}
-
 static int auth_tries;
 
 static void auth_loop(const char *username)
@@ -213,14 +193,14 @@ int main(int argc, char *const argv[])
   if (username == NULL)
     username = g_get_user_name();
 
-  ensure_atexit(display_auth_tries);
+  vlock_atexit(display_auth_tries);
 
 #ifdef USE_PLUGINS
   for (int i = 1; i < argc; i++)
     if (!load_plugin(argv[i]))
       printf_and_exit("loading plugin '%s' failed: %s", argv[i], STRERROR);
 
-  ensure_atexit(unload_plugins);
+  vlock_atexit(unload_plugins);
 
   if (!resolve_dependencies()) {
     if (errno == 0)
@@ -230,7 +210,7 @@ int main(int argc, char *const argv[])
   }
 
   plugin_hook("vlock_start");
-  ensure_atexit(call_end_hook);
+  vlock_atexit(call_end_hook);
 #else /* !USE_PLUGINS */
   /* Emulate pseudo plugin "all". */
   if (argc == 2 && (strcmp(argv[1], "all") == 0)) {
@@ -253,7 +233,7 @@ int main(int argc, char *const argv[])
   /* Delay securing the terminal until here because one of the plugins might
    * have changed the active terminal. */
   secure_terminal();
-  ensure_atexit(restore_terminal);
+  vlock_atexit(restore_terminal);
 
   auth_loop(username);
 

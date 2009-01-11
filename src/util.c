@@ -21,6 +21,8 @@
 #include <errno.h>
 #include <time.h>
 
+#include <glib.h>
+
 #include "util.h"
 
 /* Parse the given string (interpreted as seconds) into a
@@ -49,3 +51,22 @@ struct timespec *parse_seconds(const char *s)
   }
 }
 
+static GList *atexit_functions;
+
+void vlock_invoke_atexit(void)
+{
+  while (atexit_functions != NULL) {
+    (*(void (**)())&atexit_functions->data)();
+    atexit_functions = g_list_delete_link(atexit_functions,
+        atexit_functions);
+  }
+}
+
+void vlock_atexit(void (*function)(void))
+{
+  if (atexit_functions == NULL)
+    atexit(vlock_invoke_atexit);
+
+  atexit_functions = g_list_prepend(atexit_functions,
+      *(void **)&function);
+}

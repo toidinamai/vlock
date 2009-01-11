@@ -21,6 +21,9 @@ struct timespec;
  * is returned, too. */
 struct timespec *parse_seconds(const char *s);
 
+void vlock_invoke_atexit(void);
+void vlock_atexit(void (*function)(void));
+
 #define STRERROR (errno ? strerror(errno) : "Unknown error")
 
 #define GUARD_ERRNO(expr) \
