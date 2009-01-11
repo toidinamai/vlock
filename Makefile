@@ -96,7 +96,7 @@ vlock: vlock.sh config.mk Makefile
 
 override CFLAGS += -Isrc
 
-vlock-main: vlock-main.o prompt.o auth-$(AUTH_METHOD).o console_switch.o util.o
+vlock-main: vlock-main.o prompt.o auth-$(AUTH_METHOD).o console_switch.o util.o logging.o
 
 auth-pam.o: auth-pam.c prompt.h auth.h
 auth-shadow.o: auth-shadow.c prompt.h auth.h

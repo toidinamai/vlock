@@ -31,6 +31,7 @@
 #include "auth.h"
 #include "console_switch.h"
 #include "util.h"
+#include "logging.h"
 
 #ifdef USE_PLUGINS
 #include "plugins.h"
@@ -226,8 +227,11 @@ int main(int argc, char *const argv[])
 {
   const char *username = NULL;
 
-  g_set_application_name("VLock");
-  g_set_prgname(argv[0]);
+  /* Initialize GLib. */
+  g_set_prgname("vlock");
+
+  /* Initialize logging. */
+  vlock_initialize_logging();
 
   install_signal_handlers();
 
@@ -243,7 +247,7 @@ int main(int argc, char *const argv[])
 #ifdef USE_PLUGINS
   for (int i = 1; i < argc; i++)
     if (!load_plugin(argv[i]))
-      fatal_error("vlock: loading plugin '%s' failed: %s", argv[i], STRERROR);
+      g_critical("loading plugin '%s' failed: %s", argv[i], STRERROR);
 
   ensure_atexit(unload_plugins);
 
@@ -251,7 +255,7 @@ int main(int argc, char *const argv[])
     if (errno == 0)
       exit(EXIT_FAILURE);
     else
-      fatal_error("vlock: error resolving plugin dependencies: %s", STRERROR);
+      g_critical("error resolving plugin dependencies: %s", STRERROR);
   }
 
   plugin_hook("vlock_start");
@@ -268,13 +272,15 @@ int main(int argc, char *const argv[])
 
     ensure_atexit((void (*)(void))unlock_console_switch);
   } else if (argc > 1) {
-    fatal_error("vlock: plugin support disabled");
+    g_critical("plugin support disabled");
   }
 #endif
 
   if (!isatty(STDIN_FILENO))
-    fatal_error("vlock: stdin is not a terminal");
+    g_critical("stdin is not a terminal");
 
+  /* Delay securing the terminal until here because one of the plugins might
+   * have changed the active terminal. */
   secure_terminal();
   ensure_atexit(restore_terminal);
 
