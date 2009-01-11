@@ -1,6 +1,8 @@
 #include <unistd.h>
 #include <termios.h>
 
+#include "terminal.h"
+
 static struct termios term;
 static tcflag_t lflag;
 

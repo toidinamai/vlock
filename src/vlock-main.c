@@ -20,7 +20,6 @@
 
 #include <unistd.h>
 #include <sys/types.h>
-#include <signal.h>
 #include <errno.h>
 #include <time.h>
 
@@ -30,6 +29,7 @@
 #include "prompt.h"
 #include "auth.h"
 #include "console_switch.h"
+#include "signals.h"
 #include "terminal.h"
 #include "util.h"
 #include "logging.h"
@@ -40,7 +40,7 @@
 
 static GList *atexit_functions;
 
-static void invoke_atexit_functions(void)
+void invoke_atexit_functions(void)
 {
   while (atexit_functions != NULL) {
     (*(void (**)())&atexit_functions->data)();
@@ -56,36 +56,6 @@ static void ensure_atexit(void (*function)(void))
 
   atexit_functions = g_list_prepend(atexit_functions,
       *(void **)&function);
-}
-
-static void terminate(int signum)
-{
-  invoke_atexit_functions();
-  fprintf(stderr, "vlock: Killed by signal %d (%s)!\n", signum, strsignal(signum));
-  raise(signum);
-}
-
-static void install_signal_handlers(void)
-{
-  struct sigaction sa;
-
-  /* Ignore some signals. */
-  (void) sigemptyset(&(sa.sa_mask));
-  sa.sa_flags = SA_RESTART;
-  sa.sa_handler = SIG_IGN;
-  (void) sigaction(SIGTSTP, &sa, NULL);
-
-  /* Handle termination signals.  None of these should be delivered in a normal
-   * run of the program because terminal signals (INT, QUIT) are disabled
-   * below. */
-  sa.sa_flags = SA_RESETHAND;
-  sa.sa_handler = terminate;
-  (void) sigaction(SIGINT, &sa, NULL);
-  (void) sigaction(SIGQUIT, &sa, NULL);
-  (void) sigaction(SIGTERM, &sa, NULL);
-  (void) sigaction(SIGHUP, &sa, NULL);
-  (void) sigaction(SIGABRT, &sa, NULL);
-  (void) sigaction(SIGSEGV, &sa, NULL);
 }
 
 static int auth_tries;
