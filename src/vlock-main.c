@@ -26,6 +26,7 @@
 #include <time.h>
 
 #include <glib.h>
+#include <glib/gprintf.h>
 
 #include "prompt.h"
 #include "auth.h"
@@ -222,13 +223,32 @@ static void call_end_hook(void)
 }
 #endif
 
+__attribute__((noreturn))
+static void display_error_and_exit(GError *error)
+{
+  g_fprintf(stderr, "vlock: %s\n", error->message);
+  exit(1);
+}
+
+__attribute__((noreturn, format(printf, 1, 2)))
+static void printf_and_exit(const char *format, ...)
+{
+  char *error_message = NULL;
+  va_list ap;
+  va_start(ap, format);
+  g_vasprintf(&error_message, format, ap);
+  va_end(ap);
+  g_fprintf(stderr, "vlock: %s\n", error_message);
+  exit(1);
+}
+
 /* Lock the current terminal until proper authentication is received. */
 int main(int argc, char *const argv[])
 {
   const char *username = NULL;
 
   /* Initialize GLib. */
-  g_set_prgname("vlock");
+  g_set_prgname(argv[0]);
 
   /* Initialize logging. */
   vlock_initialize_logging();
@@ -247,7 +267,7 @@ int main(int argc, char *const argv[])
 #ifdef USE_PLUGINS
   for (int i = 1; i < argc; i++)
     if (!load_plugin(argv[i]))
-      g_critical("loading plugin '%s' failed: %s", argv[i], STRERROR);
+      printf_and_exit("loading plugin '%s' failed: %s", argv[i], STRERROR);
 
   ensure_atexit(unload_plugins);
 
@@ -255,7 +275,7 @@ int main(int argc, char *const argv[])
     if (errno == 0)
       exit(EXIT_FAILURE);
     else
-      g_critical("error resolving plugin dependencies: %s", STRERROR);
+      printf_and_exit("error resolving plugin dependencies: %s", STRERROR);
   }
 
   plugin_hook("vlock_start");
@@ -272,12 +292,12 @@ int main(int argc, char *const argv[])
 
     ensure_atexit((void (*)(void))unlock_console_switch);
   } else if (argc > 1) {
-    g_critical("plugin support disabled");
+    printf_and_exit("plugin support disabled");
   }
 #endif
 
   if (!isatty(STDIN_FILENO))
-    g_critical("stdin is not a terminal");
+    printf_and_exit("stdin is not a terminal");
 
   /* Delay securing the terminal until here because one of the plugins might
    * have changed the active terminal. */
