@@ -49,29 +49,3 @@ struct timespec *parse_seconds(const char *s)
   }
 }
 
-void fatal_error(const char *format, ...)
-{
-  char *error;
-  va_list ap;
-  va_start(ap, format);
-  if (vasprintf(&error, format, ap) < 0)
-    error = "error while formatting error message";
-  va_end(ap);
-  fatal_error_free(error);
-}
-
-void fatal_error_free(char *error)
-{
-  fputs(error, stderr);
-  fputc('\n', stderr);
-  free(error);
-  exit(EXIT_FAILURE);
-}
-
-void fatal_perror(const char *errmsg)
-{
-  if (errno != 0)
-    fatal_error("%s: %s", errmsg, strerror(errno));
-  else
-    fatal_error("%s", errmsg);
-}
