@@ -25,6 +25,7 @@
 
 #include <glib.h>
 #include <glib/gprintf.h>
+#include <glib-object.h>
 
 #include "prompt.h"
 #include "auth.h"
@@ -180,6 +181,7 @@ int main(int argc, char *const argv[])
 
   /* Initialize GLib. */
   g_set_prgname(argv[0]);
+  g_type_init();
 
   /* Initialize logging. */
   vlock_initialize_logging();

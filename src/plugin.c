@@ -80,3 +80,111 @@ bool call_hook(struct plugin *p, const char *hook_name)
 {
   return p->type->call_hook(p, hook_name);
 }
+
+G_DEFINE_TYPE(VlockPlugin, vlock_plugin, G_TYPE_OBJECT)
+
+/* Initialize plugin to default values. */
+static void vlock_plugin_init(VlockPlugin *self)
+{
+  self->name = NULL;
+}
+
+/* Create new plugin object. */
+static GObject *vlock_plugin_constructor(
+    GType gtype,
+    guint n_properties,
+    GObjectConstructParam *properties)
+{
+  GObjectClass *parent_class = G_OBJECT_CLASS(vlock_plugin_parent_class);
+  GObject *object = parent_class->constructor(gtype, n_properties, properties);
+  VlockPlugin *self = VLOCK_PLUGIN(object);
+
+  g_return_val_if_fail(self->name != NULL, NULL);
+
+  return object;
+}
+
+/* Destroy plugin object. */
+static void vlock_plugin_finalize(GObject *object)
+{
+  VlockPlugin *self = VLOCK_PLUGIN(object);
+  g_free(self->name);
+  self->name = NULL;
+
+  G_OBJECT_CLASS(vlock_plugin_parent_class)->finalize(object);
+}
+
+/* Properties. */
+enum {
+  PROP_VLOCK_PLUGIN_0,
+  PROP_VLOCK_PLUGIN_NAME
+};
+
+/* Set properties. */
+static void vlock_plugin_set_property(
+    GObject *object,
+    guint property_id,
+    const GValue *value,
+    GParamSpec *pspec)
+{
+  VlockPlugin *self = VLOCK_PLUGIN(object);
+
+  switch (property_id)
+  {
+    case PROP_VLOCK_PLUGIN_NAME:
+      g_free(self->name);
+      self->name = g_value_dup_string(value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+      break;
+  }
+}
+
+/* Get properties. */
+static void vlock_plugin_get_property(
+    GObject *object,
+    guint property_id,
+    GValue *value,
+    GParamSpec *pspec)
+{
+  VlockPlugin *self = VLOCK_PLUGIN(object);
+
+  switch (property_id)
+  {
+    case PROP_VLOCK_PLUGIN_NAME:
+      g_value_set_string(value, self->name);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+      break;
+  }
+}
+
+/* Initialize plugin class. */
+static void vlock_plugin_class_init(VlockPluginClass *klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+  GParamSpec *vlock_plugin_param_spec;
+
+  /* Install methods. */
+  gobject_class->constructor = vlock_plugin_constructor;
+  gobject_class->finalize = vlock_plugin_finalize;
+  gobject_class->set_property = vlock_plugin_set_property;
+  gobject_class->get_property = vlock_plugin_get_property;
+
+  /* Install properties. */
+  vlock_plugin_param_spec = g_param_spec_string(
+      "name",
+      "plugin name",
+      "Set the plugin's name",
+      NULL,
+      G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE
+  );
+
+  g_object_class_install_property(
+      gobject_class,
+      PROP_VLOCK_PLUGIN_NAME,
+      vlock_plugin_param_spec
+  );
+}

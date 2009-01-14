@@ -11,8 +11,11 @@
  *
  */
 
+#pragma once
+
 #include <stdbool.h>
 #include <glib.h>
+#include <glib-object.h>
 
 /* Names of dependencies plugins may specify. */
 #define nr_dependencies 6
@@ -80,3 +83,31 @@ void destroy_plugin(struct plugin *p);
 
 /* Call the hook of a plugin. */
 bool call_hook(struct plugin *p, const char *hook_name);
+
+/*
+ * Type macros
+ */
+#define TYPE_VLOCK_PLUGIN (vlock_plugin_get_type())
+#define VLOCK_PLUGIN(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), TYPE_VLOCK_PLUGIN, VlockPlugin))
+#define VLOCK_PLUGIN_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), TYPE_VLOCK_PLUGIN, VlockPluginClass))
+#define IS_VLOCK_PLUGIN(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), TYPE_VLOCK_PLUGIN))
+#define IS_VLOCK_PLUGIN_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), TYPE_VLOCK_PLUGIN))
+#define VLOCK_PLUGIN_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), TYPE_VLOCK_PLUGIN, VlockPluginClass))
+
+typedef struct _VlockPlugin VlockPlugin;
+typedef struct _VlockPluginClass VlockPluginClass;
+
+struct _VlockPlugin
+{
+  GObject *parent_instance;
+  gchar *name;
+
+  GList *dependencies[nr_dependencies];
+};
+
+struct _VlockPluginClass
+{
+  GObjectClass parent_class;
+};
+
+GType vlock_plugin_get_type(void);

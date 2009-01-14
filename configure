@@ -220,8 +220,8 @@ set_defaults() {
   MODULEDIR="\$(LIBDIR)/vlock/modules"
 
   # glib
-  GLIB_CFLAGS="$(pkg-config --cflags glib-2.0)"
-  GLIB_LIBS="$(pkg-config --libs glib-2.0)"
+  GLIB_CFLAGS="$(pkg-config --cflags glib-2.0 gobject-2.0)"
+  GLIB_LIBS="$(pkg-config --libs glib-2.0 gobject-2.0)"
 
   CC=gcc
   DEFAULT_CFLAGS="-O2 -Wall -W -pedantic -std=gnu99"
