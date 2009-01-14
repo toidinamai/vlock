@@ -84,8 +84,17 @@ void destroy_plugin(struct plugin *p);
 /* Call the hook of a plugin. */
 bool call_hook(struct plugin *p, const char *hook_name);
 
+/* Errors */
+#define VLOCK_PLUGIN_ERROR vlock_plugin_error_quark()
+GQuark vlock_plugin_error_quark(void);
+
+enum {
+  VLOCK_PLUGIN_ERROR_FAILED,
+  VLOCK_PLUGIN_ERROR_NOT_FOUND
+};
+
 /*
- * Type macros
+ * Plugin type macros.
  */
 #define TYPE_VLOCK_PLUGIN (vlock_plugin_get_type())
 #define VLOCK_PLUGIN(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), TYPE_VLOCK_PLUGIN, VlockPlugin))

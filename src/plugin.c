@@ -81,6 +81,11 @@ bool call_hook(struct plugin *p, const char *hook_name)
   return p->type->call_hook(p, hook_name);
 }
 
+GQuark vlock_plugin_error_quark(void)
+{
+  return g_quark_from_static_string("vlock-plugin-error-quark");
+}
+
 G_DEFINE_TYPE(VlockPlugin, vlock_plugin, G_TYPE_OBJECT)
 
 /* Initialize plugin to default values. */
