@@ -117,6 +117,11 @@ struct _VlockPlugin
 struct _VlockPluginClass
 {
   GObjectClass parent_class;
+
+  bool (*open)(VlockPlugin *self, GError **error);
 };
 
 GType vlock_plugin_get_type(void);
+
+/* Open the plugin. */
+bool vlock_plugin_open(VlockPlugin *self, GError **error);

@@ -172,7 +172,10 @@ static void vlock_plugin_class_init(VlockPluginClass *klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
   GParamSpec *vlock_plugin_param_spec;
 
-  /* Install methods. */
+  /* Virtual methods. */
+  klass->open = NULL;
+
+  /* Install overridden methods. */
   gobject_class->constructor = vlock_plugin_constructor;
   gobject_class->finalize = vlock_plugin_finalize;
   gobject_class->set_property = vlock_plugin_set_property;
@@ -192,4 +195,11 @@ static void vlock_plugin_class_init(VlockPluginClass *klass)
       PROP_VLOCK_PLUGIN_NAME,
       vlock_plugin_param_spec
   );
+}
+
+bool vlock_plugin_open(VlockPlugin *self, GError **error)
+{
+  VlockPluginClass *klass = VLOCK_PLUGIN_GET_CLASS(self);
+  g_assert(klass->open != NULL);
+  return klass->open(self, error);
 }
