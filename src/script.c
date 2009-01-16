@@ -228,8 +228,6 @@ struct _VlockScriptPrivate
 /* Initialize plugin to default values. */
 static void vlock_script_init(VlockScript *self)
 {
-  VlockPlugin *plugin = VLOCK_PLUGIN(self);
-
   self->priv = VLOCK_SCRIPT_GET_PRIVATE(self);
 
   self->priv->dead = false;
@@ -257,6 +255,7 @@ static void vlock_script_finalize(GObject *object)
 
 static bool vlock_script_open(VlockPlugin *plugin, GError **error)
 {
+  GError *tmp_error = NULL;
   VlockScript *self = VLOCK_SCRIPT(plugin);
 
   self->priv->path = g_strdup_printf("%s/%s", VLOCK_SCRIPT_DIR, plugin->name);
@@ -264,8 +263,19 @@ static bool vlock_script_open(VlockPlugin *plugin, GError **error)
   /* Get the dependency information.  Whether the script is executable or not
    * is also detected here. */
   for (size_t i = 0; i < nr_dependencies; i++)
-    if (!get_dependency(self->priv->path, dependency_names[i], &plugin->dependencies[i], error))
+    if (!get_dependency(self->priv->path, dependency_names[i], &plugin->dependencies[i], &tmp_error)) {
+      if (g_error_matches(tmp_error,
+            VLOCK_PROCESS_ERROR,
+            VLOCK_PROCESS_ERROR_NOT_FOUND) && i == 0) {
+        g_set_error(error, VLOCK_PLUGIN_ERROR, VLOCK_PLUGIN_ERROR_NOT_FOUND,
+            "%s", tmp_error->message);
+        g_clear_error(&tmp_error);
+      } else {
+        g_propagate_error(error, tmp_error);
+      }
+
       return false;
+    }
 
   return true;
 }
