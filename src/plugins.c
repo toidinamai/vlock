@@ -23,6 +23,9 @@
 #include "tsort.h"
 
 #include "plugin.h"
+#include "module.h"
+#include "script.h"
+
 #include "util.h"
 
 /* the list of plugins */
@@ -69,13 +72,13 @@ const struct hook hooks[nr_hooks] = {
 /**********************/
 
 /* helper declarations */
-static struct plugin *__load_plugin(const char *name);
+static VlockPlugin *__load_plugin(const char *name, GError **error);
 static bool __resolve_depedencies(void);
 static bool sort_plugins(void);
 
 bool load_plugin(const char *name)
 {
-  return __load_plugin(name) != NULL;
+  return __load_plugin(name, NULL) != NULL;
 }
 
 bool resolve_dependencies(void)
@@ -86,7 +89,7 @@ bool resolve_dependencies(void)
 void unload_plugins(void)
 {
   while (plugins != NULL) {
-    destroy_plugin(plugins->data);
+    g_object_unref(plugins->data);
     plugins = g_list_delete_link(plugins, plugins);
   }
 }
@@ -105,12 +108,12 @@ void plugin_hook(const char *hook_name)
 /* helper functions */
 /********************/
 
-static gint plugin_name_compare(struct plugin *p, const char *name)
+static gint plugin_name_compare(VlockPlugin *p, const char *name)
 {
   return strcmp(name, p->name);
 }
 
-static struct plugin *get_plugin(const char *name)
+static VlockPlugin *get_plugin(const char *name)
 {
   GList *item = g_list_find_custom(plugins, name, (GCompareFunc) plugin_name_compare);
 
@@ -121,32 +124,52 @@ static struct plugin *get_plugin(const char *name)
 }
 
 /* Load and return the named plugin. */
-static struct plugin *__load_plugin(const char *name)
+static VlockPlugin *__load_plugin(const char *name, GError **error)
 {
-  struct plugin *p = get_plugin(name);
+  VlockPlugin *p = get_plugin(name);
 
   if (p != NULL)
     return p;
 
-  /* Try to open a module first. */
-  p = new_plugin(name, module);
+  GError *err = NULL;
 
-  if (p != NULL)
-    goto success;
+  /* Possible plugin types. */
+  GType plugin_types[] = { TYPE_VLOCK_MODULE, TYPE_VLOCK_SCRIPT, 0 };
 
-  if (errno != ENOENT)
+  for (size_t i = 0; plugin_types[i] != 0; i++) {
+    if (err == NULL || g_error_matches(err,
+            VLOCK_PLUGIN_ERROR,
+            VLOCK_PLUGIN_ERROR_NOT_FOUND))
+      /* Continue if the was no previous error or the error was "not found". */
+      g_clear_error(&err);
+    else
+      /* Bail out on real errors. */
+      break;
+
+    /* Create the plugin. */
+    p = g_object_new(plugin_types[i], "name", name, NULL);
+
+    /* Try to open the plugin. */
+    if (!vlock_plugin_open(p, &err)) {
+      g_assert(err != NULL);
+      g_object_unref(p);
+      p = NULL;
+    }
+  }
+
+  if (err != NULL) {
+    g_assert(p == NULL);
+
+    g_propagate_error(error, err);
+
     return NULL;
+  } else {
+    g_assert(p != NULL);
 
-  /* Now try to open a script. */
-  p = new_plugin(name, script);
+    plugins = g_list_append(plugins, p);
 
-  if (p == NULL)
-    return NULL;
-
-success:
-  plugins = g_list_append(plugins, p);
-
-  return p;
+    return p;
+  }
 }
 
 /* Resolve the dependencies of the plugins. */
@@ -160,19 +183,17 @@ static bool __resolve_depedencies(void)
   for (GList *plugin_item = plugins;
       plugin_item != NULL;
       plugin_item = g_list_next(plugin_item)) {
-    struct plugin *p = plugin_item->data;
+    VlockPlugin *p = plugin_item->data;
 
     for (GList *dependency_item = p->dependencies[REQUIRES];
         dependency_item != NULL;
         dependency_item = g_list_next(dependency_item)) {
       const char *d = dependency_item->data;
-      struct plugin *q = __load_plugin(d);
+      VlockPlugin *q = __load_plugin(d, NULL);
 
       if (q == NULL) {
-        int errsv = errno;
         fprintf(stderr, "vlock-plugins: '%s' requires '%s' which could not be loaded\n", p->name, d);
         g_list_free(required_plugins);
-        errno = errsv;
         return false;
       }
 
@@ -184,13 +205,13 @@ static bool __resolve_depedencies(void)
   for (GList *plugin_item = plugins;
       plugin_item != NULL;
       plugin_item = g_list_next(plugin_item)) {
-    struct plugin *p = plugin_item->data;
+    VlockPlugin *p = plugin_item->data;
 
     for (GList *dependency_item = p->dependencies[NEEDS];
         dependency_item != NULL;
         dependency_item = g_list_next(dependency_item)) {
       const char *d = dependency_item->data;
-      struct plugin *q = get_plugin(d);
+      VlockPlugin *q = get_plugin(d);
 
       if (q == NULL) {
         fprintf(stderr, "vlock-plugins: '%s' needs '%s' which is not loaded\n", p->name, d);
@@ -207,14 +228,14 @@ static bool __resolve_depedencies(void)
    * are required. */
   for (GList *plugin_item = plugins;
       plugin_item != NULL; ) {
-    struct plugin *p = plugin_item->data;
+    VlockPlugin *p = plugin_item->data;
     bool dependencies_loaded = true;
 
     for (GList *dependency_item = p->dependencies[DEPENDS];
         dependency_item != NULL;
         dependency_item = g_list_next(dependency_item)) {
       const char *d = dependency_item->data;
-      struct plugin *q = get_plugin(d);
+      VlockPlugin *q = get_plugin(d);
 
       if (q == NULL) {
         dependencies_loaded = false;
@@ -237,7 +258,7 @@ static bool __resolve_depedencies(void)
     GList *next_plugin_item = g_list_next(plugin_item);
 
     if (!dependencies_loaded) {
-      destroy_plugin(p);
+      g_object_unref(p);
       plugins = g_list_delete_link(plugins, plugin_item);
     }
 
@@ -250,7 +271,7 @@ static bool __resolve_depedencies(void)
   for (GList *plugin_item = plugins;
       plugin_item != NULL;
       plugin_item = g_list_next(plugin_item)) {
-    struct plugin *p = plugin_item->data;
+    VlockPlugin *p = plugin_item->data;
 
     for (GList *dependency_item = p->dependencies[CONFLICTS];
         dependency_item != NULL;
@@ -283,8 +304,8 @@ static bool sort_plugins(void)
 
   while (edges != NULL) {
     struct edge *e = edges->data;
-    struct plugin *p = e->predecessor;
-    struct plugin *s = e->successor;
+    VlockPlugin *p = e->predecessor;
+    VlockPlugin *s = e->successor;
 
     fprintf(stderr, "\t%s\tmust come before\t%s\n", p->name, s->name);
     free(e);
@@ -318,12 +339,12 @@ static GList *get_edges(void)
   for (GList *plugin_item = plugins;
       plugin_item != NULL;
       plugin_item = g_list_next(plugin_item)) {
-    struct plugin *p = plugin_item->data;
+    VlockPlugin *p = plugin_item->data;
     /* p must come after these */
     for (GList *predecessor_item = p->dependencies[SUCCEEDS];
         predecessor_item != NULL;
         predecessor_item = g_list_next(predecessor_item)) {
-      struct plugin *q = get_plugin(predecessor_item->data);
+      VlockPlugin *q = get_plugin(predecessor_item->data);
 
       if (q != NULL)
         edges = g_list_append(edges, make_edge(q, p));
@@ -333,7 +354,7 @@ static GList *get_edges(void)
     for (GList *successor_item = p->dependencies[PRECEEDS];
         successor_item != NULL;
         successor_item = g_list_next(successor_item)) {
-      struct plugin *q = get_plugin(successor_item->data);
+      VlockPlugin *q = get_plugin(successor_item->data);
 
       if (q != NULL)
         edges = g_list_append(edges, make_edge(p, q));
@@ -355,16 +376,16 @@ void handle_vlock_start(const char *hook_name)
   for (GList *plugin_item = plugins;
       plugin_item != NULL;
       plugin_item = g_list_next(plugin_item)) {
-    struct plugin *p = plugin_item->data;
+    VlockPlugin *p = plugin_item->data;
 
-    if (!call_hook(p, hook_name)) {
+    if (!vlock_plugin_call_hook(p, hook_name)) {
       int errsv = errno;
 
       for (GList *reverse_item = g_list_previous(plugin_item);
           reverse_item != NULL;
           reverse_item = g_list_previous(reverse_item)) {
-        struct plugin *r = reverse_item->data;
-        (void) call_hook(r, "vlock_end");
+        VlockPlugin *r = reverse_item->data;
+        (void) vlock_plugin_call_hook(r, "vlock_end");
       }
 
       if (errsv)
@@ -381,8 +402,8 @@ void handle_vlock_end(const char *hook_name)
   for (GList *plugin_item = g_list_last(plugins);
       plugin_item != NULL;
       plugin_item = g_list_previous(plugin_item)) {
-    struct plugin *p = plugin_item->data;
-    (void) call_hook(p, hook_name);
+    VlockPlugin *p = plugin_item->data;
+    (void) vlock_plugin_call_hook(p, hook_name);
   }
 }
 
@@ -394,14 +415,14 @@ void handle_vlock_save(const char *hook_name)
   for (GList *plugin_item = plugins;
       plugin_item != NULL;
       plugin_item = g_list_next(plugin_item)) {
-    struct plugin *p = plugin_item->data;
+    VlockPlugin *p = plugin_item->data;
 
-    if (p->save_disabled)
-      continue;
+    // if (p->save_disabled)
+    //   continue;
 
-    if (!call_hook(p, hook_name)) {
-      p->save_disabled = true;
-      (void) call_hook(p, "vlock_save_abort");
+    if (!vlock_plugin_call_hook(p, hook_name)) {
+      // p->save_disabled = true;
+      (void) vlock_plugin_call_hook(p, "vlock_save_abort");
     }
   }
 }
@@ -414,12 +435,12 @@ void handle_vlock_save_abort(const char *hook_name)
   for (GList *plugin_item = g_list_last(plugins);
       plugin_item != NULL;
       plugin_item = g_list_previous(plugin_item)) {
-    struct plugin *p = plugin_item->data;
+    VlockPlugin *p = plugin_item->data;
 
-    if (p->save_disabled)
-      continue;
+    // if (p->save_disabled)
+    //   continue;
 
-    if (!call_hook(p, hook_name))
-      p->save_disabled = true;
+    if (!vlock_plugin_call_hook(p, hook_name))
+      ; // p->save_disabled = true;
   }
 }
