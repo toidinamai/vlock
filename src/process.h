@@ -11,8 +11,19 @@
  *
  */
 
+#pragma once
+
 #include <stdbool.h>
 #include <sys/types.h>
+#include <glib.h>
+
+/* Errors */
+#define VLOCK_PROCESS_ERROR vlock_process_error_quark()
+GQuark vlock_plugin_error_quark(void);
+
+enum {
+  VLOCK_PROCESS_ERROR_FAILED,
+};
 
 /* Wait for the given amount of time for the death of the given child process.
  * If the child process dies in the given amount of time or already was dead
@@ -53,4 +64,4 @@ struct child_process {
  * connected to the respective descriptor of the child.  The file descriptor of
  * the other end is stored in the field after the call.  It is up to the caller
  * to close the pipe descriptor(s). */
-bool create_child(struct child_process *child);
+bool create_child(struct child_process *child, GError **error);
