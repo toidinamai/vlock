@@ -76,9 +76,9 @@ static VlockPlugin *__load_plugin(const char *name, GError **error);
 static bool __resolve_depedencies(void);
 static bool sort_plugins(void);
 
-bool load_plugin(const char *name)
+bool load_plugin(const char *name, GError **error)
 {
-  return __load_plugin(name, NULL) != NULL;
+  return __load_plugin(name, error) != NULL;
 }
 
 bool resolve_dependencies(void)

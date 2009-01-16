@@ -11,10 +11,13 @@
  *
  */
 
+#pragma once
+
 #include <stdbool.h>
+#include <glib.h>
 
 /* Load the named plugin. */
-bool load_plugin(const char *name);
+bool load_plugin(const char *name, GError **error);
 
 /* Resolve all the dependencies between all plugins.  This function *must* be
  * called after all plugins were loaded.  This function aborts on error. */

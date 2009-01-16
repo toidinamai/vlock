@@ -198,9 +198,16 @@ int main(int argc, char *const argv[])
   vlock_atexit(display_auth_tries);
 
 #ifdef USE_PLUGINS
-  for (int i = 1; i < argc; i++)
-    if (!load_plugin(argv[i]))
-      printf_and_exit("loading plugin '%s' failed: %s", argv[i], STRERROR);
+  for (int i = 1; i < argc; i++) {
+    GError *tmp_error = NULL;
+
+    if (!load_plugin(argv[i], &tmp_error)) {
+      g_assert(tmp_error != NULL);
+      g_printf("vlock: loading plugin '%s' failed: %s\n", argv[i], tmp_error->message);
+      g_clear_error(&tmp_error);
+      exit(1);
+    }
+  }
 
   vlock_atexit(unload_plugins);
 
