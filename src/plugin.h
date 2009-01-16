@@ -32,58 +32,6 @@ struct hook
 #define nr_hooks 4
 extern const struct hook hooks[nr_hooks];
 
-struct plugin_type;
-
-/* Struct representing a plugin instance. */
-struct plugin
-{
-  /* The name of the plugin. */
-  char *name;
-
-  /* Array of dependencies.  Each dependency is a (possibly empty) list of
-   * strings.  The dependencies must be stored in the same order as the
-   * dependency names above.  The strings a freed when the plugin is destroyed
-   * thus must be stored as copies. */
-  GList *dependencies[nr_dependencies];
-
-  /* Did one of the save hooks fail? */
-  bool save_disabled;
-
-  /* The type of the plugin. */
-  struct plugin_type *type;
-
-  /* The call_hook and close functions may use this pointer. */
-  void *context;
-};
-
-
-/* Struct representing the type of a plugin. */
-struct plugin_type
-{
-  /* Method that is called on plugin initialization. */
-  bool (*init)(struct plugin *p);
-  /* Method that is called on plugin destruction.  */
-  void (*destroy)(struct plugin *p);
-  /* Method that is called when a hook should be executed.  */
-  bool (*call_hook)(struct plugin *p, const char *name);
-};
-
-/* Modules. */
-extern struct plugin_type *module;
-/* Scripts. */
-extern struct plugin_type *script;
-
-/* Open a new plugin struct of the given type.  On error errno is set and NULL
- * is returned. */ 
-struct plugin *new_plugin(const char *name, struct plugin_type *type);
-
-/* Destroy the given plugin.  This is the opposite of of __allocate_plugin.
- * This function should not be called directly. */
-void destroy_plugin(struct plugin *p);
-
-/* Call the hook of a plugin. */
-bool call_hook(struct plugin *p, const char *hook_name);
-
 /* Errors */
 #define VLOCK_PLUGIN_ERROR vlock_plugin_error_quark()
 GQuark vlock_plugin_error_quark(void);
@@ -108,7 +56,8 @@ typedef struct _VlockPluginClass VlockPluginClass;
 
 struct _VlockPlugin
 {
-  GObject *parent_instance;
+  GObject parent_instance;
+
   gchar *name;
 
   GList *dependencies[nr_dependencies];
@@ -119,9 +68,13 @@ struct _VlockPluginClass
   GObjectClass parent_class;
 
   bool (*open)(VlockPlugin *self, GError **error);
+  bool (*call_hook)(VlockPlugin *self, const gchar *hook_name);
 };
 
 GType vlock_plugin_get_type(void);
 
 /* Open the plugin. */
 bool vlock_plugin_open(VlockPlugin *self, GError **error);
+
+GList *vlock_plugin_get_dependencies(VlockPlugin *self, const gchar *dependency_name);
+bool vlock_plugin_call_hook(VlockPlugin *self, const gchar *hook_name);
