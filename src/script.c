@@ -76,6 +76,8 @@ static bool get_dependency(const char *path, const char *dependency_name,
   /* Parse the dependency data into the list. */
   parse_dependency(data, dependency_list);
 
+  g_free(data);
+
   return true;
 }
 
@@ -194,7 +196,7 @@ error:
 
 static void parse_dependency(char *data, GList **dependency_list)
 {
-  char **dependency_items = g_strsplit_set(data, " \r\n", -1);
+  char **dependency_items = g_strsplit_set(g_strstrip(data), " \r\n", -1);
 
   for (size_t i = 0; dependency_items[i] != NULL; i++)
     *dependency_list = g_list_append(
@@ -232,7 +234,7 @@ static void vlock_script_init(VlockScript *self)
 
   self->priv->dead = false;
   self->priv->launched = false;
-  self->priv->path = g_strdup_printf("%s/%s", VLOCK_SCRIPT_DIR, plugin->name);
+  self->priv->path = NULL;
 }
 
 static void vlock_script_finalize(GObject *object)
@@ -256,6 +258,8 @@ static void vlock_script_finalize(GObject *object)
 static bool vlock_script_open(VlockPlugin *plugin, GError **error)
 {
   VlockScript *self = VLOCK_SCRIPT(plugin);
+
+  self->priv->path = g_strdup_printf("%s/%s", VLOCK_SCRIPT_DIR, plugin->name);
 
   /* Get the dependency information.  Whether the script is executable or not
    * is also detected here. */
