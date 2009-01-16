@@ -56,13 +56,13 @@ struct _VlockModulePrivate
   module_hook_function hooks[nr_hooks];
 };
 
-static bool vlock_module_open(VlockPlugin *object, GError **error)
+static bool vlock_module_open(VlockPlugin *plugin, GError **error)
 {
-  VlockModule *self = VLOCK_MODULE(object);
+  VlockModule *self = VLOCK_MODULE(plugin);
 
   g_assert(self->priv->dl_handle == NULL);
 
-  char *path = g_strdup_printf("%s/%s.so", VLOCK_MODULE_DIR, object->name);
+  char *path = g_strdup_printf("%s/%s.so", VLOCK_MODULE_DIR, plugin->name);
 
   /* Test for access.  This must be done manually because vlock most likely
    * runs as a setuid executable and would otherwise override restrictions. */
@@ -76,7 +76,7 @@ static bool vlock_module_open(VlockPlugin *object, GError **error)
         VLOCK_PLUGIN_ERROR,
         error_code,
         "could not open module '%s': %s",
-        object->name,
+        plugin->name,
         g_strerror(errno));
 
     g_free(path);
@@ -94,7 +94,7 @@ static bool vlock_module_open(VlockPlugin *object, GError **error)
         VLOCK_PLUGIN_ERROR,
         VLOCK_PLUGIN_ERROR_FAILED,
         "could not open module '%s': %s",
-        object->name,
+        plugin->name,
         dlerror());
 
     return false;
@@ -112,16 +112,16 @@ static bool vlock_module_open(VlockPlugin *object, GError **error)
     for (size_t j = 0; dependency != NULL && (*dependency)[j] != NULL; j++) {
       char *s = g_strdup((*dependency)[j]);
 
-      object->dependencies[i] = g_list_append(object->dependencies[i], s);
+      plugin->dependencies[i] = g_list_append(plugin->dependencies[i], s);
     }
   }
 
   return true;
 }
 
-static bool vlock_module_call_hook(VlockPlugin *object, const gchar *hook_name)
+static bool vlock_module_call_hook(VlockPlugin *plugin, const gchar *hook_name)
 {
-  VlockModule *self = VLOCK_MODULE(object);
+  VlockModule *self = VLOCK_MODULE(plugin);
 
   /* Find the right hook index. */
   for (size_t i = 0; i < nr_hooks; i++)
