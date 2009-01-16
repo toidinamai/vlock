@@ -252,7 +252,9 @@ bool create_child(struct child_process *child, GError **error)
   if (read(status_pipe[0], &child_errno, sizeof child_errno) == sizeof child_errno) {
     g_set_error(error,
         VLOCK_PROCESS_ERROR,
-        VLOCK_PROCESS_ERROR_FAILED,
+        child_errno == ENOENT ?
+          VLOCK_PROCESS_ERROR_NOT_FOUND :
+          VLOCK_PROCESS_ERROR_FAILED,
         "child process could not exec: %s",
         g_strerror(child_errno));
     goto child_failed;

@@ -19,10 +19,11 @@
 
 /* Errors */
 #define VLOCK_PROCESS_ERROR vlock_process_error_quark()
-GQuark vlock_plugin_error_quark(void);
+GQuark vlock_process_error_quark(void);
 
 enum {
   VLOCK_PROCESS_ERROR_FAILED,
+  VLOCK_PROCESS_ERROR_NOT_FOUND,
 };
 
 /* Wait for the given amount of time for the death of the given child process.
