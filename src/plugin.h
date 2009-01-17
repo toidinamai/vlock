@@ -38,6 +38,7 @@ GQuark vlock_plugin_error_quark(void);
 
 enum {
   VLOCK_PLUGIN_ERROR_FAILED,
+  VLOCK_PLUGIN_ERROR_DEPENDENCY,
   VLOCK_PLUGIN_ERROR_NOT_FOUND
 };
 

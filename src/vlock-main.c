@@ -37,6 +37,7 @@
 
 #ifdef USE_PLUGINS
 #include "plugins.h"
+#include "plugin.h"
 #endif
 
 static int auth_tries;
@@ -198,12 +199,20 @@ int main(int argc, char *const argv[])
   vlock_atexit(display_auth_tries);
 
 #ifdef USE_PLUGINS
-  for (int i = 1; i < argc; i++) {
-    GError *tmp_error = NULL;
+  GError *tmp_error = NULL;
 
+  for (int i = 1; i < argc; i++) {
     if (!load_plugin(argv[i], &tmp_error)) {
       g_assert(tmp_error != NULL);
-      g_printf("vlock: loading plugin '%s' failed: %s\n", argv[i], tmp_error->message);
+
+      if (g_error_matches(tmp_error,
+            VLOCK_PLUGIN_ERROR,
+            VLOCK_PLUGIN_ERROR_NOT_FOUND)) {
+        g_fprintf(stderr, "vlock: no such plugin '%s'\n", argv[i]);
+      } else {
+        g_fprintf(stderr, "vlock: loading plugin '%s' failed: %s\n", argv[i], tmp_error->message);
+      }
+
       g_clear_error(&tmp_error);
       exit(1);
     }
@@ -211,11 +220,11 @@ int main(int argc, char *const argv[])
 
   vlock_atexit(unload_plugins);
 
-  if (!resolve_dependencies()) {
-    if (errno == 0)
-      exit(EXIT_FAILURE);
-    else
-      printf_and_exit("error resolving plugin dependencies: %s", STRERROR);
+  if (!resolve_dependencies(&tmp_error)) {
+      g_assert(tmp_error != NULL);
+      g_printf("vlock: error resolving plugin dependencies: %s\n", tmp_error->message);
+      g_clear_error(&tmp_error);
+      exit(1);
   }
 
   plugin_hook("vlock_start");

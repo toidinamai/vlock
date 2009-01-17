@@ -73,17 +73,17 @@ const struct hook hooks[nr_hooks] = {
 
 /* helper declarations */
 static VlockPlugin *__load_plugin(const char *name, GError **error);
-static bool __resolve_depedencies(void);
-static bool sort_plugins(void);
+static bool __resolve_depedencies(GError **error);
+static bool sort_plugins(GError **error);
 
 bool load_plugin(const char *name, GError **error)
 {
   return __load_plugin(name, error) != NULL;
 }
 
-bool resolve_dependencies(void)
+bool resolve_dependencies(GError **error)
 {
-  return __resolve_depedencies() && sort_plugins();
+  return __resolve_depedencies(error) && sort_plugins(error);
 }
 
 void unload_plugins(void)
@@ -173,7 +173,7 @@ static VlockPlugin *__load_plugin(const char *name, GError **error)
 }
 
 /* Resolve the dependencies of the plugins. */
-static bool __resolve_depedencies(void)
+static bool __resolve_depedencies(GError **error)
 {
   GList *required_plugins = NULL;
 
@@ -192,7 +192,11 @@ static bool __resolve_depedencies(void)
       VlockPlugin *q = __load_plugin(d, NULL);
 
       if (q == NULL) {
-        fprintf(stderr, "vlock-plugins: '%s' requires '%s' which could not be loaded\n", p->name, d);
+        g_set_error(
+            error,
+            VLOCK_PLUGIN_ERROR,
+            VLOCK_PLUGIN_ERROR_DEPENDENCY,
+            "'%s' requires '%s' which could not be loaded", p->name, d);
         g_list_free(required_plugins);
         return false;
       }
@@ -214,7 +218,11 @@ static bool __resolve_depedencies(void)
       VlockPlugin *q = get_plugin(d);
 
       if (q == NULL) {
-        fprintf(stderr, "vlock-plugins: '%s' needs '%s' which is not loaded\n", p->name, d);
+        g_set_error(
+            error,
+            VLOCK_PLUGIN_ERROR,
+            VLOCK_PLUGIN_ERROR_DEPENDENCY,
+            "'%s' needs '%s' which is not loaded", p->name, d);
         g_list_free(required_plugins);
         errno = 0;
         return false;
@@ -242,10 +250,13 @@ static bool __resolve_depedencies(void)
 
         /* Abort if dependencies not met and plugin is required. */
         if (g_list_find(required_plugins, p) != NULL) {
-          fprintf(stderr,
-              "vlock-plugins: '%s' is required by some other plugin\n"
-               "              but depends on '%s' which is not loaded",
-               p->name, d);
+          g_set_error(
+              error,
+              VLOCK_PLUGIN_ERROR,
+              VLOCK_PLUGIN_ERROR_DEPENDENCY,
+              "'%s' is required by some other plugin but depends on '%s' which is not loaded",
+              p->name,
+              d);
           g_list_free(required_plugins);
           errno = 0;
           return false;
@@ -278,7 +289,13 @@ static bool __resolve_depedencies(void)
         dependency_item = g_list_next(dependency_item)) {
       const char *d = dependency_item->data;
       if (get_plugin(d) != NULL) {
-        fprintf(stderr, "vlock-plugins: '%s' and '%s' cannot be loaded at the same time\n", p->name, d);
+        g_set_error(
+            error,
+            VLOCK_PLUGIN_ERROR,
+            VLOCK_PLUGIN_ERROR_DEPENDENCY,
+            "'%s' and '%s' cannot be loaded at the same time",
+            p->name,
+            d);
         errno = 0;
         return false;
       }
@@ -292,7 +309,7 @@ static GList *get_edges(void);
 
 /* Sort the list of plugins according to their "preceeds" and "succeeds"
  * dependencies.  Fails if sorting is not possible because of circles. */
-static bool sort_plugins(void)
+static bool sort_plugins(GError **error)
 {
   GList *edges = get_edges();
   GList *sorted_plugins;
@@ -302,21 +319,12 @@ static bool sort_plugins(void)
 
   bool tsort_successful = (edges == NULL);
 
-  while (edges != NULL) {
-    struct edge *e = edges->data;
-    VlockPlugin *p = e->predecessor;
-    VlockPlugin *s = e->successor;
-
-    fprintf(stderr, "\t%s\tmust come before\t%s\n", p->name, s->name);
-    free(e);
-    edges = g_list_delete_link(edges, edges);
-  }
-
   if (tsort_successful) {
     /* Switch the global list of plugins for the sorted list.  The global list
      * is static and cannot be freed. */
 
-    assert(g_list_length(sorted_plugins) == g_list_length(plugins));
+    g_assert(edges == NULL);
+    g_assert(g_list_length(sorted_plugins) == g_list_length(plugins));
 
     GList *tmp = plugins;
     plugins = sorted_plugins;
@@ -325,7 +333,25 @@ static bool sort_plugins(void)
 
     return true;
   } else {
-    fprintf(stderr, "vlock-plugins: circular dependencies detected\n");
+    GString *error_message = g_string_new("circular dependencies detected:");
+
+    while (edges != NULL) {
+      struct edge *e = edges->data;
+      VlockPlugin *p = e->predecessor;
+      VlockPlugin *s = e->successor;
+
+      g_string_append_printf(error_message, "\n\t'%s'\tmust come before\t'%s'", p->name, s->name);
+      g_free(e);
+      edges = g_list_delete_link(edges, edges);
+    }
+
+    g_set_error(error,
+        VLOCK_PLUGIN_ERROR,
+        VLOCK_PLUGIN_ERROR_DEPENDENCY,
+        "%s",
+        error_message->str);
+
+    g_string_free(error_message, true);
     return false;
   }
 }
