@@ -31,6 +31,9 @@ G_DEFINE_TYPE(VlockPlugin, vlock_plugin, G_TYPE_OBJECT)
 static void vlock_plugin_init(VlockPlugin *self)
 {
   self->name = NULL;
+  self->save_disabled = false;
+  for (size_t i = 0; i < nr_dependencies; i++)
+    self->dependencies[i] = NULL;
 }
 
 /* Create new plugin object. */

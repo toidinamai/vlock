@@ -443,11 +443,11 @@ void handle_vlock_save(const char *hook_name)
       plugin_item = g_list_next(plugin_item)) {
     VlockPlugin *p = plugin_item->data;
 
-    // if (p->save_disabled)
-    //   continue;
+    if (p->save_disabled)
+      continue;
 
     if (!vlock_plugin_call_hook(p, hook_name)) {
-      // p->save_disabled = true;
+      p->save_disabled = true;
       (void) vlock_plugin_call_hook(p, "vlock_save_abort");
     }
   }
@@ -463,10 +463,10 @@ void handle_vlock_save_abort(const char *hook_name)
       plugin_item = g_list_previous(plugin_item)) {
     VlockPlugin *p = plugin_item->data;
 
-    // if (p->save_disabled)
-    //   continue;
+    if (p->save_disabled)
+      continue;
 
     if (!vlock_plugin_call_hook(p, hook_name))
-      ; // p->save_disabled = true;
+      p->save_disabled = true;
   }
 }

@@ -62,6 +62,8 @@ struct _VlockPlugin
   gchar *name;
 
   GList *dependencies[nr_dependencies];
+
+  bool save_disabled;
 };
 
 struct _VlockPluginClass
