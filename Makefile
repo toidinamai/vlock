@@ -34,6 +34,10 @@ scripts:
 check memcheck:
 	@$(MAKE) -C tests $@
 
+.PHONY: uncrustify
+uncrustify:
+	uncrustify -c .uncrustify.cfg --mtime --no-backup $(wildcard src/*.c src/*.h)
+
 ### configuration ###
 
 config.mk:
