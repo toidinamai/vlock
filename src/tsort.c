@@ -91,7 +91,7 @@ GList *tsort(GList *nodes, GList **edges)
           /* ... add it to the list of zeros. */
           zeros = g_list_append(zeros, e->successor);
 
-        free(e);
+        g_free(e);
       }
 
       edge_item = tmp;
