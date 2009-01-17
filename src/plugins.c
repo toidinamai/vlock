@@ -150,7 +150,10 @@ static VlockPlugin *__load_plugin(const char *name, GError **error)
     p = g_object_new(plugin_types[i], "name", name, NULL);
 
     /* Try to open the plugin. */
-    if (!vlock_plugin_open(p, &err)) {
+    if (vlock_plugin_open(p, &err)) {
+      g_assert(err == NULL);
+      break;
+    } else {
       g_assert(err != NULL);
       g_object_unref(p);
       p = NULL;
