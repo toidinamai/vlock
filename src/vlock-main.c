@@ -41,11 +41,13 @@
 #endif
 
 static const char *auth_failure_blurb =
+  "\n"
   "******************************************************************\n"
   "*** You may not be able to able to unlock your terminal now.   ***\n"
   "***                                                            ***\n"
   "*** Log into another terminal and kill the vlock-main process. ***\n"
   "******************************************************************\n"
+  "\n"
 ;
 
 static int auth_tries;
@@ -127,9 +129,7 @@ static void auth_loop(const char *username)
         if (g_error_matches(err,
                             VLOCK_AUTH_ERROR,
                             VLOCK_AUTH_ERROR_FAILED)) {
-          fputc('\n', stderr);
           fputs(auth_failure_blurb, stderr);
-          fputc('\n', stderr);
           sleep(3);
         }
       }
