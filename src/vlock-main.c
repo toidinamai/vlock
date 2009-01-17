@@ -156,25 +156,6 @@ static void call_end_hook(void)
 }
 #endif
 
-__attribute__((noreturn))
-static void display_error_and_exit(GError *error)
-{
-  g_fprintf(stderr, "vlock: %s\n", error->message);
-  exit(1);
-}
-
-__attribute__((noreturn, format(printf, 1, 2)))
-static void printf_and_exit(const char *format, ...)
-{
-  char *error_message = NULL;
-  va_list ap;
-  va_start(ap, format);
-  g_vasprintf(&error_message, format, ap);
-  va_end(ap);
-  g_fprintf(stderr, "vlock: %s\n", error_message);
-  exit(1);
-}
-
 /* Lock the current terminal until proper authentication is received. */
 int main(int argc, char *const argv[])
 {
@@ -214,7 +195,7 @@ int main(int argc, char *const argv[])
       }
 
       g_clear_error(&tmp_error);
-      exit(1);
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -222,9 +203,9 @@ int main(int argc, char *const argv[])
 
   if (!resolve_dependencies(&tmp_error)) {
       g_assert(tmp_error != NULL);
-      g_printf("vlock: error resolving plugin dependencies: %s\n", tmp_error->message);
+      g_fprintf(stderr, "vlock: error resolving plugin dependencies: %s\n", tmp_error->message);
       g_clear_error(&tmp_error);
-      exit(1);
+      exit(EXIT_FAILURE);
   }
 
   plugin_hook("vlock_start");
@@ -234,19 +215,22 @@ int main(int argc, char *const argv[])
   if (argc == 2 && (strcmp(argv[1], "all") == 0)) {
     if (!lock_console_switch()) {
       if (errno)
-        perror("vlock: could not disable console switching");
+        g_fprintf(stderr, "vlock: could not disable console switching: %s\n", g_strerror(errno));
 
       exit(EXIT_FAILURE);
     }
 
     ensure_atexit((void (*)(void))unlock_console_switch);
   } else if (argc > 1) {
-    printf_and_exit("plugin support disabled");
+    g_fprintf(stderr, "vlock: plugin support disabled\n");
+    exit(EXIT_FAILURE);
   }
 #endif
 
-  if (!isatty(STDIN_FILENO))
-    printf_and_exit("stdin is not a terminal");
+  if (!isatty(STDIN_FILENO)) {
+    g_fprintf(stderr, "vlock: stdin is not a terminal\n");
+    exit(EXIT_FAILURE);
+  }
 
   /* Delay securing the terminal until here because one of the plugins might
    * have changed the active terminal. */
@@ -255,5 +239,5 @@ int main(int argc, char *const argv[])
 
   auth_loop(username);
 
-  exit(0);
+  exit(EXIT_SUCCESS);
 }
