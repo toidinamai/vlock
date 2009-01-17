@@ -54,8 +54,8 @@ static void auth_loop(const char *username)
 #ifndef NO_ROOT_PASS
   if (strcmp(username, "root") == 0)
 #endif
-    /* ... do not fall back to "root". */
-    auth_names[1] = NULL;
+  /* ... do not fall back to "root". */
+  auth_names[1] = NULL;
 
   /* Get the vlock message from the environment. */
   vlock_message = getenv("VLOCK_MESSAGE");
@@ -110,21 +110,31 @@ static void auth_loop(const char *username)
       g_assert(err != NULL);
 
       if (g_error_matches(err,
-            VLOCK_PROMPT_ERROR,
-            VLOCK_PROMPT_ERROR_TIMEOUT)) {
+                          VLOCK_PROMPT_ERROR,
+                          VLOCK_PROMPT_ERROR_TIMEOUT))
         fprintf(stderr, "Timeout!\n");
-      } else {
+      else {
         fprintf(stderr, "vlock: %s\n", err->message);
 
         if (g_error_matches(err,
-              VLOCK_AUTH_ERROR,
-              VLOCK_AUTH_ERROR_FAILED)) {
+                            VLOCK_AUTH_ERROR,
+                            VLOCK_AUTH_ERROR_FAILED)) {
           fputc('\n', stderr);
-          fprintf(stderr, "******************************************************************\n");
-          fprintf(stderr, "*** You may not be able to able to unlock your terminal now.   ***\n");
-          fprintf(stderr, "***                                                            ***\n");
-          fprintf(stderr, "*** Log into another terminal and kill the vlock-main process. ***\n");
-          fprintf(stderr, "******************************************************************\n");
+          fprintf(
+            stderr,
+            "******************************************************************\n");
+          fprintf(
+            stderr,
+            "*** You may not be able to able to unlock your terminal now.   ***\n");
+          fprintf(
+            stderr,
+            "***                                                            ***\n");
+          fprintf(
+            stderr,
+            "*** Log into another terminal and kill the vlock-main process. ***\n");
+          fprintf(
+            stderr,
+            "******************************************************************\n");
           fputc('\n', stderr);
           sleep(3);
         }
@@ -146,7 +156,10 @@ auth_success:
 void display_auth_tries(void)
 {
   if (auth_tries > 0)
-    fprintf(stderr, "%d failed authentication %s.\n", auth_tries, auth_tries > 1 ? "tries" : "try");
+    fprintf(stderr,
+            "%d failed authentication %s.\n",
+            auth_tries,
+            auth_tries > 1 ? "tries" : "try");
 }
 
 #ifdef USE_PLUGINS
@@ -154,6 +167,7 @@ static void call_end_hook(void)
 {
   (void) plugin_hook("vlock_end");
 }
+
 #endif
 
 /* Lock the current terminal until proper authentication is received. */
@@ -187,12 +201,14 @@ int main(int argc, char *const argv[])
       g_assert(tmp_error != NULL);
 
       if (g_error_matches(tmp_error,
-            VLOCK_PLUGIN_ERROR,
-            VLOCK_PLUGIN_ERROR_NOT_FOUND)) {
+                          VLOCK_PLUGIN_ERROR,
+                          VLOCK_PLUGIN_ERROR_NOT_FOUND))
         g_fprintf(stderr, "vlock: no such plugin '%s'\n", argv[i]);
-      } else {
-        g_fprintf(stderr, "vlock: loading plugin '%s' failed: %s\n", argv[i], tmp_error->message);
-      }
+      else
+        g_fprintf(stderr,
+                  "vlock: loading plugin '%s' failed: %s\n",
+                  argv[i],
+                  tmp_error->message);
 
       g_clear_error(&tmp_error);
       exit(EXIT_FAILURE);
@@ -202,10 +218,12 @@ int main(int argc, char *const argv[])
   vlock_atexit(unload_plugins);
 
   if (!resolve_dependencies(&tmp_error)) {
-      g_assert(tmp_error != NULL);
-      g_fprintf(stderr, "vlock: error resolving plugin dependencies: %s\n", tmp_error->message);
-      g_clear_error(&tmp_error);
-      exit(EXIT_FAILURE);
+    g_assert(tmp_error != NULL);
+    g_fprintf(stderr,
+              "vlock: error resolving plugin dependencies: %s\n",
+              tmp_error->message);
+    g_clear_error(&tmp_error);
+    exit(EXIT_FAILURE);
   }
 
   plugin_hook("vlock_start");
@@ -215,12 +233,14 @@ int main(int argc, char *const argv[])
   if (argc == 2 && (strcmp(argv[1], "all") == 0)) {
     if (!lock_console_switch()) {
       if (errno)
-        g_fprintf(stderr, "vlock: could not disable console switching: %s\n", g_strerror(errno));
+        g_fprintf(stderr,
+                  "vlock: could not disable console switching: %s\n",
+                  g_strerror(errno));
 
       exit(EXIT_FAILURE);
     }
 
-    ensure_atexit((void (*)(void))unlock_console_switch);
+    ensure_atexit((void (*) (void))unlock_console_switch);
   } else if (argc > 1) {
     g_fprintf(stderr, "vlock: plugin support disabled\n");
     exit(EXIT_FAILURE);
@@ -241,3 +261,4 @@ int main(int argc, char *const argv[])
 
   exit(EXIT_SUCCESS);
 }
+

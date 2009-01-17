@@ -23,8 +23,8 @@ static GList *get_zeros(GList *nodes, GList *edges)
   GList *zeros = g_list_copy(nodes);
 
   for (GList *edge_item = edges;
-      edge_item != NULL;
-      edge_item = g_list_next(edge_item)) {
+       edge_item != NULL;
+       edge_item = g_list_next(edge_item)) {
     struct edge *e = edge_item->data;
     zeros = g_list_remove(zeros, e->successor);
   }
@@ -36,8 +36,8 @@ static GList *get_zeros(GList *nodes, GList *edges)
 static bool is_zero(void *node, GList *edges)
 {
   for (GList *edge_item = edges;
-      edge_item != NULL;
-      edge_item = g_list_next(edge_item)) {
+       edge_item != NULL;
+       edge_item = g_list_next(edge_item)) {
     struct edge *e = edge_item->data;
 
     if (e->successor == node)
@@ -76,7 +76,7 @@ GList *tsort(GList *nodes, GList **edges)
 
     /* Then look at each edge ... */
     for (GList *edge_item = *edges;
-        edge_item != NULL;) {
+         edge_item != NULL;) {
       struct edge *e = edge_item->data;
 
       GList *tmp = g_list_next(edge_item);
@@ -106,5 +106,7 @@ GList *tsort(GList *nodes, GList **edges)
 
   g_list_free(zeros);
 
-  return sorted_nodes;;
+  return sorted_nodes;
+  ;
 }
+

@@ -31,9 +31,9 @@
  * is returned, too.  "0" is also parsed as NULL. */
 struct timespec *parse_seconds(const char *s)
 {
-  if (s == NULL) {
+  if (s == NULL)
     return NULL;
-  } else {
+  else {
     char *n;
     struct timespec *t = calloc(sizeof *t, 1);
 
@@ -58,7 +58,7 @@ void vlock_invoke_atexit(void)
   while (atexit_functions != NULL) {
     (*(void (**)())&atexit_functions->data)();
     atexit_functions = g_list_delete_link(atexit_functions,
-        atexit_functions);
+                                          atexit_functions);
   }
 }
 
@@ -68,5 +68,6 @@ void vlock_atexit(void (*function)(void))
     atexit(vlock_invoke_atexit);
 
   atexit_functions = g_list_prepend(atexit_functions,
-      *(void **)&function);
+                                    *(void **) &function);
 }
+

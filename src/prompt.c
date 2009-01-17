@@ -104,10 +104,10 @@ before_select:
 
     if (timeout_val == NULL) {
       g_propagate_error(error,
-          g_error_new_literal(
-            VLOCK_PROMPT_ERROR,
-            VLOCK_PROMPT_ERROR_FAILED,
-            g_strerror(errno)));
+                        g_error_new_literal(
+                          VLOCK_PROMPT_ERROR,
+                          VLOCK_PROMPT_ERROR_FAILED,
+                          g_strerror(errno)));
       return NULL;
     }
 
@@ -123,8 +123,8 @@ before_select:
     switch (errno) {
       case 0:
         g_propagate_error(error,
-            g_error_new_literal(
-              VLOCK_PROMPT_ERROR, VLOCK_PROMPT_ERROR_TIMEOUT, ""));
+                          g_error_new_literal(
+                            VLOCK_PROMPT_ERROR, VLOCK_PROMPT_ERROR_TIMEOUT, ""));
         goto out;
       case EINTR:
         /* A signal was caught. Restart. */
@@ -132,10 +132,10 @@ before_select:
         goto before_select;
       default:
         g_propagate_error(error,
-            g_error_new_literal(
-              VLOCK_PROMPT_ERROR,
-              VLOCK_PROMPT_ERROR_FAILED,
-              g_strerror(errno)));
+                          g_error_new_literal(
+                            VLOCK_PROMPT_ERROR,
+                            VLOCK_PROMPT_ERROR_FAILED,
+                            g_strerror(errno)));
         goto out;
     }
   }
@@ -159,10 +159,10 @@ before_select:
   /* Copy the string. */
   if ((result = strdup(buffer)) == NULL)
     g_propagate_error(error,
-        g_error_new_literal(
-          VLOCK_PROMPT_ERROR,
-          VLOCK_PROMPT_ERROR_FAILED,
-          g_strerror(errno)));
+                      g_error_new_literal(
+                        VLOCK_PROMPT_ERROR,
+                        VLOCK_PROMPT_ERROR_FAILED,
+                        g_strerror(errno)));
 
   /* Clear our buffer. */
   memset(buffer, 0, sizeof buffer);
@@ -178,7 +178,9 @@ out:
 }
 
 /* Same as prompt except that the characters entered are not echoed. */
-char *prompt_echo_off(const char *msg, const struct timespec *timeout, GError **error)
+char *prompt_echo_off(const char *msg,
+                      const struct timespec *timeout,
+                      GError **error)
 {
   struct termios term;
   tcflag_t lflag;

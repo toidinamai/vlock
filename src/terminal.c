@@ -21,3 +21,4 @@ void restore_terminal(void)
   term.c_lflag = lflag;
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
+

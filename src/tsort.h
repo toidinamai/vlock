@@ -16,7 +16,8 @@
 
 /* An edge of the graph, specifying that predecessor must come before
  * successor. */
-struct edge {
+struct edge
+{
   void *predecessor;
   void *successor;
 };

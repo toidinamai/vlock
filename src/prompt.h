@@ -59,7 +59,9 @@ enum {
 char *prompt(const char *msg, const struct timespec *timeout, GError **error);
 
 /* Same as prompt() above, except that characters entered are not echoed. */
-char *prompt_echo_off(const char *msg, const struct timespec *timeout, GError **error);
+char *prompt_echo_off(const char *msg,
+                      const struct timespec *timeout,
+                      GError **error);
 
 /* Read a single character from the stdin.  If the timeout is reached
  * 0 is returned. */

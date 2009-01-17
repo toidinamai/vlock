@@ -51,26 +51,27 @@
 #include "plugin.h"
 #include "script.h"
 
-static char *read_dependency(const char *path, const char *dependency_name, GError **error);
+static char *read_dependency(const char *path,
+                             const char *dependency_name,
+                             GError **error);
 static void parse_dependency(char *data, GList **dependency_list);
 
 /* Get the dependency from the script. */
 static bool get_dependency(const char *path, const char *dependency_name,
-    GList **dependency_list, GError **error)
+                           GList **dependency_list, GError **error)
 {
   GError *tmp_error = NULL;
 
   /* Read the dependency data. */
   char *data = read_dependency(path, dependency_name, &tmp_error);
 
-  if (data == NULL)  {
+  if (data == NULL) {
     if (tmp_error != NULL) {
       g_propagate_error(error, tmp_error);
       return false;
-    } else {
+    } else
       /* No data. */
       return true;
-    }
   }
 
   /* Parse the dependency data into the list. */
@@ -84,7 +85,9 @@ static bool get_dependency(const char *path, const char *dependency_name,
 /* Read the dependency data by starting the script with the name of the
  * dependency as a single command line argument.  The script should then print
  * the dependencies to its stdout one on per line. */
-static char *read_dependency(const char *path, const char *dependency_name, GError **error)
+static char *read_dependency(const char *path,
+                             const char *dependency_name,
+                             GError **error)
 {
   GError *tmp_error = NULL;
   const char *argv[] = { path, dependency_name, NULL };
@@ -127,12 +130,12 @@ static char *read_dependency(const char *path, const char *dependency_name, GErr
     if (select(child.stdout_fd+1, &read_fds, NULL, NULL, &t) != 1) {
 timeout:
       g_set_error(&tmp_error,
-          VLOCK_PLUGIN_ERROR,
-          VLOCK_PLUGIN_ERROR_FAILED,
-          "reading dependency (%s) data from script %s failed: timeout",
-          dependency_name,
-          /* XXX: plugin->name */ path
-        );
+                  VLOCK_PLUGIN_ERROR,
+                  VLOCK_PLUGIN_ERROR_FAILED,
+                  "reading dependency (%s) data from script %s failed: timeout",
+                  dependency_name,
+                  /* XXX: plugin->name */ path
+                  );
       goto error;
     }
 
@@ -157,12 +160,13 @@ timeout:
       break;
 
     if (data_length+length+1 > LINE_MAX) {
-      g_set_error(&tmp_error,
-          VLOCK_PLUGIN_ERROR,
-          VLOCK_PLUGIN_ERROR_FAILED,
-          "reading dependency (%s) data from script %s failed: too much data",
-          dependency_name,
-          /* XXX: plugin->name */ path
+      g_set_error(
+        &tmp_error,
+        VLOCK_PLUGIN_ERROR,
+        VLOCK_PLUGIN_ERROR_FAILED,
+        "reading dependency (%s) data from script %s failed: too much data",
+        dependency_name,
+        /* XXX: plugin->name */ path
         );
       goto error;
     }
@@ -200,16 +204,18 @@ static void parse_dependency(char *data, GList **dependency_list)
 
   for (size_t i = 0; dependency_items[i] != NULL; i++)
     *dependency_list = g_list_append(
-        *dependency_list,
-        g_strdup(dependency_items[i])
-    );
+      *dependency_list,
+      g_strdup(dependency_items[i])
+      );
 
   g_strfreev(dependency_items);
 }
 
 G_DEFINE_TYPE(VlockScript, vlock_script, TYPE_VLOCK_PLUGIN)
 
-#define VLOCK_SCRIPT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), TYPE_VLOCK_SCRIPT, VlockScriptPrivate))
+#define VLOCK_SCRIPT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj),\
+                                                                   TYPE_VLOCK_SCRIPT,\
+                                                                   VlockScriptPrivate))
 
 struct _VlockScriptPrivate
 {
@@ -263,16 +269,16 @@ static bool vlock_script_open(VlockPlugin *plugin, GError **error)
   /* Get the dependency information.  Whether the script is executable or not
    * is also detected here. */
   for (size_t i = 0; i < nr_dependencies; i++)
-    if (!get_dependency(self->priv->path, dependency_names[i], &plugin->dependencies[i], &tmp_error)) {
+    if (!get_dependency(self->priv->path, dependency_names[i],
+                        &plugin->dependencies[i], &tmp_error)) {
       if (g_error_matches(tmp_error,
-            VLOCK_PROCESS_ERROR,
-            VLOCK_PROCESS_ERROR_NOT_FOUND) && i == 0) {
+                          VLOCK_PROCESS_ERROR,
+                          VLOCK_PROCESS_ERROR_NOT_FOUND) && i == 0) {
         g_set_error(error, VLOCK_PLUGIN_ERROR, VLOCK_PLUGIN_ERROR_NOT_FOUND,
-            "%s", tmp_error->message);
+                    "%s", tmp_error->message);
         g_clear_error(&tmp_error);
-      } else {
+      } else
         g_propagate_error(error, tmp_error);
-      }
 
       return false;
     }
@@ -348,7 +354,7 @@ static bool vlock_script_call_hook(VlockPlugin *plugin, const gchar *hook_name)
   length = write(self->priv->fd, hook_name, hook_name_length);
 
   if (length > 0)
-    length += write(self->priv->fd, &newline, sizeof newline); 
+    length += write(self->priv->fd, &newline, sizeof newline);
 
   /* Restore the previous SIGPIPE handler. */
   (void) sigaction(SIGPIPE, &oldact, NULL);
@@ -358,7 +364,6 @@ static bool vlock_script_call_hook(VlockPlugin *plugin, const gchar *hook_name)
 
   return !self->priv->dead;
 }
-
 
 /* Initialize script class. */
 static void vlock_script_class_init(VlockScriptClass *klass)
@@ -374,3 +379,4 @@ static void vlock_script_class_init(VlockScriptClass *klass)
   plugin_class->open = vlock_script_open;
   plugin_class->call_hook = vlock_script_call_hook;
 }
+

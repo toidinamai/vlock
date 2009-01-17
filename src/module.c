@@ -38,7 +38,9 @@
 
 G_DEFINE_TYPE(VlockModule, vlock_module, TYPE_VLOCK_PLUGIN)
 
-#define VLOCK_MODULE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), TYPE_VLOCK_MODULE, VlockModulePrivate))
+#define VLOCK_MODULE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj),\
+                                                                   TYPE_VLOCK_MODULE,\
+                                                                   VlockModulePrivate))
 
 /* A hook function as defined by a module. */
 typedef bool (*module_hook_function)(void **);
@@ -68,16 +70,16 @@ static bool vlock_module_open(VlockPlugin *plugin, GError **error)
    * runs as a setuid executable and would otherwise override restrictions. */
   if (access(path, R_OK) < 0) {
     gint error_code = (errno == ENOENT) ?
-      VLOCK_PLUGIN_ERROR_NOT_FOUND :
-      VLOCK_PLUGIN_ERROR_FAILED;
+                      VLOCK_PLUGIN_ERROR_NOT_FOUND :
+                      VLOCK_PLUGIN_ERROR_FAILED;
 
     g_set_error(
-        error,
-        VLOCK_PLUGIN_ERROR,
-        error_code,
-        "could not open module '%s': %s",
-        plugin->name,
-        g_strerror(errno));
+      error,
+      VLOCK_PLUGIN_ERROR,
+      error_code,
+      "could not open module '%s': %s",
+      plugin->name,
+      g_strerror(errno));
 
     g_free(path);
     return false;
@@ -90,19 +92,19 @@ static bool vlock_module_open(VlockPlugin *plugin, GError **error)
 
   if (dl_handle == NULL) {
     g_set_error(
-        error,
-        VLOCK_PLUGIN_ERROR,
-        VLOCK_PLUGIN_ERROR_FAILED,
-        "could not open module '%s': %s",
-        plugin->name,
-        dlerror());
+      error,
+      VLOCK_PLUGIN_ERROR,
+      VLOCK_PLUGIN_ERROR_FAILED,
+      "could not open module '%s': %s",
+      plugin->name,
+      dlerror());
 
     return false;
   }
 
   /* Load all the hooks.  Unimplemented hooks are NULL and will not be called later. */
   for (size_t i = 0; i < nr_hooks; i++)
-    *(void **) (&self->priv->hooks[i]) = dlsym(dl_handle, hooks[i].name);
+    *(void **)(&self->priv->hooks[i]) = dlsym(dl_handle, hooks[i].name);
 
   /* Load all dependencies.  Unspecified dependencies are NULL. */
   for (size_t i = 0; i < nr_dependencies; i++) {
@@ -169,3 +171,4 @@ static void vlock_module_class_init(VlockModuleClass *klass)
   plugin_class->open = vlock_module_open;
   plugin_class->call_hook = vlock_module_call_hook;
 }
+

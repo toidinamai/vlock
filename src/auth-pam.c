@@ -57,7 +57,8 @@ GQuark vlock_auth_error_quark(void)
   return g_quark_from_static_string("vlock-auth-pam-error-quark");
 }
 
-struct conversation_data {
+struct conversation_data
+{
   GError *error;
   struct timespec *timeout;
 };
@@ -84,12 +85,16 @@ static int conversation(int num_msg, const struct pam_message **msg, struct
   for (int i = 0; i < num_msg; i++) {
     switch (msg[i]->msg_style) {
       case PAM_PROMPT_ECHO_OFF:
-        aresp[i].resp = prompt_echo_off(msg[i]->msg, conv_data->timeout, &conv_data->error);
+        aresp[i].resp = prompt_echo_off(msg[i]->msg,
+                                        conv_data->timeout,
+                                        &conv_data->error);
         if (aresp[i].resp == NULL)
           goto fail;
         break;
       case PAM_PROMPT_ECHO_ON:
-        aresp[i].resp = prompt(msg[i]->msg, conv_data->timeout, &conv_data->error);
+        aresp[i].resp = prompt(msg[i]->msg,
+                               conv_data->timeout,
+                               &conv_data->error);
         if (aresp[i].resp == NULL)
           goto fail;
         break;
@@ -149,10 +154,10 @@ bool auth(const char *user, struct timespec *timeout, GError **error)
 
   if (pam_status != PAM_SUCCESS) {
     g_propagate_error(error,
-        g_error_new_literal(
-          VLOCK_AUTH_ERROR,
-          VLOCK_AUTH_ERROR_FAILED,
-          pam_strerror(pamh, pam_status)));
+                      g_error_new_literal(
+                        VLOCK_AUTH_ERROR,
+                        VLOCK_AUTH_ERROR_FAILED,
+                        pam_strerror(pamh, pam_status)));
     goto end;
   }
 
@@ -165,10 +170,10 @@ bool auth(const char *user, struct timespec *timeout, GError **error)
 
     if (pam_status != PAM_SUCCESS) {
       g_propagate_error(error,
-          g_error_new_literal(
-            VLOCK_AUTH_ERROR,
-            VLOCK_AUTH_ERROR_FAILED,
-            pam_strerror(pamh, pam_status)));
+                        g_error_new_literal(
+                          VLOCK_AUTH_ERROR,
+                          VLOCK_AUTH_ERROR_FAILED,
+                          pam_strerror(pamh, pam_status)));
       goto end;
     }
   }
@@ -184,36 +189,36 @@ bool auth(const char *user, struct timespec *timeout, GError **error)
     g_assert(conv_data.error != NULL);
     g_propagate_error(error, conv_data.error);
   } else if (pam_status == PAM_AUTH_ERR ||
-      pam_status == PAM_USER_UNKNOWN ||
-      pam_status == PAM_MAXTRIES) {
+             pam_status == PAM_USER_UNKNOWN ||
+             pam_status == PAM_MAXTRIES) {
     g_assert(conv_data.error == NULL);
 
     g_propagate_error(error,
-        g_error_new_literal(
-          VLOCK_AUTH_ERROR,
-          VLOCK_AUTH_ERROR_DENIED,
-          "Authentication failure"));
+                      g_error_new_literal(
+                        VLOCK_AUTH_ERROR,
+                        VLOCK_AUTH_ERROR_DENIED,
+                        "Authentication failure"));
   } else if (pam_status != PAM_SUCCESS) {
     g_assert(conv_data.error == NULL);
 
     g_propagate_error(error,
-        g_error_new_literal(
-          VLOCK_AUTH_ERROR,
-          VLOCK_AUTH_ERROR_FAILED,
-          pam_strerror(pamh, pam_status)));
+                      g_error_new_literal(
+                        VLOCK_AUTH_ERROR,
+                        VLOCK_AUTH_ERROR_FAILED,
+                        pam_strerror(pamh, pam_status)));
   }
 
 end:
   /* finish pam */
   pam_end_status = pam_end(pamh, pam_status);
 
-  if (pam_end_status != PAM_SUCCESS && error != NULL && *error == NULL) {
+  if (pam_end_status != PAM_SUCCESS && error != NULL && *error == NULL)
     g_propagate_error(error,
-        g_error_new_literal(
-          VLOCK_AUTH_ERROR,
-          VLOCK_AUTH_ERROR_FAILED,
-          pam_strerror(pamh, pam_status)));
-  }
+                      g_error_new_literal(
+                        VLOCK_AUTH_ERROR,
+                        VLOCK_AUTH_ERROR_FAILED,
+                        pam_strerror(pamh, pam_status)));
 
   return (pam_end_status == PAM_SUCCESS && pam_status == PAM_SUCCESS);
 }
+

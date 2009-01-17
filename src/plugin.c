@@ -37,10 +37,9 @@ static void vlock_plugin_init(VlockPlugin *self)
 }
 
 /* Create new plugin object. */
-static GObject *vlock_plugin_constructor(
-    GType gtype,
-    guint n_properties,
-    GObjectConstructParam *properties)
+static GObject *vlock_plugin_constructor(GType gtype,
+                                         guint n_properties,
+                                         GObjectConstructParam *properties)
 {
   GObjectClass *parent_class = G_OBJECT_CLASS(vlock_plugin_parent_class);
   GObject *object = parent_class->constructor(gtype, n_properties, properties);
@@ -63,7 +62,8 @@ static void vlock_plugin_finalize(GObject *object)
   for (size_t i = 0; i < nr_dependencies; i++) {
     while (self->dependencies[i] != NULL) {
       g_free(self->dependencies[i]->data);
-      self->dependencies[i] = g_list_delete_link(self->dependencies[i], self->dependencies[i]);
+      self->dependencies[i] = g_list_delete_link(self->dependencies[i],
+                                                 self->dependencies[i]);
     }
   }
 
@@ -88,11 +88,10 @@ static void vlock_plugin_set_name(VlockPlugin *self, const gchar *name)
 }
 
 /* Set properties. */
-static void vlock_plugin_set_property(
-    GObject *object,
-    guint property_id,
-    const GValue *value,
-    GParamSpec *pspec)
+static void vlock_plugin_set_property(GObject *object,
+                                      guint property_id,
+                                      const GValue *value,
+                                      GParamSpec *pspec)
 {
   VlockPlugin *self = VLOCK_PLUGIN(object);
 
@@ -109,11 +108,10 @@ static void vlock_plugin_set_property(
 }
 
 /* Get properties. */
-static void vlock_plugin_get_property(
-    GObject *object,
-    guint property_id,
-    GValue *value,
-    GParamSpec *pspec)
+static void vlock_plugin_get_property(GObject *object,
+                                      guint property_id,
+                                      GValue *value,
+                                      GParamSpec *pspec)
 {
   VlockPlugin *self = VLOCK_PLUGIN(object);
 
@@ -146,18 +144,18 @@ static void vlock_plugin_class_init(VlockPluginClass *klass)
 
   /* Install properties. */
   vlock_plugin_param_spec = g_param_spec_string(
-      "name",
-      "plugin name",
-      "Set the plugin's name",
-      NULL,
-      G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE
-  );
+    "name",
+    "plugin name",
+    "Set the plugin's name",
+    NULL,
+    G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE
+    );
 
   g_object_class_install_property(
-      gobject_class,
-      PROP_VLOCK_PLUGIN_NAME,
-      vlock_plugin_param_spec
-  );
+    gobject_class,
+    PROP_VLOCK_PLUGIN_NAME,
+    vlock_plugin_param_spec
+    );
 }
 
 bool vlock_plugin_open(VlockPlugin *self, GError **error)
@@ -173,3 +171,4 @@ bool vlock_plugin_call_hook(VlockPlugin *self, const gchar *hook_name)
   g_assert(klass->call_hook != NULL);
   return klass->call_hook(self, hook_name);
 }
+

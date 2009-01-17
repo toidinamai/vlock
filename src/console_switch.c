@@ -127,3 +127,4 @@ bool unlock_console_switch(void)
     return false;
   }
 }
+

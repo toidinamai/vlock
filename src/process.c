@@ -28,7 +28,6 @@ GQuark vlock_process_error_quark(void)
   return g_quark_from_static_string("vlock-process-error-quark");
 }
 
-
 /* Do nothing. */
 static void ignore_sigalarm(int __attribute__((unused)) signum)
 {
@@ -155,38 +154,35 @@ bool create_child(struct child_process *child, GError **error)
 
   (void) fcntl(status_pipe[1], F_SETFD, FD_CLOEXEC);
 
-  if (child->stdin_fd == REDIRECT_PIPE) {
+  if (child->stdin_fd == REDIRECT_PIPE)
     if (pipe(stdin_pipe) < 0) {
       g_set_error(error,
-          VLOCK_PROCESS_ERROR,
-          VLOCK_PROCESS_ERROR_FAILED,
-          "could not open stdin pipe: %s",
-          g_strerror(errno));
+                  VLOCK_PROCESS_ERROR,
+                  VLOCK_PROCESS_ERROR_FAILED,
+                  "could not open stdin pipe: %s",
+                  g_strerror(errno));
       goto stdin_pipe_failed;
     }
-  } 
 
-  if (child->stdout_fd == REDIRECT_PIPE) {
+  if (child->stdout_fd == REDIRECT_PIPE)
     if (pipe(stdout_pipe) < 0) {
       g_set_error(error,
-          VLOCK_PROCESS_ERROR,
-          VLOCK_PROCESS_ERROR_FAILED,
-          "could not open stdout pipe: %s",
-          g_strerror(errno));
+                  VLOCK_PROCESS_ERROR,
+                  VLOCK_PROCESS_ERROR_FAILED,
+                  "could not open stdout pipe: %s",
+                  g_strerror(errno));
       goto stdout_pipe_failed;
     }
-  }
 
-  if (child->stderr_fd == REDIRECT_PIPE) {
+  if (child->stderr_fd == REDIRECT_PIPE)
     if (pipe(stderr_pipe) < 0) {
       g_set_error(error,
-          VLOCK_PROCESS_ERROR,
-          VLOCK_PROCESS_ERROR_FAILED,
-          "could not open stderr pipe: %s",
-          g_strerror(errno));
+                  VLOCK_PROCESS_ERROR,
+                  VLOCK_PROCESS_ERROR_FAILED,
+                  "could not open stderr pipe: %s",
+                  g_strerror(errno));
       goto stderr_pipe_failed;
     }
-  }
 
   child->pid = fork();
 
@@ -230,7 +226,7 @@ bool create_child(struct child_process *child, GError **error)
       (void) close(status_pipe[1]);
       _exit(child->function(child->argument));
     } else {
-      execv(child->path, (char *const*)child->argv);
+      execv(child->path, (char *const*) child->argv);
       (void) write(status_pipe[1], &errno, sizeof errno);
     }
 
@@ -239,24 +235,25 @@ bool create_child(struct child_process *child, GError **error)
 
   if (child->pid < 0) {
     g_set_error(error,
-        VLOCK_PROCESS_ERROR,
-        VLOCK_PROCESS_ERROR_FAILED,
-        "could not fork: %s",
-        g_strerror(errno));
+                VLOCK_PROCESS_ERROR,
+                VLOCK_PROCESS_ERROR_FAILED,
+                "could not fork: %s",
+                g_strerror(errno));
     goto fork_failed;
   }
 
   (void) close(status_pipe[1]);
 
   /* Get the error status from the child, if any. */
-  if (read(status_pipe[0], &child_errno, sizeof child_errno) == sizeof child_errno) {
+  if (read(status_pipe[0], &child_errno,
+           sizeof child_errno) == sizeof child_errno) {
     g_set_error(error,
-        VLOCK_PROCESS_ERROR,
-        child_errno == ENOENT ?
-          VLOCK_PROCESS_ERROR_NOT_FOUND :
-          VLOCK_PROCESS_ERROR_FAILED,
-        "child process could not exec: %s",
-        g_strerror(child_errno));
+                VLOCK_PROCESS_ERROR,
+                child_errno == ENOENT ?
+                VLOCK_PROCESS_ERROR_NOT_FOUND :
+                VLOCK_PROCESS_ERROR_FAILED,
+                "child process could not exec: %s",
+                g_strerror(child_errno));
     goto child_failed;
   }
 
@@ -310,3 +307,4 @@ stdin_pipe_failed:
 
   return false;
 }
+

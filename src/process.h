@@ -38,7 +38,8 @@ void ensure_death(pid_t pid);
 #define REDIRECT_DEV_NULL (-3)
 #define REDIRECT_PIPE (-4)
 
-struct child_process {
+struct child_process
+{
   /* Function that will be run in the child. */
   int (*function)(void *argument);
   /* Argument for the function. */

@@ -51,10 +51,10 @@ bool auth(const char *user, struct timespec *timeout, GError **error)
   /* format the prompt */
   if (asprintf(&msg, "%s's Password: ", user) < 0) {
     g_propagate_error(error,
-        g_error_new_literal(
-          VLOCK_AUTH_ERROR,
-          VLOCK_AUTH_ERROR_FAILED,
-          g_strerror(errno)));
+                      g_error_new_literal(
+                        VLOCK_AUTH_ERROR,
+                        VLOCK_AUTH_ERROR_FAILED,
+                        g_strerror(errno)));
     return false;
   }
 
@@ -69,20 +69,20 @@ bool auth(const char *user, struct timespec *timeout, GError **error)
       goto auth_error;
 
     g_set_error(error,
-        VLOCK_AUTH_ERROR,
-        VLOCK_AUTH_ERROR_FAILED,
-        "Could not get shadow record: %s",
-        g_strerror(errno));
+                VLOCK_AUTH_ERROR,
+                VLOCK_AUTH_ERROR_FAILED,
+                "Could not get shadow record: %s",
+                g_strerror(errno));
     goto shadow_error;
   }
 
   /* hash the password */
   if ((cryptpw = crypt(pwd, spw->sp_pwdp)) == NULL) {
     g_set_error(error,
-        VLOCK_AUTH_ERROR,
-        VLOCK_AUTH_ERROR_FAILED,
-        "crypt() failed: %s",
-        g_strerror(errno));
+                VLOCK_AUTH_ERROR,
+                VLOCK_AUTH_ERROR_FAILED,
+                "crypt() failed: %s",
+                g_strerror(errno));
     goto shadow_error;
   }
 
@@ -92,10 +92,10 @@ bool auth(const char *user, struct timespec *timeout, GError **error)
 auth_error:
     sleep(1);
     g_propagate_error(error,
-        g_error_new_literal(
-          VLOCK_AUTH_ERROR,
-          VLOCK_AUTH_ERROR_DENIED,
-          "Authentication failure"));
+                      g_error_new_literal(
+                        VLOCK_AUTH_ERROR,
+                        VLOCK_AUTH_ERROR_DENIED,
+                        "Authentication failure"));
   }
 
 shadow_error:
@@ -113,3 +113,4 @@ prompt_error:
 
   return result;
 }
+
