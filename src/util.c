@@ -53,10 +53,17 @@ struct timespec *parse_seconds(const char *s)
 
 static GList *atexit_functions;
 
+typedef union
+{
+  void *as_pointer;
+  void (*as_function)(void);
+} function_pointer;
+
 void vlock_invoke_atexit(void)
 {
   while (atexit_functions != NULL) {
-    (*(void (**)())&atexit_functions->data)();
+    function_pointer p = { .as_pointer = atexit_functions->data };
+    p.as_function();
     atexit_functions = g_list_delete_link(atexit_functions,
                                           atexit_functions);
   }
@@ -67,7 +74,8 @@ void vlock_atexit(void (*function)(void))
   if (atexit_functions == NULL)
     atexit(vlock_invoke_atexit);
 
-  atexit_functions = g_list_prepend(atexit_functions,
-                                    *(void **) &function);
+  function_pointer p = { .as_function = function };
+
+  atexit_functions = g_list_prepend(atexit_functions, p.as_pointer);
 }
 
