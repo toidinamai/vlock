@@ -234,7 +234,7 @@ int main(int argc, char *const argv[])
       exit(EXIT_FAILURE);
     }
 
-    ensure_atexit((void (*) (void))unlock_console_switch);
+    vlock_atexit((void (*) (void))unlock_console_switch);
   } else if (argc > 1) {
     g_fprintf(stderr, "vlock: plugin support disabled\n");
     exit(EXIT_FAILURE);
