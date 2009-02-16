@@ -11,6 +11,10 @@ PROGRAMS = vlock vlock-main
 .PHONY: all
 all: $(PROGRAMS)
 
+.PHONY: check-syntax
+check-syntax:
+	$(CC) $(CFLAGS) -S -o /dev/null $(CHK_SOURCES)
+
 .PHONY: debug
 debug:
 	@$(MAKE) DEBUG=y
