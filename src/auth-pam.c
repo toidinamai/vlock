@@ -185,19 +185,18 @@ bool auth(const char *user, struct timespec *timeout, GError **error)
   /* authenticate the user */
   pam_status = pam_authenticate(pamh, 0);
 
-  if (pam_status == PAM_CONV_ERR) {
-    g_assert(conv_data.error != NULL);
-    g_propagate_error(error, conv_data.error);
-  } else if (pam_status == PAM_AUTH_ERR ||
+  if (pam_status == PAM_CONV_ERR ||
+	     pam_status == PAM_AUTH_ERR ||
              pam_status == PAM_USER_UNKNOWN ||
              pam_status == PAM_MAXTRIES) {
-    g_assert(conv_data.error == NULL);
-
-    g_propagate_error(error,
-                      g_error_new_literal(
-                        VLOCK_AUTH_ERROR,
-                        VLOCK_AUTH_ERROR_DENIED,
-                        "Authentication failure"));
+    if (conv_data.error != NULL) 
+      g_propagate_error(error, conv_data.error);
+    else
+      g_propagate_error(error,
+			g_error_new_literal(
+			  VLOCK_AUTH_ERROR,
+			  VLOCK_AUTH_ERROR_DENIED,
+			  "Authentication failure"));
   } else if (pam_status != PAM_SUCCESS) {
     g_assert(conv_data.error == NULL);
 
