@@ -106,10 +106,11 @@ information about plugins.
 .PP
 .B VLOCK_PROMPT_TIMEOUT
 .IP
-Set this variable to specify the amount of time (in seconds) you will have to
-enter your password at the password prompt.  If this variable is unset or set
-to an invalid value or 0 no timeout is used.  \fBWarning\fR: If this value is
-too low, you may not be able to unlock your session.
+Set this variable to specify the amount of time (in seconds) you will
+have to enter your password at the password prompt.  Every keystroke
+resets the timeout.  If this variable is unset or set to an invalid
+value or 0 no timeout is used.  \fBWarning\fR: If this value is too
+low, you may not be able to unlock your session.
 .PP
 .SH FILES
 .B ~/.vlockrc
