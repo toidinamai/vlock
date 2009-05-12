@@ -186,6 +186,11 @@ before_select:
 	goto before_select;
       case 0:
 	/* Timeout was hit. */
+	g_propagate_error(error,
+			  g_error_new_literal(
+                            VLOCK_PROMPT_ERROR,
+			    VLOCK_PROMPT_ERROR_TIMEOUT,
+			    ""));
 	goto out;
       default:
 	/* Some other error. */
