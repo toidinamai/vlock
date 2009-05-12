@@ -95,14 +95,14 @@ static void auth_loop(const char *username)
     }
 
     /* Wait for enter or escape to be pressed. */
-    c = wait_for_character("\n\033", wait_timeout);
+    c = wait_for_character("\n\033", wait_timeout, NULL);
 
     /* Escape was pressed or the timeout occurred. */
     if (c == '\033' || c == 0) {
 #ifdef USE_PLUGINS
       plugin_hook("vlock_save");
       /* Wait for any key to be pressed. */
-      c = wait_for_character(NULL, NULL);
+      c = wait_for_character(NULL, NULL, NULL);
       plugin_hook("vlock_save_abort");
 
       /* Do not require enter to be pressed twice. */

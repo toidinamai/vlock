@@ -65,9 +65,9 @@ char *prompt_echo_off(const char *msg,
 
 /* Read a single character from the stdin.  If the timeout is reached
  * 0 is returned. */
-char read_character(struct timespec *timeout);
+char read_character(const struct timespec *timeout, GError **error);
 
 /* Wait for any of the characters in the given character set to be read from
  * stdin.  If charset is NULL wait for any character.  Returns 0 when the
  * timeout occurs. */
-char wait_for_character(const char *charset, struct timespec *timeout);
+char wait_for_character(const char *charset, const struct timespec *timeout, GError **error);

@@ -65,13 +65,12 @@ GQuark vlock_prompt_error_quark(void)
  * fails or the timeout (if given) occurs NULL is retured. */
 char *prompt(const char *msg, const struct timespec *timeout, GError **error)
 {
+  GError *err = NULL;
   char buffer[PROMPT_BUFFER_SIZE];
   char *result = NULL;
-  ssize_t len;
+  size_t len;
   struct termios term;
-  struct timeval *timeout_val = NULL;
   tcflag_t lflag;
-  fd_set readfds;
 
   if (msg != NULL) {
     /* Write out the prompt. */
@@ -83,8 +82,6 @@ char *prompt(const char *msg, const struct timespec *timeout, GError **error)
   (void) tcgetattr(STDIN_FILENO, &term);
   /* Save the lflag value. */
   lflag = term.c_lflag;
-  /* Enable canonical mode.  We're only interested in line buffering. */
-  term.c_lflag |= ICANON;
   /* Disable terminal signals. */
   term.c_lflag &= ~ISIG;
   /* Set the terminal attributes. */
@@ -92,68 +89,21 @@ char *prompt(const char *msg, const struct timespec *timeout, GError **error)
   /* Discard all unread input characters. */
   (void) tcflush(STDIN_FILENO, TCIFLUSH);
 
-  /* Initialize file descriptor set. */
-  FD_ZERO(&readfds);
-  FD_SET(STDIN_FILENO, &readfds);
+  /* Read the string one character at a time. */
+  for (len = 0; len < sizeof buffer - 1; len++) {
+    char c = wait_for_character(NULL, timeout, &err);
 
-
-before_select:
-  /* copy timeout */
-  if (timeout != NULL) {
-    timeout_val = malloc(sizeof *timeout_val);
-
-    if (timeout_val == NULL) {
-      g_propagate_error(error,
-                        g_error_new_literal(
-                          VLOCK_PROMPT_ERROR,
-                          VLOCK_PROMPT_ERROR_FAILED,
-                          g_strerror(errno)));
-      return NULL;
+    if (err != NULL) {
+      g_propagate_error(error, err);
+      goto out;
+    } else if (c == '\n') {
+      break;
     }
 
-    timeout_val->tv_sec = timeout->tv_sec;
-    timeout_val->tv_usec = timeout->tv_nsec / 1000;
+    buffer[len] = c;
   }
-
-  /* Reset errno. */
-  errno = 0;
-
-  /* Wait until a string was entered. */
-  if (select(STDIN_FILENO + 1, &readfds, NULL, NULL, timeout_val) != 1) {
-    switch (errno) {
-      case 0:
-        g_propagate_error(error,
-                          g_error_new_literal(
-                            VLOCK_PROMPT_ERROR, VLOCK_PROMPT_ERROR_TIMEOUT, ""));
-        goto out;
-      case EINTR:
-        /* A signal was caught. Restart. */
-        free(timeout_val);
-        goto before_select;
-      default:
-        g_propagate_error(error,
-                          g_error_new_literal(
-                            VLOCK_PROMPT_ERROR,
-                            VLOCK_PROMPT_ERROR_FAILED,
-                            g_strerror(errno)));
-        goto out;
-    }
-  }
-
-  /* Read the string from stdin.  At most buffer length - 1 bytes, to
-   * leave room for the terminating zero byte. */
-  if ((len = read(STDIN_FILENO, buffer, sizeof buffer - 1)) < 0)
-    goto out;
 
   /* Terminate the string. */
-  buffer[len] = '\0';
-
-  /* Strip trailing newline characters. */
-  for (len = strlen(buffer); len > 0; --len)
-    if (buffer[len - 1] != '\r' && buffer[len - 1] != '\n')
-      break;
-
-  /* Terminate the string, again. */
   buffer[len] = '\0';
 
   /* Copy the string. */
@@ -168,8 +118,6 @@ before_select:
   memset(buffer, 0, sizeof buffer);
 
 out:
-  free(timeout_val);
-
   /* Restore original terminal attributes. */
   term.c_lflag = lflag;
   (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term);
@@ -204,12 +152,15 @@ char *prompt_echo_off(const char *msg,
 
 /* Read a single character from the stdin.  If the timeout is reached
  * 0 is returned. */
-char read_character(struct timespec *timeout)
+char read_character(const struct timespec *timeout, GError **error)
 {
   char c = 0;
   struct timeval *timeout_val = NULL;
   fd_set readfds;
 
+  g_assert(error == NULL || *error == NULL);
+
+before_select:
   if (timeout != NULL) {
     timeout_val = calloc(sizeof *timeout_val, 1);
 
@@ -223,9 +174,29 @@ char read_character(struct timespec *timeout)
   FD_ZERO(&readfds);
   FD_SET(STDIN_FILENO, &readfds);
 
+  /* Reset errno. */
+  errno = 0;
+
   /* Wait for a character. */
-  if (select(STDIN_FILENO + 1, &readfds, NULL, NULL, timeout_val) != 1)
-    goto out;
+  if (select(STDIN_FILENO + 1, &readfds, NULL, NULL, timeout_val) != 1) {
+    switch (errno) {
+      case EINTR:
+	/* A signal was caught.  Restart. */
+	free(timeout_val);
+	goto before_select;
+      case 0:
+	/* Timeout was hit. */
+	goto out;
+      default:
+	/* Some other error. */
+	g_propagate_error(error,
+			  g_error_new_literal(
+                            VLOCK_PROMPT_ERROR,
+			    VLOCK_PROMPT_ERROR_FAILED,
+			    g_strerror(errno)));
+	goto out;
+    }
+  }
 
   /* Read the character. */
   (void) read(STDIN_FILENO, &c, 1);
@@ -238,7 +209,7 @@ out:
 /* Wait for any of the characters in the given character set to be read from
  * stdin.  If charset is NULL wait for any character.  Returns 0 when the
  * timeout occurs. */
-char wait_for_character(const char *charset, struct timespec *timeout)
+char wait_for_character(const char *charset, const struct timespec *timeout, GError **error)
 {
   struct termios term;
   tcflag_t lflag;
@@ -251,7 +222,7 @@ char wait_for_character(const char *charset, struct timespec *timeout)
   (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
   for (;;) {
-    c = read_character(timeout);
+    c = read_character(timeout, error);
 
     if (c == 0 || charset == NULL)
       break;
