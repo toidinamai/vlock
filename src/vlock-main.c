@@ -92,23 +92,24 @@ static void block_signals(void)
   (void) sigaction(SIGTERM, &sa, NULL);
 }
 
-static struct termios term;
-static tcflag_t lflag;
+static struct termios old_term;
 
-static void secure_terminal(void)
+static void setup_terminal(void)
 {
+  (void) tcgetattr(STDIN_FILENO, &old_term);
+  struct termios new_term = old_term;
+  /* Pressing enter must yield line feed. */
+  new_term.c_iflag &= ~INLCR;
+  new_term.c_iflag |= ICRNL;
   /* Disable terminal echoing and signals. */
-  (void) tcgetattr(STDIN_FILENO, &term);
-  lflag = term.c_lflag;
-  term.c_lflag &= ~(ECHO | ISIG);
-  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
+  new_term.c_lflag &= ~(ECHO | ISIG);
+  (void) tcsetattr(STDIN_FILENO, TCSANOW, &new_term);
 }
 
 static void restore_terminal(void)
 {
   /* Restore the terminal. */
-  term.c_lflag = lflag;
-  (void) tcsetattr(STDIN_FILENO, TCSANOW, &term);
+  (void) tcsetattr(STDIN_FILENO, TCSANOW, &old_term);
 }
 
 static int auth_tries;
@@ -253,7 +254,7 @@ int main(int argc, char *const argv[])
   if (!isatty(STDIN_FILENO))
     fatal_error("vlock: stdin is not a terminal");
 
-  secure_terminal();
+  setup_terminal();
   ensure_atexit(restore_terminal);
 
   auth_loop(username);
