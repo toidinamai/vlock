@@ -1,3 +1,10 @@
+2011-09-18 Frank Benkstein <frank-vlock@benkstein.net>
+
+	vlock 2.2.3
+
+	* Fix vlock not reacting to input when started in the background
+	from bash.  (Thanks to Amy Fong for the report.)
+
 2008-05-14 Frank Benkstein <frank-vlock@benkstein.net>
 
 	vlock 2.2.2
